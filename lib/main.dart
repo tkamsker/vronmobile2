@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:vronmobile2/core/theme/app_theme.dart';
 import 'package:vronmobile2/core/navigation/routes.dart';
+import 'package:vronmobile2/core/config/env_config.dart';
 import 'package:vronmobile2/features/auth/screens/main_screen.dart';
 
-void main() {
+void main() async {
+  // Ensure Flutter is initialized before loading environment
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment configuration from .env file
+  await EnvConfig.initialize();
+
   runApp(const VronApp());
 }
 
