@@ -93,24 +93,24 @@
 
 ### Tests for User Story 2 (TDD - Write FIRST, ensure FAIL) ⚠️
 
-- [ ] T026 [P] [US2] Write integration test for email/password sign-in flow in test/integration/auth_flow_test.dart (tap Sign In triggers UC2)
-- [ ] T027 [P] [US2] Write integration test for Google OAuth flow in test/integration/auth_flow_test.dart (tap Google button triggers UC3)
-- [ ] T028 [P] [US2] Write integration test for Facebook OAuth flow in test/integration/auth_flow_test.dart (tap Facebook button triggers UC4)
-- [ ] T029 [P] [US2] Write integration test for Forgot Password flow in test/integration/auth_flow_test.dart (tap link opens browser)
-- [ ] T030 [P] [US2] Write integration test for Create Account flow in test/integration/auth_flow_test.dart (tap link navigates to UC6 screen)
-- [ ] T031 [P] [US2] Write integration test for Guest Mode flow in test/integration/auth_flow_test.dart (tap button navigates to UC14 screen)
+- [X] T026 [P] [US2] Write integration test for email/password sign-in flow in test/integration/auth_flow_test.dart (tap Sign In triggers UC2)
+- [X] T027 [P] [US2] Write integration test for Google OAuth flow in test/integration/auth_flow_test.dart (tap Google button triggers UC3)
+- [X] T028 [P] [US2] Write integration test for Facebook OAuth flow in test/integration/auth_flow_test.dart (tap Facebook button triggers UC4)
+- [X] T029 [P] [US2] Write integration test for Forgot Password flow in test/integration/auth_flow_test.dart (tap link opens browser)
+- [X] T030 [P] [US2] Write integration test for Create Account flow in test/integration/auth_flow_test.dart (tap link navigates to UC6 screen)
+- [X] T031 [P] [US2] Write integration test for Guest Mode flow in test/integration/auth_flow_test.dart (tap button navigates to UC14 screen)
 
 **Run tests: All should FAIL (Red phase)**
 
 ### Implementation for User Story 2
 
-- [ ] T032 [P] [US2] Implement Sign In button handler in lib/features/auth/screens/main_screen.dart to trigger email auth (UC2 integration point)
-- [ ] T033 [P] [US2] Implement Google OAuth button handler in lib/features/auth/screens/main_screen.dart to trigger UC3
-- [ ] T034 [P] [US2] Implement Facebook OAuth button handler in lib/features/auth/screens/main_screen.dart to trigger UC4
-- [ ] T035 [P] [US2] Implement Forgot Password link handler in lib/features/auth/screens/main_screen.dart using url_launcher to open browser
-- [ ] T036 [P] [US2] Implement Create Account link handler in lib/features/auth/screens/main_screen.dart to navigate to UC6 route
-- [ ] T037 [P] [US2] Implement Guest Mode button handler in lib/features/auth/screens/main_screen.dart to navigate to UC14 route
-- [ ] T038 [US2] Add navigation error handling in lib/features/auth/screens/main_screen.dart (handle route not found, url_launcher failures)
+- [X] T032 [P] [US2] Implement Sign In button handler in lib/features/auth/screens/main_screen.dart to trigger email auth (UC2 integration point)
+- [X] T033 [P] [US2] Implement Google OAuth button handler in lib/features/auth/screens/main_screen.dart to trigger UC3
+- [X] T034 [P] [US2] Implement Facebook OAuth button handler in lib/features/auth/screens/main_screen.dart to trigger UC4
+- [X] T035 [P] [US2] Implement Forgot Password link handler in lib/features/auth/screens/main_screen.dart using url_launcher to open browser
+- [X] T036 [P] [US2] Implement Create Account link handler in lib/features/auth/screens/main_screen.dart to navigate to UC6 route
+- [X] T037 [P] [US2] Implement Guest Mode button handler in lib/features/auth/screens/main_screen.dart to navigate to UC14 route
+- [X] T038 [US2] Add navigation error handling in lib/features/auth/screens/main_screen.dart (handle route not found, url_launcher failures)
 
 **Run tests: All should PASS (Green phase)**
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:vronmobile2/core/constants/app_strings.dart';
+import 'package:vronmobile2/core/navigation/routes.dart';
 import 'package:vronmobile2/features/auth/widgets/email_input.dart';
 import 'package:vronmobile2/features/auth/widgets/password_input.dart';
 import 'package:vronmobile2/features/auth/widgets/sign_in_button.dart';
@@ -110,19 +112,53 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  void _handleForgotPassword() {
-    // TODO: Implement forgot password flow (UC5)
+  Future<void> _handleForgotPassword() async {
+    // T035: Implement forgot password flow (UC5)
     // Opens browser to password reset page
+    final url = Uri.parse('https://vron.one/forgot-password');
+
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          _showError('Could not open password reset page');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _showError('Error opening password reset: ${e.toString()}');
+      }
+    }
   }
 
   void _handleCreateAccount() {
-    // TODO: Navigate to create account screen (UC6)
-    // Navigator.pushNamed(context, AppRoutes.createAccount);
+    // T036: Navigate to create account screen (UC6)
+    try {
+      Navigator.pushNamed(context, AppRoutes.createAccount);
+    } catch (e) {
+      _showError('Navigation error: ${e.toString()}');
+    }
   }
 
   void _handleContinueAsGuest() {
-    // TODO: Navigate to guest mode (UC7)
-    // Navigator.pushNamed(context, AppRoutes.guestMode);
+    // T037: Navigate to guest mode (UC7/UC14)
+    try {
+      Navigator.pushNamed(context, AppRoutes.guestMode);
+    } catch (e) {
+      _showError('Navigation error: ${e.toString()}');
+    }
+  }
+
+  // T038: Add navigation error handling
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   @override
