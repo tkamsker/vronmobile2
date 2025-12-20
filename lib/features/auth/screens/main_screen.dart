@@ -7,6 +7,7 @@ import 'package:vronmobile2/features/auth/widgets/password_input.dart';
 import 'package:vronmobile2/features/auth/widgets/sign_in_button.dart';
 import 'package:vronmobile2/features/auth/widgets/oauth_button.dart';
 import 'package:vronmobile2/features/auth/widgets/text_link.dart';
+import 'package:vronmobile2/features/auth/services/auth_service.dart';
 
 /// Main authentication screen for non-logged-in users
 class MainScreen extends StatefulWidget {
@@ -22,6 +23,7 @@ class _MainScreenState extends State<MainScreen> {
   final _passwordController = TextEditingController();
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
+  final _authService = AuthService();
 
   bool _isFormValid = false;
   bool _isSignInLoading = false;
@@ -67,20 +69,50 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  void _handleSignIn() {
+  Future<void> _handleSignIn() async {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() {
         _isSignInLoading = true;
       });
-      // TODO: Implement email/password authentication (UC2)
-      // Placeholder for now
-      Future.delayed(const Duration(seconds: 1), () {
+
+      try {
+        // Call authentication service
+        final result = await _authService.login(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+
+        if (!mounted) return;
+
+        if (result.isSuccess) {
+          // Login successful - show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Login successful!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+
+          // TODO: Navigate to home screen after successful login
+          // For now, just clear the form
+          _emailController.clear();
+          _passwordController.clear();
+        } else {
+          // Login failed - show error message
+          _showError(result.error ?? 'Login failed');
+        }
+      } catch (e) {
+        if (mounted) {
+          _showError('Unexpected error: ${e.toString()}');
+        }
+      } finally {
         if (mounted) {
           setState(() {
             _isSignInLoading = false;
           });
         }
-      });
+      }
     }
   }
 
