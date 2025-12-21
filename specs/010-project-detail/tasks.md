@@ -24,9 +24,9 @@
 
 **Purpose**: Create directory structure for project detail feature
 
-- [ ] T001 [P] Create feature directory structure lib/features/project_detail/ with subdirectories: screens/, widgets/
-- [ ] T002 [P] Create test directory structure test/features/project_detail/ with subdirectories: screens/, widgets/
-- [ ] T003 [P] Create integration test directory test/integration/ if not exists
+- [X] T001 [P] Create feature directory structure lib/features/project_detail/ with subdirectories: screens/, widgets/
+- [X] T002 [P] Create test directory structure test/features/project_detail/ with subdirectories: screens/, widgets/
+- [X] T003 [P] Create integration test directory test/integration/ if not exists
 
 **Checkpoint**: Directory structure ready for implementation
 
@@ -38,11 +38,11 @@
 
 **⚠️ CRITICAL**: User story work cannot begin until this phase is complete
 
-- [ ] T004 Add i18n keys to lib/core/i18n/en.json for projectDetail section (title, loading, error, retry, projectData, products, liveStatus, subscription, lastUpdated)
-- [ ] T005 [P] Add i18n keys to lib/core/i18n/de.json with German translations
-- [ ] T006 [P] Add i18n keys to lib/core/i18n/pt.json with Portuguese translations
-- [ ] T007 Extend ProjectService in lib/features/home/services/project_service.dart with fetchProjectDetail(String projectId) method
-- [ ] T008 Add GraphQL query constant _getProjectDetailQuery to ProjectService matching contracts/project-detail-query.graphql
+- [X] T004 Add i18n keys to lib/core/i18n/en.json for projectDetail section (title, loading, error, retry, projectData, products, liveStatus, subscription, lastUpdated)
+- [X] T005 [P] Add i18n keys to lib/core/i18n/de.json with German translations
+- [X] T006 [P] Add i18n keys to lib/core/i18n/pt.json with Portuguese translations
+- [X] T007 Extend ProjectService in lib/features/home/services/project_service.dart with fetchProjectDetail(String projectId) method
+- [X] T008 Add GraphQL query constant _getProjectDetailQuery to ProjectService matching contracts/project-detail-query.graphql
 
 **Checkpoint**: Service layer and i18n ready - user story implementation can now begin
 
