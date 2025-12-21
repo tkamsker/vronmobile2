@@ -14,7 +14,7 @@ class ProjectService {
 
   /// GraphQL query to fetch all projects for the authenticated user
   /// Based on the getProjects query from the VRon API
-  /// NOTE: Backend doesn't support 'description' field yet - it will default to empty string
+  /// NOTE: Projects are Products in backend - includes Product-specific fields for mutations
   static const String _projectsQuery = '''
     query GetProjects(\$lang: Language!) {
       getProjects(input: {}) {
@@ -26,6 +26,10 @@ class ProjectService {
         name {
           text(lang: \$lang)
         }
+        status
+        tracksInventory
+        categoryId
+        tags
         subscription {
           isActive
           isTrial
@@ -187,8 +191,13 @@ class ProjectService {
         print('  - Description: $description');
       }
 
+      // First fetch current project to get Product-specific fields
+      // VRonUpdateProduct requires all fields (status, tracksInventory, etc.)
+      final currentProject = await getProjectDetail(projectId);
+
       // Projects are Products in backend - use VRonUpdateProduct mutation
       // Map: name → title (per ProjectMutation.md documentation)
+      // Must pass ALL required fields, preserving existing values for fields we don't update
       final result = await _graphqlService.query(
         _updateProjectMutation,
         variables: {
@@ -196,6 +205,10 @@ class ProjectService {
             'id': projectId,
             'title': name, // name field maps to title in backend
             'description': description,
+            'status': currentProject.status, // Preserve existing status
+            'tracksInventory': currentProject.tracksInventory, // Preserve existing inventory setting
+            if (currentProject.categoryId != null) 'categoryId': currentProject.categoryId,
+            'tags': currentProject.tags, // Preserve existing tags
           },
         },
       );
