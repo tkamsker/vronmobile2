@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:vronmobile2/core/navigation/routes.dart';
 import 'package:vronmobile2/features/home/models/project.dart';
 import 'package:vronmobile2/features/home/services/project_service.dart';
@@ -108,6 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onFilterChanged(String filter) {
+    HapticFeedback.selectionClick();
     if (kDebugMode) print('🏠 [HOME] Filter changed to: $filter');
     setState(() {
       _selectedFilter = filter;
@@ -116,12 +118,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleProjectTap(String projectId) {
+    HapticFeedback.lightImpact();
     if (kDebugMode) print('🏠 [HOME] Project tapped: $projectId');
     // TODO: Navigate to project detail screen
     Navigator.pushNamed(context, AppRoutes.projectDetail, arguments: projectId);
   }
 
   void _handleBottomNavTap(int index) {
+    HapticFeedback.selectionClick();
     if (kDebugMode) print('🏠 [HOME] Bottom nav tapped: $index');
 
     switch (index) {
@@ -139,11 +143,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleCreateProject() {
+    HapticFeedback.mediumImpact();
     if (kDebugMode) print('🏠 [HOME] Create project tapped');
     Navigator.pushNamed(context, AppRoutes.createProject);
   }
 
   void _handleProfileTap() {
+    HapticFeedback.lightImpact();
     if (kDebugMode) print('🏠 [HOME] Profile icon tapped');
     Navigator.pushNamed(context, AppRoutes.profile);
   }
@@ -231,6 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ? IconButton(
                   icon: const Icon(Icons.clear),
                   onPressed: () {
+                    HapticFeedback.lightImpact();
                     _searchController.clear();
                   },
                 )
