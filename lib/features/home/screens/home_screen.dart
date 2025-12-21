@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,6 +23,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final ProjectService _projectService = ProjectService();
   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounceTimer;
 
   List<Project> _allProjects = [];
   List<Project> _filteredProjects = [];
@@ -40,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -75,10 +78,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onSearchChanged() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      _searchQuery = query;
-      _applyFilters();
+    // Cancel previous timer if it exists
+    _debounceTimer?.cancel();
+
+    // Create new timer with 300ms delay (FR-003 requirement)
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      final query = _searchController.text.toLowerCase();
+      setState(() {
+        _searchQuery = query;
+        _applyFilters();
+      });
     });
   }
 

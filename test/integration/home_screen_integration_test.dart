@@ -92,7 +92,9 @@ void main() {
       if (initialProjectCount > 0) {
         // Enter search text
         await tester.enterText(find.byType(TextField), 'marketing');
-        await tester.pump();
+        // Wait for debounce (300ms) per FR-003
+        await tester.pump(const Duration(milliseconds: 350));
+        await tester.pumpAndSettle();
 
         // Project list should update
         final filteredProjectCount = tester
@@ -215,6 +217,168 @@ void main() {
 
       // Should reload projects
       // Loading indicator should appear briefly
+    });
+
+    // Feature 009: Search Projects Integration Tests
+    testWidgets('T009-01: search combined with Active filter', (tester) async {
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
+
+      // Wait for projects to load
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      if (tester.any(find.byType(ProjectCard))) {
+        // First apply Active filter
+        await tester.tap(find.text('Active'));
+        await tester.pumpAndSettle();
+
+        final activeCount =
+            tester.widgetList(find.byType(ProjectCard)).length;
+
+        // Then apply search on top of Active filter
+        await tester.enterText(find.byType(TextField), 'project');
+        await tester.pump(const Duration(milliseconds: 350)); // Debounce
+        await tester.pumpAndSettle();
+
+        final filteredCount =
+            tester.widgetList(find.byType(ProjectCard)).length;
+
+        // Filtered count should be <= active count
+        expect(
+          filteredCount,
+          lessThanOrEqualTo(activeCount),
+          reason: 'Search should further filter active projects',
+        );
+      }
+    });
+
+    testWidgets('T009-02: search combined with Archived filter', (
+      tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
+
+      // Wait for projects to load
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      if (tester.any(find.byType(ProjectCard))) {
+        // Apply Archived filter
+        await tester.tap(find.text('Archived'));
+        await tester.pumpAndSettle();
+
+        // Apply search
+        await tester.enterText(find.byType(TextField), 'test');
+        await tester.pump(const Duration(milliseconds: 350)); // Debounce
+        await tester.pumpAndSettle();
+
+        // Should not crash and should work correctly
+        expect(tester.takeException(), isNull);
+      }
+    });
+
+    testWidgets('T009-03: search persists after pull-to-refresh', (
+      tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
+
+      // Wait for projects to load
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      if (tester.any(find.byType(ProjectCard))) {
+        // Enter search query
+        await tester.enterText(find.byType(TextField), 'test');
+        await tester.pump(const Duration(milliseconds: 350)); // Debounce
+        await tester.pumpAndSettle();
+
+        // Get filtered count
+        final filteredCount =
+            tester.widgetList(find.byType(ProjectCard)).length;
+
+        // Perform pull-to-refresh
+        await tester.drag(
+          find.byType(RefreshIndicator),
+          const Offset(0, 300),
+        );
+        await tester.pumpAndSettle(const Duration(seconds: 5));
+
+        // Search should still be applied after refresh
+        final postRefreshCount =
+            tester.widgetList(find.byType(ProjectCard)).length;
+
+        expect(
+          postRefreshCount,
+          equals(filteredCount),
+          reason: 'Search filter should persist after refresh',
+        );
+
+        // Verify search text is still present
+        final textField = tester.widget<TextField>(find.byType(TextField));
+        expect(textField.controller?.text, equals('test'));
+      }
+    });
+
+    testWidgets('T009-04: switching filters clears then reapplies search', (
+      tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
+
+      // Wait for projects to load
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      if (tester.any(find.byType(ProjectCard))) {
+        // Apply search first
+        await tester.enterText(find.byType(TextField), 'project');
+        await tester.pump(const Duration(milliseconds: 350)); // Debounce
+        await tester.pumpAndSettle();
+
+        // Switch to Active filter
+        await tester.tap(find.text('Active'));
+        await tester.pumpAndSettle();
+
+        // Search should still be applied
+        final textField = tester.widget<TextField>(find.byType(TextField));
+        expect(textField.controller?.text, equals('project'));
+
+        // Switch to Archived filter
+        await tester.tap(find.text('Archived'));
+        await tester.pumpAndSettle();
+
+        // Search should still be applied
+        expect(textField.controller?.text, equals('project'));
+      }
+    });
+
+    testWidgets('T009-05: clear search after filtering shows all projects', (
+      tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
+
+      // Wait for projects to load
+      await tester.pumpAndSettle(const Duration(seconds: 5));
+
+      if (tester.any(find.byType(ProjectCard))) {
+        final initialCount =
+            tester.widgetList(find.byType(ProjectCard)).length;
+
+        // Apply search
+        await tester.enterText(find.byType(TextField), 'test');
+        await tester.pump(const Duration(milliseconds: 350)); // Debounce
+        await tester.pumpAndSettle();
+
+        // Clear search using clear button
+        if (tester.any(find.widgetWithIcon(IconButton, Icons.clear))) {
+          await tester.tap(find.widgetWithIcon(IconButton, Icons.clear));
+          await tester.pump(const Duration(milliseconds: 350)); // Debounce
+          await tester.pumpAndSettle();
+
+          // Should show all projects again
+          final finalCount =
+              tester.widgetList(find.byType(ProjectCard)).length;
+          expect(
+            finalCount,
+            equals(initialCount),
+            reason: 'Clearing search should show all projects',
+          );
+        }
+      }
     });
   });
 }
