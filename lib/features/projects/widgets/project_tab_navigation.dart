@@ -41,16 +41,29 @@ class _ProjectTabNavigationState extends State<ProjectTabNavigation>
   Widget build(BuildContext context) {
     return Column(
       children: [
-        TabBar(
-          controller: _tabController,
-          labelColor: Theme.of(context).primaryColor,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: Theme.of(context).primaryColor,
-          tabs: const [
-            Tab(text: 'Viewer'),
-            Tab(text: 'Project data'),
-            Tab(text: 'Products'),
-          ],
+        Semantics(
+          label: 'Project detail tabs',
+          hint: 'Swipe left or right to switch between tabs',
+          child: TabBar(
+            controller: _tabController,
+            labelColor: Theme.of(context).primaryColor,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: Theme.of(context).primaryColor,
+            tabs: [
+              Semantics(
+                label: 'Viewer tab. View project 3D preview',
+                child: Tab(text: 'Viewer'),
+              ),
+              Semantics(
+                label: 'Project data tab. Edit project details',
+                child: Tab(text: 'Project data'),
+              ),
+              Semantics(
+                label: 'Products tab. View project products',
+                child: Tab(text: 'Products'),
+              ),
+            ],
+          ),
         ),
         Expanded(
           child: TabBarView(

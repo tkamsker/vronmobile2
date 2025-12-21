@@ -23,7 +23,7 @@ class ProjectDetailHeader extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -37,38 +37,55 @@ class ProjectDetailHeader extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
+                Semantics(
+                  button: true,
+                  label: 'Back',
+                  hint: 'Navigate back to projects list',
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
+                  ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.more_vert),
-                  onPressed: onMenuPressed ?? () {},
+                Semantics(
+                  button: true,
+                  label: 'More options',
+                  hint: 'Open project menu',
+                  child: IconButton(
+                    icon: const Icon(Icons.more_vert),
+                    onPressed: onMenuPressed ?? () {},
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             // Project name
-            Text(
-              project.name,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+            Semantics(
+              header: true,
+              label: 'Project name: ${project.name}',
+              child: Text(
+                project.name,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
             ),
             const SizedBox(height: 8),
             // Status badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: _getStatusColor(),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Text(
-                project.statusLabel,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+            Semantics(
+              label: 'Project status: ${project.statusLabel}',
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _getStatusColor(),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  project.statusLabel,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),

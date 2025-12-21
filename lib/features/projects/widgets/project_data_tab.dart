@@ -56,8 +56,9 @@ class _ProjectDataTabState extends State<ProjectDataTab> {
     super.dispose();
   }
 
-  Future<bool> _onWillPop() async {
-    if (!_isDirty) return true;
+  Future<void> _handlePopInvoked(bool didPop) async {
+    // If already popped or no unsaved changes, do nothing
+    if (didPop || !_isDirty) return;
 
     // Show warning dialog for unsaved changes
     final shouldPop = await showDialog<bool>(
@@ -80,7 +81,9 @@ class _ProjectDataTabState extends State<ProjectDataTab> {
       ),
     );
 
-    return shouldPop ?? false;
+    if (shouldPop == true && mounted) {
+      Navigator.of(context).pop();
+    }
   }
 
   Future<void> _handleSave() async {
@@ -129,8 +132,9 @@ class _ProjectDataTabState extends State<ProjectDataTab> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
+      canPop: !_isDirty,
+      onPopInvokedWithResult: (didPop, result) => _handlePopInvoked(didPop),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -185,21 +189,27 @@ class _ProjectDataTabState extends State<ProjectDataTab> {
               const SizedBox(height: 24),
 
               // Save button
-              ElevatedButton(
-                onPressed: _isSaving ? null : _handleSave,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+              Semantics(
+                button: true,
+                label: _isSaving ? 'Saving project changes' : 'Save project changes',
+                hint: _isSaving ? 'Please wait...' : 'Double tap to save',
+                enabled: !_isSaving,
+                child: ElevatedButton(
+                  onPressed: _isSaving ? null : _handleSave,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                  child: _isSaving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text(
+                          'Save',
+                          style: TextStyle(fontSize: 16),
+                        ),
                 ),
-                child: _isSaving
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text(
-                        'Save',
-                        style: TextStyle(fontSize: 16),
-                      ),
               ),
             ],
           ),
