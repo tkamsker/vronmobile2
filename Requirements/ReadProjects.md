@@ -55,12 +55,14 @@ Returns an array of projects with basic information including subscription detai
 
 **Query Signature:**
 ```graphql
-query GetProjects($input: VrGetProjectsInput!) {
+query GetProjects($input: VRGetProjectsInput!) {
   getProjects(input: $input) {
     # Project fields
   }
 }
 ```
+
+**IMPORTANT:** The type name is `VRGetProjectsInput` (capital VR), not `VrGetProjectsInput`
 
 **Input Variables:**
 ```typescript
@@ -100,7 +102,7 @@ Returns a lightweight list of projects with minimal fields (id, name, slug only)
 
 **Query Signature:**
 ```graphql
-query GetProjectsMinimal($input: VrGetProjectsInput!) {
+query GetProjectsMinimal($input: VRGetProjectsInput!) {
   VRGetProjectsMinimal(input: $input) {
     projects {
       # Minimal fields
@@ -108,6 +110,8 @@ query GetProjectsMinimal($input: VrGetProjectsInput!) {
   }
 }
 ```
+
+**IMPORTANT:** The type name is `VRGetProjectsInput` (capital VR), not `VrGetProjectsInput`
 
 ---
 

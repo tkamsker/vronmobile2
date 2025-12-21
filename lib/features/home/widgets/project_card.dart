@@ -86,7 +86,7 @@ class ProjectCard extends StatelessWidget {
 
                   // Metadata row (updated time + team info)
                   Text(
-                    '${_formatUpdateTime(project.updatedAt)} · ${project.teamInfo}',
+                    '${project.updatedAt != null ? _formatUpdateTime(project.updatedAt!) : "Recently"} · ${project.teamInfo ?? "Team"}',
                     style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
 
@@ -130,7 +130,7 @@ class ProjectCard extends StatelessWidget {
   }
 
   Widget _buildImage() {
-    if (project.imageUrl.isEmpty) {
+    if (project.imageUrl == null || project.imageUrl!.isEmpty) {
       return Container(
         height: 200,
         color: Colors.grey[300],
@@ -141,7 +141,7 @@ class ProjectCard extends StatelessWidget {
     }
 
     return CachedNetworkImage(
-      imageUrl: project.imageUrl,
+      imageUrl: project.imageUrl!,
       height: 200,
       width: double.infinity,
       fit: BoxFit.cover,

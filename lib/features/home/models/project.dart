@@ -7,6 +7,8 @@ class Project {
   final String? imageUrl;
   final bool isLive;
   final DateTime? liveDate;
+  final DateTime? updatedAt;
+  final String? teamInfo;
   final ProjectSubscription? subscription;
 
   Project({
@@ -17,6 +19,8 @@ class Project {
     this.imageUrl,
     required this.isLive,
     this.liveDate,
+    this.updatedAt,
+    this.teamInfo,
     this.subscription,
   });
 
@@ -34,6 +38,10 @@ class Project {
       liveDate: json['liveDate'] != null
           ? DateTime.parse(json['liveDate'] as String)
           : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
+          : null,
+      teamInfo: json['teamInfo'] as String?,
       subscription: json['subscription'] != null
           ? ProjectSubscription.fromJson(
               json['subscription'] as Map<String, dynamic>,
@@ -52,6 +60,43 @@ class Project {
       return textObj['text'] as String;
     }
     return '';
+  }
+
+  /// Get short description (truncated to 100 characters)
+  String get shortDescription {
+    if (description == null || description!.isEmpty) {
+      return '';
+    }
+    if (description!.length <= 100) {
+      return description!;
+    }
+    return '${description!.substring(0, 100)}...';
+  }
+
+  /// Get status color in hex format
+  String get statusColorHex {
+    if (isLive) {
+      return '#4CAF50'; // Green for live projects
+    } else if (subscription?.isTrial == true) {
+      return '#FF9800'; // Orange for trial
+    } else if (subscription?.isActive == true) {
+      return '#2196F3'; // Blue for active subscription
+    } else {
+      return '#9E9E9E'; // Gray for inactive
+    }
+  }
+
+  /// Get status label
+  String get statusLabel {
+    if (isLive) {
+      return 'Live';
+    } else if (subscription?.isTrial == true) {
+      return 'Trial';
+    } else if (subscription?.isActive == true) {
+      return 'Active';
+    } else {
+      return 'Inactive';
+    }
   }
 
   /// Convert Project to JSON (for updates/mutations)

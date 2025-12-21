@@ -130,9 +130,13 @@ class AuthService {
       await _tokenStorage.saveAuthCode(authCode);
       if (kDebugMode) print('✅ [AUTH] Tokens stored securely');
 
-      // Refresh GraphQL client with new auth code
-      await _graphqlService.refreshClient();
-      if (kDebugMode) print('✅ [AUTH] GraphQL client refreshed with new auth');
+      // Set ACCESS TOKEN (not AUTH_CODE) in GraphQL service for API authentication
+      // The VRON GraphQL API expects the raw access token, not the encoded AUTH_CODE
+      _graphqlService.setAuthToken(accessToken);
+      if (kDebugMode) {
+        print('✅ [AUTH] GraphQL client configured with access token');
+        print('ℹ️  [AUTH] Using accessToken (not AUTH_CODE) for GraphQL API');
+      }
 
       // Return success with email as user identifier
       if (kDebugMode) print('✅ [AUTH] Login successful for: $email');

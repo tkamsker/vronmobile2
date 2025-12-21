@@ -132,7 +132,10 @@ class I18nService extends ChangeNotifier {
 /// Extension method for easy translation access
 /// Usage: 'projectDetail.title'.tr()
 extension StringTranslation on String {
-  String tr([Map<String, String>? params]) {
-    return I18nService().translate(this, params);
+  String tr({Map<String, dynamic>? params}) {
+    return I18nService().translate(
+      this,
+      params?.map((key, value) => MapEntry(key, value.toString())),
+    );
   }
 }

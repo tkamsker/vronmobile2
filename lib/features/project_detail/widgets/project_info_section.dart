@@ -144,7 +144,7 @@ class ProjectInfoSection extends StatelessWidget {
     final dateStr = DateFormat.yMMMd().format(project.liveDate!);
 
     return Text(
-      'projectDetail.lastUpdated'.tr({'date': dateStr}),
+      'projectDetail.lastUpdated'.tr(params: {'date': dateStr}),
       style: Theme.of(
         context,
       ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),

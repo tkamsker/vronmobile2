@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+import 'package:vronmobile2/core/config/env_config.dart';
 import 'package:vronmobile2/core/services/graphql_service.dart';
 import 'package:vronmobile2/features/home/models/project.dart';
 
@@ -5,24 +7,45 @@ import 'package:vronmobile2/features/home/models/project.dart';
 class ProjectService {
   final GraphQLService _graphql = GraphQLService();
 
+  bool get _isDebug => EnvConfig.isDebug;
+
+  ProjectService() {
+    if (_isDebug) {
+      print('🏗️  [PROJECT_SERVICE] Created ProjectService instance');
+      print('🏗️  [PROJECT_SERVICE] GraphQL service ID: ${identityHashCode(_graphql)}');
+    }
+  }
+
   /// GraphQL query for fetching project list
+  /// Note: VRGetProjectsInput (capital VR) is required, not VrGetProjectsInput
   static const String _getProjectsQuery = '''
-    query GetProjects(\$lang: Language!) {
-      projects {
+    query GetProjects(\$input: VRGetProjectsInput!, \$lang: Language!) {
+      getProjects(input: \$input) {
         id
         slug
         name {
           text(lang: \$lang)
         }
-        description {
-          text(lang: \$lang)
-        }
         imageUrl
         isLive
+        liveDate
         subscription {
           isActive
           isTrial
           status
+          canChoosePlan
+          hasExpired
+          currency
+          price
+          renewalInterval
+          startedAt
+          expiresAt
+          renewsAt
+          prices {
+            currency
+            monthly
+            yearly
+          }
         }
       }
     }
@@ -83,17 +106,46 @@ class ProjectService {
 
   /// Fetch list of projects
   Future<List<Project>> getProjects({String lang = 'EN'}) async {
+    if (_isDebug) {
+      print('📋 [PROJECT_SERVICE] getProjects() called');
+      print('📋 [PROJECT_SERVICE] Language: $lang');
+      print('📋 [PROJECT_SERVICE] Using GraphQL service ID: ${identityHashCode(_graphql)}');
+    }
+
     final result = await _graphql.query(
       _getProjectsQuery,
-      variables: {'lang': lang},
+      variables: {
+        'input': {}, // Empty input object - fetches all projects
+        'lang': lang,
+      },
     );
 
+    if (_isDebug) {
+      print('📋 [PROJECT_SERVICE] Query completed');
+      print('📋 [PROJECT_SERVICE] Processing result...');
+    }
+
     return _graphql.handleResult(result, (data) {
-      final projectsData = data['projects'] as List<dynamic>;
+      if (_isDebug) {
+        print('📋 [PROJECT_SERVICE] Data received, extracting projects...');
+        print('📋 [PROJECT_SERVICE] Data keys: ${data.keys.toList()}');
+      }
+
+      final projectsData = data['getProjects'] as List<dynamic>;
+
+      if (_isDebug) {
+        print('✅ [PROJECT_SERVICE] Found ${projectsData.length} projects');
+      }
+
       return projectsData
           .map((json) => Project.fromJson(json as Map<String, dynamic>))
           .toList();
     });
+  }
+
+  /// Alias for getProjects (for compatibility)
+  Future<List<Project>> fetchProjects({String lang = 'EN'}) async {
+    return getProjects(lang: lang);
   }
 
   /// Fetch single project detail by ID

@@ -5,11 +5,11 @@
 
 # --- Prerequisites ---
 # Ensure 'jq' is installed:
-#   brew install jq
+# brew install jq
 #
 # --- Usage ---
 # ./test_login.sh [email] [password]
-#   - If email/password are not provided, it uses the default test credentials.
+# - If email/password are not provided, it uses the default test credentials.
 
 # --- Configuration ---
 GRAPHQL_ENDPOINT="https://api.vron.stage.motorenflug.at/graphql"
@@ -26,38 +26,38 @@ echo "Attempting to sign in with email: $EMAIL"
 # 1. Construct GraphQL mutation payload
 JSON_PAYLOAD=$(cat <<EOF
 {
-  "query": "mutation SignIn(\\$input: SignInInput!) { signIn(input: \\$input) { accessToken } }",
-  "variables": {
-    "input": {
-      "email": "$EMAIL",
-      "password": "$PASSWORD"
-    }
-  }
+"query": "mutation SignIn(\\$input: SignInInput!) { signIn(input: \\$input) { accessToken } }",
+"variables": {
+"input": {
+"email": "$EMAIL",
+"password": "$PASSWORD"
+}
+}
 }
 EOF
 )
 
 # 2. Send POST request to GraphQL endpoint
 RESPONSE=$(curl -s \
-  -X POST \
-  -H "Content-Type: application/json" \
-  -H "X-VRon-Platform: $X_VRON_PLATFORM_HEADER" \
-  --data "$JSON_PAYLOAD" \
-  "$GRAPHQL_ENDPOINT")
+-X POST \
+-H "Content-Type: application/json" \
+-H "X-VRon-Platform: $X_VRON_PLATFORM_HEADER" \
+--data "$JSON_PAYLOAD" \
+"$GRAPHQL_ENDPOINT")
 
 # Check for cURL errors
 if [ $? -ne 0 ]; then
-  echo "Error: cURL command failed."
-  exit 1
+echo "Error: cURL command failed."
+exit 1
 fi
 
 # 3. Parse accessToken from response
 ACCESS_TOKEN=$(echo "$RESPONSE" | jq -r '.data.signIn.accessToken // empty')
 
 if [ -z "$ACCESS_TOKEN" ]; then
-  echo "Error: Failed to get accessToken. Check credentials or API response."
-  echo "Full response: $RESPONSE"
-  exit 1
+echo "Error: Failed to get accessToken. Check credentials or API response."
+echo "Full response: $RESPONSE"
+exit 1
 fi
 
 echo "Successfully received accessToken."
@@ -66,12 +66,12 @@ echo "AccessToken: $ACCESS_TOKEN"
 # 4. Construct AUTH_CODE JSON structure
 AUTH_CODE_JSON=$(cat <<EOF
 {
-    "MERCHANT": {
-        "accessToken": "$ACCESS_TOKEN"
-    },
-    "activeRoles": {
-        "merchants":"MERCHANT"
-    }
+"MERCHANT": {
+"accessToken": "$ACCESS_TOKEN"
+},
+"activeRoles": {
+"merchants":"MERCHANT"
+}
 }
 EOF
 )
