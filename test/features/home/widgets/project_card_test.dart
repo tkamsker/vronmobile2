@@ -29,6 +29,7 @@ void main() {
       id: 'proj_123',
       slug: 'marketing-analytics',
       name: 'Marketing Analytics',
+      description: 'Test project description',
       imageUrl: 'https://cdn.vron.one/projects/proj_123/thumbnail.jpg',
       isLive: true,
       liveDate: DateTime.parse('2025-12-20T10:30:00Z'),
@@ -87,6 +88,7 @@ void main() {
         id: 'proj_456',
         slug: 'trial-project',
         name: 'Trial Project',
+        description: 'Trial project description',
         imageUrl: '',
         isLive: true,
         subscription: ProjectSubscription(
@@ -117,6 +119,7 @@ void main() {
         id: 'proj_789',
         slug: 'not-live-project',
         name: 'Not Live Project',
+        description: 'Not live project description',
         imageUrl: '',
         isLive: false,
         subscription: testSubscription,
@@ -247,6 +250,7 @@ void main() {
         id: 'proj_yearly',
         slug: 'yearly-project',
         name: 'Yearly Project',
+        description: 'Yearly project description',
         imageUrl: '',
         isLive: true,
         subscription: ProjectSubscription(
