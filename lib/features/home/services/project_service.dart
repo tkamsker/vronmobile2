@@ -204,63 +204,21 @@ class ProjectService {
         print('  - Description: $description');
       }
 
-      // First fetch Product data to get existing fields
-      // Projects are Products in backend - need Product-specific fields
+      // Try mutation with minimal fields first
+      // Backend may support partial updates (only id, title, description)
       if (kDebugMode) {
-        print('📦 [PROJECTS] Fetching Product data for update...');
-      }
-
-      final productResult = await _graphqlService.query(
-        _getProductQuery,
-        variables: {'id': projectId},
-      );
-
-      if (productResult.hasException) {
-        if (kDebugMode) {
-          print('❌ [PROJECTS] Failed to fetch Product data: ${productResult.exception}');
-        }
-        throw Exception('Failed to fetch product data: ${productResult.exception}');
-      }
-
-      final productData = productResult.data?['product'] as Map<String, dynamic>?;
-      if (productData == null) {
-        throw Exception('Product not found: $projectId');
-      }
-
-      // Extract existing Product fields to preserve them
-      final existingStatus = productData['status'] as String;
-      final existingTracksInventory = productData['tracksInventory'] as bool;
-      final existingCategoryId = productData['categoryId'] as String?;
-      final existingTags = (productData['tags'] as List?)?.cast<String>() ?? [];
-
-      if (kDebugMode) {
-        print('✅ [PROJECTS] Product data fetched - preserving existing fields:');
-        print('  - status: $existingStatus');
-        print('  - tracksInventory: $existingTracksInventory');
-        print('  - categoryId: $existingCategoryId');
-        print('  - tags: $existingTags');
-      }
-
-      // Now update with VRonUpdateProduct mutation
-      // Map: name → title (per ProjectMutation.md documentation)
-      // Preserve all existing Product fields, only update title and description
-      final updateInput = {
-        'id': projectId,
-        'title': name, // name field maps to title in backend
-        'description': description,
-        'status': existingStatus, // Preserve existing status
-        'tracksInventory': existingTracksInventory, // Preserve existing inventory setting
-        'tags': existingTags, // Preserve existing tags
-      };
-
-      // Only include categoryId if it exists
-      if (existingCategoryId != null) {
-        updateInput['categoryId'] = existingCategoryId;
+        print('📦 [PROJECTS] Attempting update with minimal fields...');
       }
 
       final result = await _graphqlService.query(
         _updateProjectMutation,
-        variables: {'input': updateInput},
+        variables: {
+          'input': {
+            'id': projectId,
+            'title': name, // name field maps to title in backend
+            'description': description,
+          },
+        },
       );
 
       if (result.hasException) {
