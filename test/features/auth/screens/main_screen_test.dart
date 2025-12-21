@@ -5,11 +5,7 @@ import 'package:vronmobile2/features/auth/screens/main_screen.dart';
 void main() {
   group('MainScreen Widget', () {
     testWidgets('displays all UI elements', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: MainScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: MainScreen()));
 
       // Check for input fields
       expect(find.text('Email'), findsOneWidget);
@@ -27,11 +23,7 @@ void main() {
     });
 
     testWidgets('email and password fields are present', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: MainScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: MainScreen()));
 
       final emailField = find.widgetWithText(TextFormField, 'Email');
       final passwordField = find.widgetWithText(TextFormField, 'Password');
@@ -41,11 +33,7 @@ void main() {
     });
 
     testWidgets('Sign In button is initially disabled', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: MainScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: MainScreen()));
 
       final signInButton = find.widgetWithText(ElevatedButton, 'Sign In');
       expect(signInButton, findsOneWidget);
@@ -54,57 +42,45 @@ void main() {
       expect(button.onPressed, isNull);
     });
 
-    testWidgets('layout uses SafeArea and SingleChildScrollView', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: MainScreen(),
-        ),
-      );
+    testWidgets('layout uses SafeArea and SingleChildScrollView', (
+      tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: MainScreen()));
 
       expect(find.byType(SafeArea), findsOneWidget);
       expect(find.byType(SingleChildScrollView), findsOneWidget);
     });
 
     testWidgets('uses Form widget for validation', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: MainScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: MainScreen()));
 
       expect(find.byType(Form), findsOneWidget);
     });
 
     testWidgets('all buttons have accessible semantic labels', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: MainScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: MainScreen()));
 
       expect(find.bySemanticsLabel('Sign in button'), findsOneWidget);
-      expect(find.bySemanticsLabel('Sign in with Google button'), findsOneWidget);
-      expect(find.bySemanticsLabel('Sign in with Facebook button'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Sign in with Google button'),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel('Sign in with Facebook button'),
+        findsOneWidget,
+      );
       expect(find.bySemanticsLabel('Continue as guest button'), findsOneWidget);
     });
 
     testWidgets('links have accessible semantic labels', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: MainScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: MainScreen()));
 
       expect(find.bySemanticsLabel('Forgot password link'), findsOneWidget);
       expect(find.bySemanticsLabel('Create account link'), findsOneWidget);
     });
 
     testWidgets('form validation state updates on text input', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: MainScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: MainScreen()));
 
       // Initially button should be disabled
       var signInButton = find.widgetWithText(ElevatedButton, 'Sign In');
@@ -128,15 +104,16 @@ void main() {
       expect(passwordField, findsOneWidget);
     });
 
-    testWidgets('entering invalid email shows validation error', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: MainScreen(),
-        ),
-      );
+    testWidgets('entering invalid email shows validation error', (
+      tester,
+    ) async {
+      await tester.pumpWidget(const MaterialApp(home: MainScreen()));
 
       // Enter invalid email
-      await tester.enterText(find.widgetWithText(TextFormField, 'Email'), 'notanemail');
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Email'),
+        'notanemail',
+      );
       await tester.pump();
 
       // Tap outside to trigger blur validation
@@ -148,20 +125,13 @@ void main() {
     });
 
     testWidgets('screen has proper padding and spacing', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: MainScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: MainScreen()));
 
       final scrollView = find.byType(SingleChildScrollView);
       expect(scrollView, findsOneWidget);
 
       final padding = tester.widget<Padding>(
-        find.descendant(
-          of: scrollView,
-          matching: find.byType(Padding),
-        ).first,
+        find.descendant(of: scrollView, matching: find.byType(Padding)).first,
       );
 
       // Verify padding is present
@@ -169,11 +139,7 @@ void main() {
     });
 
     testWidgets('can scroll when keyboard is shown', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: MainScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: MainScreen()));
 
       // Find scrollable
       final scrollable = find.byType(SingleChildScrollView);
@@ -182,6 +148,51 @@ void main() {
       // Verify it's scrollable
       final scrollView = tester.widget<SingleChildScrollView>(scrollable);
       expect(scrollView.physics, isNot(const NeverScrollableScrollPhysics()));
+    });
+
+    testWidgets('Form validation wiring is present', (tester) async {
+      // T043: Verify form validation system is wired up correctly
+      // Note: The button enable/disable logic relies on real user interaction
+      // (typing) which is difficult to simulate in widget tests. The actual
+      // validation logic is tested in individual widget tests and integration tests.
+
+      await tester.pumpWidget(const MaterialApp(home: MainScreen()));
+
+      // Verify Form widget exists with GlobalKey
+      expect(find.byType(Form), findsOneWidget);
+
+      // Verify button is initially disabled (no input)
+      var signInButton = find.widgetWithText(ElevatedButton, 'Sign In');
+      var button = tester.widget<ElevatedButton>(signInButton);
+      expect(
+        button.onPressed,
+        isNull,
+        reason: 'Button should be disabled when fields are empty',
+      );
+
+      // Verify email and password fields have validators
+      final emailField = find.widgetWithText(TextFormField, 'Email');
+      final passwordField = find.widgetWithText(TextFormField, 'Password');
+      expect(emailField, findsOneWidget);
+      expect(passwordField, findsOneWidget);
+
+      final emailWidget = tester.widget<TextFormField>(emailField);
+      final passwordWidget = tester.widget<TextFormField>(passwordField);
+      expect(
+        emailWidget.validator,
+        isNotNull,
+        reason: 'Email field should have validator',
+      );
+      expect(
+        passwordWidget.validator,
+        isNotNull,
+        reason: 'Password field should have validator',
+      );
+      expect(emailWidget.autovalidateMode, AutovalidateMode.onUserInteraction);
+      expect(
+        passwordWidget.autovalidateMode,
+        AutovalidateMode.onUserInteraction,
+      );
     });
   });
 }

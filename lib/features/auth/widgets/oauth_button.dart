@@ -3,10 +3,7 @@ import 'package:vronmobile2/core/constants/app_strings.dart';
 import 'package:vronmobile2/core/theme/app_theme.dart';
 
 /// OAuth provider types
-enum OAuthProvider {
-  google,
-  facebook,
-}
+enum OAuthProvider { google, facebook }
 
 /// OAuth button for Google/Facebook authentication
 class OAuthButton extends StatelessWidget {

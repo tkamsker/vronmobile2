@@ -97,15 +97,15 @@ flutter run -d <device-id>
 1. Launch app
 2. Verify main screen appears
 3. Check all elements present:
-   - ✓ VRON logo/branding
-   - ✓ Email input field
-   - ✓ Password input field
-   - ✓ Sign In button (disabled)
-   - ✓ Google sign-in button
-   - ✓ Facebook sign-in button
-   - ✓ Continue as Guest button
-   - ✓ Forgot Password link
-   - ✓ Create Account link
+ - ✓ VRON logo/branding
+ - ✓ Email input field
+ - ✓ Password input field
+ - ✓ Sign In button (disabled)
+ - ✓ Google sign-in button
+ - ✓ Facebook sign-in button
+ - ✓ Continue as Guest button
+ - ✓ Forgot Password link
+ - ✓ Create Account link
 
 #### Scenario 2: Email Validation
 **Steps:**
@@ -198,9 +198,9 @@ expect(find.byType(ElevatedButton), findsOneWidget);
 ```dart
 // Scroll to make visible
 await tester.dragUntilVisible(
-  find.text('Widget'),
-  find.byType(SingleChildScrollView),
-  const Offset(0, -100),
+find.text('Widget'),
+find.byType(SingleChildScrollView),
+const Offset(0, -100),
 );
 ```
 
@@ -231,7 +231,7 @@ expect(find.byType(Form), findsOneWidget);
 ```
 00:02 +65 -1: Some tests failed.
 Expected: <true>
-  Actual: <false>
+Actual: <false>
 ```
 
 ### Coverage Report
@@ -272,14 +272,14 @@ flutter run
 name: Flutter Tests
 on: [push, pull_request]
 jobs:
-  test:
+test:
  runs-on: ubuntu-latest
  steps:
-   - uses: actions/checkout@v3
-   - uses: subosito/flutter-action@v2
-   - run: flutter pub get
-   - run: flutter test
-   - run: flutter analyze
+ - uses: actions/checkout@v3
+ - uses: subosito/flutter-action@v2
+ - run: flutter pub get
+ - run: flutter test
+ - run: flutter analyze
 ```
 
 ## Next Steps
@@ -319,84 +319,84 @@ emulator -avd <avd-name>
 flutter test --timeout=60s
 
 ```
- Excellent! You have several devices available. Let me create a quick reference card:                                       
-                                                              
-⏺ Bash(cat > TESTING_QUICKREF.md << 'EOF'                                                   
-   # Testing Quick Reference - Main Screen Feature…)                                                 
-  ⎿  # Testing Quick Reference - Main Screen Feature                                                 
-                                                              
-  ## ✅ Current Status                                                       
-  … +182 lines (ctrl+o to expand)                                                     
-                                                              
-⏺ Testing Help Summary                                                       
-                                                              
-  I've created comprehensive testing documentation for you! Here's what you have:                                         
-                                                              
-  📄 Documentation Created                                                      
-                                                              
-  1. test_guide.md - Complete testing guide with:                                                 
- - All test commands                                                         
- - Manual test scenarios (10 detailed scenarios)                                                  
- - Debugging tips                                                         
- - Performance testing with DevTools                                                     
- - CI/CD integration examples                                                      
-  2. TESTING_QUICKREF.md - Quick reference card with:                                                
- - Current status (66 tests passing)                                                     
- - Most common commands                                                      
- - 2-minute smoke test checklist                                                      
- - Troubleshooting guide                                                        
- - File locations                                                         
-                                                              
-  🎯 To Test Right Now                                                       
-                                                              
-  Option 1: Run All Tests (30 seconds)                                                   
-  flutter test                                                         
-                                                              
-  Option 2: Launch App on iOS Simulator (recommended)                                                
-  flutter run -d 19EA67E6-6120-45A9-8D83-1A007D0306AA                                                
-                                                              
-  Option 3: Launch on Your Physical iPhone                                                  
-  flutter run -d 00008140-0005185602DB001C                                                  
-                                                              
-  ✅ What's Working                                                          
-                                                              
-  All 66 tests pass covering:                                                      
-  - ✓ Email validation (11 unit tests)                                                   
-  - ✓ All widgets (49 widget tests)                                                      
-  - ✓ Navigation flows (6 integration tests)                                                   
-                                                              
-  The main authentication screen is fully functional with:                                              
-  - Email/password inputs with validation                                                   
-  - Password visibility toggle                                                     
-  - Sign In, OAuth, and navigation buttons                                                  
-  - Error handling                                                        
-  - Accessibility (WCAG 2.1 Level AA)                                                    
-                                                              
-  🔍 Quick Smoke Test                                                        
-                                                              
-  After launching the app:                                                      
-  1. Try entering "invalid" in email field → see error                                               
-  2. Enter "user@test.com" → error clears                                                   
-  3. Tap password field, type "test123"                                                     
-  4. Tap eye icon → password toggles visibility                                                   
-  5. Scroll down, tap "Create Account" → navigates                                                
-  6. Tap "Continue as Guest" → navigates                                                    
-                                                              
-  Want me to help you:                                                       
-  - Run a specific test?                                                        
-  - Launch the app on a particular device?                                                  
-  - Generate a coverage report?                                                       
-  - Explain any test in detail?                                                       
-                                                              
-  Just let me know what you'd like to explore!                                                 
-                                                              
-  Todos                                                             
-  ☒ Complete Phase 1: Setup (T001-T005)                                                     
-  ☒ Complete Phase 2: Foundational (T006-T009)                                                 
-  ☒ Complete Phase 3: User Story 1 - Tests (T010-T016)                                               
-  ☒ Complete Phase 3: User Story 1 - Implementation (T017-T025)                                               
-  ☒ Complete Phase 4: User Story 2 - Tests (T026-T031)                                               
-  ☒ Complete Phase 4: User Story 2 - Implementation (T032-T038)                                               
-  ☐ Complete Phase 5: User Story 3 - Tests (T039-T043)                                               
-  ☐ Complete Phase 5: User Story 3 - Implementation (T044-T050)                                               
-  ☐ Complete Phase 6: Polish & Cross-Cutting (T051-T058)       
+ Excellent! You have several devices available. Let me create a quick reference card: 
+
+⏺ Bash(cat > TESTING_QUICKREF.md << 'EOF' 
+ # Testing Quick Reference - Main Screen Feature…) 
+⎿  # Testing Quick Reference - Main Screen Feature 
+
+## ✅ Current Status 
+… +182 lines (ctrl+o to expand) 
+
+⏺ Testing Help Summary 
+
+I've created comprehensive testing documentation for you! Here's what you have: 
+
+📄 Documentation Created
+
+1. test_guide.md - Complete testing guide with: 
+ - All test commands 
+ - Manual test scenarios (10 detailed scenarios)
+ - Debugging tips 
+ - Performance testing with DevTools 
+ - CI/CD integration examples
+2. TESTING_QUICKREF.md - Quick reference card with:
+ - Current status (66 tests passing) 
+ - Most common commands
+ - 2-minute smoke test checklist
+ - Troubleshooting guide
+ - File locations 
+
+🎯 To Test Right Now 
+
+Option 1: Run All Tests (30 seconds) 
+flutter test 
+
+Option 2: Launch App on iOS Simulator (recommended)
+flutter run -d 19EA67E6-6120-45A9-8D83-1A007D0306AA
+
+Option 3: Launch on Your Physical iPhone
+flutter run -d 00008140-0005185602DB001C
+
+✅ What's Working
+
+All 66 tests pass covering:
+- ✓ Email validation (11 unit tests) 
+- ✓ All widgets (49 widget tests)
+- ✓ Navigation flows (6 integration tests) 
+
+The main authentication screen is fully functional with:
+- Email/password inputs with validation 
+- Password visibility toggle 
+- Sign In, OAuth, and navigation buttons
+- Error handling
+- Accessibility (WCAG 2.1 Level AA)
+
+🔍 Quick Smoke Test
+
+After launching the app:
+1. Try entering "invalid" in email field → see error 
+2. Enter "user@test.com" → error clears 
+3. Tap password field, type "test123" 
+4. Tap eye icon → password toggles visibility 
+5. Scroll down, tap "Create Account" → navigates
+6. Tap "Continue as Guest" → navigates
+
+Want me to help you: 
+- Run a specific test?
+- Launch the app on a particular device?
+- Generate a coverage report? 
+- Explain any test in detail? 
+
+Just let me know what you'd like to explore! 
+
+Todos 
+☒ Complete Phase 1: Setup (T001-T005) 
+☒ Complete Phase 2: Foundational (T006-T009) 
+☒ Complete Phase 3: User Story 1 - Tests (T010-T016) 
+☒ Complete Phase 3: User Story 1 - Implementation (T017-T025) 
+☒ Complete Phase 4: User Story 2 - Tests (T026-T031) 
+☒ Complete Phase 4: User Story 2 - Implementation (T032-T038) 
+☐ Complete Phase 5: User Story 3 - Tests (T039-T043) 
+☐ Complete Phase 5: User Story 3 - Implementation (T044-T050) 
+☐ Complete Phase 6: Polish & Cross-Cutting (T051-T058) 

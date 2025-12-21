@@ -8,10 +8,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: TextLink(
-              text: 'Forgot Password?',
-              onPressed: () {},
-            ),
+            body: TextLink(text: 'Forgot Password?', onPressed: () {}),
           ),
         ),
       );
@@ -45,10 +42,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: TextLink(
-              text: 'Link',
-              onPressed: () {},
-            ),
+            body: TextLink(text: 'Link', onPressed: () {}),
           ),
         ),
       );
@@ -74,14 +68,13 @@ void main() {
       expect(find.bySemanticsLabel('Forgot password link'), findsOneWidget);
     });
 
-    testWidgets('displays with default semantic label when not provided', (tester) async {
+    testWidgets('displays with default semantic label when not provided', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: TextLink(
-              text: 'Create Account',
-              onPressed: () {},
-            ),
+            body: TextLink(text: 'Create Account', onPressed: () {}),
           ),
         ),
       );
@@ -96,14 +89,8 @@ void main() {
           home: Scaffold(
             body: Column(
               children: [
-                TextLink(
-                  text: 'Forgot Password?',
-                  onPressed: () {},
-                ),
-                TextLink(
-                  text: 'Create Account',
-                  onPressed: () {},
-                ),
+                TextLink(text: 'Forgot Password?', onPressed: () {}),
+                TextLink(text: 'Create Account', onPressed: () {}),
               ],
             ),
           ),

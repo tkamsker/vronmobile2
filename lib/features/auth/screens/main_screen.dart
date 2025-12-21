@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vronmobile2/core/config/env_config.dart';
 import 'package:vronmobile2/core/constants/app_strings.dart';
 import 'package:vronmobile2/core/navigation/routes.dart';
 import 'package:vronmobile2/features/auth/widgets/email_input.dart';
@@ -70,39 +72,51 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _handleSignIn() async {
+    if (kDebugMode) print('🔘 [UI] Sign In button pressed');
+
     if (_formKey.currentState?.validate() ?? false) {
+      if (kDebugMode) print('✅ [UI] Form validation passed');
+
       setState(() {
         _isSignInLoading = true;
       });
 
       try {
+        if (kDebugMode) print('📡 [UI] Calling authentication service...');
+
         // Call authentication service
         final result = await _authService.login(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
 
+        if (kDebugMode) {
+          print(
+            '📡 [UI] Authentication service returned: ${result.isSuccess ? "SUCCESS" : "FAILURE"}',
+          );
+        }
+
         if (!mounted) return;
 
         if (result.isSuccess) {
-          // Login successful - show success message
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Login successful!'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
+          if (kDebugMode)
+            print('✅ [UI] Login successful - navigating to home screen');
 
-          // TODO: Navigate to home screen after successful login
-          // For now, just clear the form
-          _emailController.clear();
-          _passwordController.clear();
+          final userEmail = result.data?['email'] as String?;
+
+          // Navigate to home screen and remove login screen from stack
+          Navigator.of(
+            context,
+          ).pushReplacementNamed(AppRoutes.home, arguments: userEmail);
+
+          if (kDebugMode) print('✅ [UI] Navigated to home screen');
         } else {
+          if (kDebugMode) print('❌ [UI] Login failed: ${result.error}');
           // Login failed - show error message
           _showError(result.error ?? 'Login failed');
         }
       } catch (e) {
+        if (kDebugMode) print('❌ [UI] Unexpected error: ${e.toString()}');
         if (mounted) {
           _showError('Unexpected error: ${e.toString()}');
         }
@@ -113,6 +127,8 @@ class _MainScreenState extends State<MainScreen> {
           });
         }
       }
+    } else {
+      if (kDebugMode) print('❌ [UI] Form validation failed');
     }
   }
 
@@ -147,7 +163,8 @@ class _MainScreenState extends State<MainScreen> {
   Future<void> _handleForgotPassword() async {
     // T035: Implement forgot password flow (UC5)
     // Opens browser to password reset page
-    final url = Uri.parse('https://vron.one/forgot-password');
+    final baseUrl = EnvConfig.merchantUrl;
+    final url = Uri.parse('$baseUrl/auth/forgot-password');
 
     try {
       if (await canLaunchUrl(url)) {

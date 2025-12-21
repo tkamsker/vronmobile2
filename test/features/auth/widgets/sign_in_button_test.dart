@@ -8,10 +8,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: SignInButton(
-              onPressed: () {},
-              isLoading: false,
-            ),
+            body: SignInButton(onPressed: () {}, isLoading: false),
           ),
         ),
       );
@@ -44,12 +41,7 @@ void main() {
     testWidgets('is disabled when onPressed is null', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: SignInButton(
-              onPressed: null,
-              isLoading: false,
-            ),
-          ),
+          home: Scaffold(body: SignInButton(onPressed: null, isLoading: false)),
         ),
       );
 
@@ -57,15 +49,12 @@ void main() {
       expect(button.onPressed, isNull);
     });
 
-    testWidgets('shows loading indicator when isLoading is true', (tester) async {
+    testWidgets('shows loading indicator when isLoading is true', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: SignInButton(
-              onPressed: () {},
-              isLoading: true,
-            ),
-          ),
+          home: Scaffold(body: SignInButton(onPressed: () {}, isLoading: true)),
         ),
       );
 
@@ -73,14 +62,13 @@ void main() {
       expect(find.text('Sign In'), findsNothing);
     });
 
-    testWidgets('does not show loading indicator when isLoading is false', (tester) async {
+    testWidgets('does not show loading indicator when isLoading is false', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: SignInButton(
-              onPressed: () {},
-              isLoading: false,
-            ),
+            body: SignInButton(onPressed: () {}, isLoading: false),
           ),
         ),
       );
@@ -92,12 +80,7 @@ void main() {
     testWidgets('is disabled when isLoading is true', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: SignInButton(
-              onPressed: () {},
-              isLoading: true,
-            ),
-          ),
+          home: Scaffold(body: SignInButton(onPressed: () {}, isLoading: true)),
         ),
       );
 
@@ -109,10 +92,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: SignInButton(
-              onPressed: () {},
-              isLoading: false,
-            ),
+            body: SignInButton(onPressed: () {}, isLoading: false),
           ),
         ),
       );
@@ -125,10 +105,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: SignInButton(
-              onPressed: () {},
-              isLoading: false,
-            ),
+            body: SignInButton(onPressed: () {}, isLoading: false),
           ),
         ),
       );

@@ -1,4 +1,3 @@
-import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:vronmobile2/features/auth/services/auth_service.dart';
@@ -34,6 +33,7 @@ class MockGraphQLService extends GraphQLService {
 class MockTokenStorage extends TokenStorage {
   String? _accessToken;
   String? _refreshToken;
+  String? _authCode;
 
   @override
   Future<void> saveAccessToken(String token) async {
@@ -56,6 +56,16 @@ class MockTokenStorage extends TokenStorage {
   }
 
   @override
+  Future<void> saveAuthCode(String authCode) async {
+    _authCode = authCode;
+  }
+
+  @override
+  Future<String?> getAuthCode() async {
+    return _authCode;
+  }
+
+  @override
   Future<void> saveTokens({
     required String accessToken,
     String? refreshToken,
@@ -68,6 +78,7 @@ class MockTokenStorage extends TokenStorage {
   Future<void> deleteAllTokens() async {
     _accessToken = null;
     _refreshToken = null;
+    _authCode = null;
   }
 
   @override
@@ -87,13 +98,9 @@ void main() {
 
     // Valid GraphQL document for mocking
     final mockDocument = gql('''
-      mutation Login(\$email: String!, \$password: String!) {
-        login(email: \$email, password: \$password) {
-          token
-          user {
-            id
-            email
-          }
+      mutation SignIn(\$input: SignInInput!) {
+        signIn(input: \$input) {
+          accessToken
         }
       }
     ''');
@@ -108,16 +115,10 @@ void main() {
     });
 
     group('login', () {
-      test('successful login stores token and returns user data', () async {
+      test('successful login stores token and AUTH_CODE', () async {
         // Arrange
         final mockData = {
-          'login': {
-            'token': 'test-access-token',
-            'user': {
-              'id': '123',
-              'email': 'user@example.com',
-            },
-          },
+          'signIn': {'accessToken': 'test-access-token'},
         };
 
         mockGraphQLService.mockResult = QueryResult(
@@ -134,12 +135,16 @@ void main() {
 
         // Assert
         expect(result.isSuccess, true);
-        expect(result.data?['id'], '123');
         expect(result.data?['email'], 'user@example.com');
 
-        // Verify token was stored
+        // Verify access token was stored
         final storedToken = await mockTokenStorage.getAccessToken();
         expect(storedToken, 'test-access-token');
+
+        // Verify AUTH_CODE was created and stored
+        final storedAuthCode = await mockTokenStorage.getAuthCode();
+        expect(storedAuthCode, isNotNull);
+        expect(storedAuthCode!.isNotEmpty, true);
       });
 
       test('login with invalid credentials returns error', () async {

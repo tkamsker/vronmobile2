@@ -3,6 +3,7 @@ import 'package:vronmobile2/core/theme/app_theme.dart';
 import 'package:vronmobile2/core/navigation/routes.dart';
 import 'package:vronmobile2/core/config/env_config.dart';
 import 'package:vronmobile2/features/auth/screens/main_screen.dart';
+import 'package:vronmobile2/features/home/screens/home_screen.dart';
 
 void main() async {
   // Ensure Flutter is initialized before loading environment
@@ -25,8 +26,14 @@ class VronApp extends StatelessWidget {
       initialRoute: AppRoutes.main,
       routes: {
         AppRoutes.main: (context) => const MainScreen(),
-        AppRoutes.createAccount: (context) => const PlaceholderScreen(title: 'Create Account'),
-        AppRoutes.guestMode: (context) => const PlaceholderScreen(title: 'Guest Mode'),
+        AppRoutes.home: (context) {
+          final email = ModalRoute.of(context)?.settings.arguments as String?;
+          return HomeScreen(userEmail: email);
+        },
+        AppRoutes.createAccount: (context) =>
+            const PlaceholderScreen(title: 'Create Account'),
+        AppRoutes.guestMode: (context) =>
+            const PlaceholderScreen(title: 'Guest Mode'),
       },
       debugShowCheckedModeBanner: false,
     );
@@ -42,9 +49,7 @@ class PlaceholderScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
+      appBar: AppBar(title: Text(title)),
       body: Center(
         child: Text(
           'Screen: $title\n(To be implemented)',

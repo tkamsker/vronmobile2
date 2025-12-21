@@ -6,11 +6,7 @@ class PasswordInput extends StatefulWidget {
   final TextEditingController controller;
   final FocusNode? focusNode;
 
-  const PasswordInput({
-    super.key,
-    required this.controller,
-    this.focusNode,
-  });
+  const PasswordInput({super.key, required this.controller, this.focusNode});
 
   @override
   State<PasswordInput> createState() => _PasswordInputState();
@@ -32,9 +28,7 @@ class _PasswordInputState extends State<PasswordInput> {
           labelText: AppStrings.passwordLabel,
           hintText: AppStrings.passwordHint,
           suffixIcon: IconButton(
-            icon: Icon(
-              _isObscured ? Icons.visibility : Icons.visibility_off,
-            ),
+            icon: Icon(_isObscured ? Icons.visibility : Icons.visibility_off),
             onPressed: () {
               setState(() {
                 _isObscured = !_isObscured;

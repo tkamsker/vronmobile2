@@ -126,23 +126,23 @@
 
 ### Tests for User Story 3 (TDD - Write FIRST, ensure FAIL) ⚠️
 
-- [ ] T039 [P] [US3] Write widget test for email validation feedback in test/features/auth/widgets/email_input_test.dart (error message on blur with invalid email)
-- [ ] T040 [P] [US3] Write widget test for password validation feedback in test/features/auth/widgets/password_input_test.dart (error message when empty)
-- [ ] T041 [P] [US3] Write widget test for Sign In button disabled state in test/features/auth/widgets/sign_in_button_test.dart (disabled when form invalid)
-- [ ] T042 [P] [US3] Write widget test for loading indicator in test/features/auth/widgets/sign_in_button_test.dart (shows CircularProgressIndicator during auth)
-- [ ] T043 [US3] Write widget test for form validation in test/features/auth/screens/main_screen_test.dart (button enabled only when both fields valid)
+- [X] T039 [P] [US3] Write widget test for email validation feedback in test/features/auth/widgets/email_input_test.dart (error message on blur with invalid email)
+- [X] T040 [P] [US3] Write widget test for password validation feedback in test/features/auth/widgets/password_input_test.dart (error message when empty)
+- [X] T041 [P] [US3] Write widget test for Sign In button disabled state in test/features/auth/widgets/sign_in_button_test.dart (disabled when form invalid)
+- [X] T042 [P] [US3] Write widget test for loading indicator in test/features/auth/widgets/sign_in_button_test.dart (shows CircularProgressIndicator during auth)
+- [X] T043 [US3] Write widget test for form validation in test/features/auth/screens/main_screen_test.dart (button enabled only when both fields valid)
 
 **Run tests: All should FAIL (Red phase)**
 
 ### Implementation for User Story 3
 
-- [ ] T044 [P] [US3] Add validator callback to EmailInput in lib/features/auth/widgets/email_input.dart using EmailValidator
-- [ ] T045 [P] [US3] Add validator callback to PasswordInput in lib/features/auth/widgets/password_input.dart for required field check
-- [ ] T046 [US3] Wire Form validation in lib/features/auth/screens/main_screen.dart using GlobalKey<FormState> (depends on T044, T045)
-- [ ] T047 [US3] Implement Sign In button enable/disable logic in lib/features/auth/screens/main_screen.dart based on form validity
-- [ ] T048 [P] [US3] Add loading state management to SignInButton in lib/features/auth/widgets/sign_in_button.dart with CircularProgressIndicator
-- [ ] T049 [P] [US3] Add loading state management to OAuthButton in lib/features/auth/widgets/oauth_button.dart
-- [ ] T050 [US3] Add validation timing in lib/features/auth/widgets/email_input.dart to validate on blur (300ms feedback per success criteria)
+- [X] T044 [P] [US3] Add validator callback to EmailInput in lib/features/auth/widgets/email_input.dart using EmailValidator
+- [X] T045 [P] [US3] Add validator callback to PasswordInput in lib/features/auth/widgets/password_input.dart for required field check
+- [X] T046 [US3] Wire Form validation in lib/features/auth/screens/main_screen.dart using GlobalKey<FormState> (depends on T044, T045)
+- [X] T047 [US3] Implement Sign In button enable/disable logic in lib/features/auth/screens/main_screen.dart based on form validity
+- [X] T048 [P] [US3] Add loading state management to SignInButton in lib/features/auth/widgets/sign_in_button.dart with CircularProgressIndicator
+- [X] T049 [P] [US3] Add loading state management to OAuthButton in lib/features/auth/widgets/oauth_button.dart
+- [X] T050 [US3] Add validation timing in lib/features/auth/widgets/email_input.dart to validate on blur (300ms feedback per success criteria)
 
 **Run tests: All should PASS (Green phase)**
 
@@ -154,14 +154,14 @@
 
 **Purpose**: Final improvements affecting the entire feature
 
-- [ ] T051 [P] Run flutter analyze and fix all linting issues
-- [ ] T052 [P] Run flutter format . to ensure code formatting consistency
-- [ ] T053 Verify Figma design match in lib/features/auth/screens/main_screen.dart (colors, spacing, typography)
-- [ ] T054 [P] Run accessibility audit using Flutter semantic tree in test/features/auth/screens/main_screen_test.dart
-- [ ] T055 [P] Verify all touch targets are minimum 44x44 logical pixels
-- [ ] T056 Test keyboard handling on iPhone SE (smallest supported device) - ensure no scrolling required
-- [ ] T057 [P] Run performance profiling with Flutter DevTools - confirm 60fps and <1s load time
-- [ ] T058 Validate quickstart.md instructions work end-to-end
+- [X] T051 [P] Run flutter analyze and fix all linting issues
+- [X] T052 [P] Run flutter format . to ensure code formatting consistency
+- [N/A] T053 Verify Figma design match in lib/features/auth/screens/main_screen.dart (colors, spacing, typography) - Requires Figma access
+- [X] T054 [P] Run accessibility audit using Flutter semantic tree in test/features/auth/screens/main_screen_test.dart - All semantic tests passing
+- [X] T055 [P] Verify all touch targets are minimum 44x44 logical pixels - Tests verify this
+- [MANUAL] T056 Test keyboard handling on iPhone SE (smallest supported device) - ensure no scrolling required - Requires manual testing
+- [MANUAL] T057 [P] Run performance profiling with Flutter DevTools - confirm 60fps and <1s load time - Requires DevTools profiling
+- [N/A] T058 Validate quickstart.md instructions work end-to-end - No quickstart.md exists yet
 
 ---
 

@@ -9,33 +9,32 @@ class GraphQLService {
   GraphQLClient? _client;
 
   GraphQLService({TokenStorage? tokenStorage})
-      : _tokenStorage = tokenStorage ?? TokenStorage();
+    : _tokenStorage = tokenStorage ?? TokenStorage();
 
   /// Gets or creates the GraphQL client
-  /// Configures authentication header if token is available
+  /// Configures authentication header with AUTH_CODE if available
+  /// Also adds X-VRon-Platform header for merchant platform
   Future<GraphQLClient> getClient() async {
     if (_client != null) {
       return _client!;
     }
 
-    // Get access token if available
-    final token = await _tokenStorage.getAccessToken();
+    // Get AUTH_CODE if available
+    final authCode = await _tokenStorage.getAuthCode();
 
-    // Configure HTTP link
+    // Configure HTTP link with headers
     final httpLink = HttpLink(
       EnvConfig.graphqlEndpoint,
+      defaultHeaders: {'X-VRon-Platform': 'merchants'},
     );
 
-    // Configure auth link if token exists
-    AuthLink? authLink;
-    if (token != null && token.isNotEmpty) {
-      authLink = AuthLink(
-        getToken: () async => 'Bearer $token',
-      );
-    }
+    Link link = httpLink;
 
-    // Combine links
-    final Link link = authLink != null ? authLink.concat(httpLink) : httpLink;
+    // Configure auth link if AUTH_CODE exists
+    if (authCode != null && authCode.isNotEmpty) {
+      final authLink = AuthLink(getToken: () async => 'Bearer $authCode');
+      link = authLink.concat(httpLink);
+    }
 
     // Create client
     _client = GraphQLClient(
@@ -60,10 +59,7 @@ class GraphQLService {
   }) async {
     final client = await getClient();
     return await client.query(
-      QueryOptions(
-        document: gql(query),
-        variables: variables ?? {},
-      ),
+      QueryOptions(document: gql(query), variables: variables ?? {}),
     );
   }
 
@@ -74,10 +70,7 @@ class GraphQLService {
   }) async {
     final client = await getClient();
     return await client.mutate(
-      MutationOptions(
-        document: gql(mutation),
-        variables: variables ?? {},
-      ),
+      MutationOptions(document: gql(mutation), variables: variables ?? {}),
     );
   }
 }
