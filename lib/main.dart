@@ -7,6 +7,7 @@ import 'package:vronmobile2/features/auth/screens/main_screen.dart';
 import 'package:vronmobile2/features/home/screens/home_screen.dart';
 import 'package:vronmobile2/features/profile/screens/language_screen.dart';
 import 'package:vronmobile2/features/profile/screens/profile_screen.dart';
+import 'package:vronmobile2/features/projects/screens/project_detail_screen.dart';
 
 void main() async {
   // Ensure Flutter is initialized before loading environment
@@ -44,8 +45,13 @@ class VronApp extends StatelessWidget {
             const PlaceholderScreen(title: 'Create Account'),
         AppRoutes.guestMode: (context) =>
             const PlaceholderScreen(title: 'Guest Mode'),
-        AppRoutes.projectDetail: (context) =>
-            const PlaceholderScreen(title: 'Project Detail'),
+        AppRoutes.projectDetail: (context) {
+          final projectId = ModalRoute.of(context)?.settings.arguments as String?;
+          if (projectId == null) {
+            return const PlaceholderScreen(title: 'Error: No project ID');
+          }
+          return ProjectDetailScreen(projectId: projectId);
+        },
         AppRoutes.createProject: (context) =>
             const PlaceholderScreen(title: 'Create Project'),
         AppRoutes.lidar: (context) =>
