@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vronmobile2/core/i18n/i18n_service.dart';
 
 /// Bottom navigation bar with Home, Projects, LiDAR, and Profile tabs
 class BottomNavBar extends StatelessWidget {
@@ -24,11 +25,23 @@ class BottomNavBar extends StatelessWidget {
         fontWeight: FontWeight.w600,
       ),
       unselectedLabelStyle: const TextStyle(fontSize: 12),
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-        BottomNavigationBarItem(icon: Icon(Icons.folder), label: 'Projects'),
-        BottomNavigationBarItem(icon: Icon(Icons.camera_alt), label: 'LiDAR'),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+      items: [
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.home),
+          label: 'navigation.home'.tr(),
+        ),
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.folder),
+          label: 'navigation.projects'.tr(),
+        ),
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.camera_alt),
+          label: 'navigation.lidar'.tr(),
+        ),
+        BottomNavigationBarItem(
+          icon: const Icon(Icons.person),
+          label: 'navigation.profile'.tr(),
+        ),
       ],
     );
   }

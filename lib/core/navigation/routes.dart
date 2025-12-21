@@ -21,4 +21,5 @@ class AppRoutes {
   // Main app routes
   static const String lidar = '/lidar';
   static const String profile = '/profile';
+  static const String language = '/language';
 }
