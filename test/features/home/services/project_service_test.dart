@@ -406,5 +406,79 @@ void main() {
         expect(projects, isEmpty);
       });
     });
+
+    // T014-T015: Tests for getProjectDetail method (TDD - these should FAIL initially)
+    group('getProjectDetail', () {
+      test('T014: returns project details on successful API call', () async {
+        // Arrange
+        final mockData = {
+          'project': {
+            'id': 'proj_123',
+            'slug': 'marketing-analytics',
+            'name': {'text': 'Marketing Analytics'},
+            'description': {'text': 'Comprehensive analytics dashboard for marketing campaigns'},
+            'imageUrl': 'https://cdn.vron.one/projects/proj_123/thumbnail.jpg',
+            'isLive': true,
+            'liveDate': '2025-12-20T10:30:00Z',
+            'subscription': {
+              'isActive': true,
+              'isTrial': false,
+              'status': 'ACTIVE',
+              'canChoosePlan': false,
+              'hasExpired': false,
+              'currency': 'EUR',
+              'price': 29.99,
+              'renewalInterval': 'MONTHLY',
+              'startedAt': '2025-12-20T10:30:00Z',
+              'expiresAt': '2026-01-20T10:30:00Z',
+              'renewsAt': '2026-01-20T10:30:00Z',
+              'prices': {'currency': 'EUR', 'monthly': 29.99, 'yearly': 299.99},
+            },
+          },
+        };
+
+        mockGraphQLService.mockResult = QueryResult(
+          data: mockData,
+          source: QueryResultSource.network,
+          options: QueryOptions(document: mockDocument),
+        );
+
+        // Act
+        final project = await projectService.getProjectDetail('proj_123');
+
+        // Assert
+        expect(project.id, 'proj_123');
+        expect(project.slug, 'marketing-analytics');
+        expect(project.name, 'Marketing Analytics');
+        expect(project.description, 'Comprehensive analytics dashboard for marketing campaigns');
+        expect(project.imageUrl, 'https://cdn.vron.one/projects/proj_123/thumbnail.jpg');
+        expect(project.isLive, true);
+        expect(project.subscription.isActive, true);
+        expect(project.subscription.status, 'ACTIVE');
+      });
+
+      test('T015: throws exception on GraphQL error', () async {
+        // Arrange
+        mockGraphQLService.mockResult = QueryResult(
+          data: null,
+          source: QueryResultSource.network,
+          options: QueryOptions(document: mockDocument),
+          exception: OperationException(
+            graphqlErrors: [
+              GraphQLError(
+                message: 'Project not found',
+                extensions: {'code': 'NOT_FOUND'},
+              ),
+            ],
+          ),
+        );
+
+        // Act & Assert
+        expect(
+          () => projectService.getProjectDetail('invalid_id'),
+          throwsA(isA<Exception>()),
+        );
+      });
+    });
   });
 }
