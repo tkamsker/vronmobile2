@@ -34,6 +34,14 @@ class VronApp extends StatelessWidget {
             const PlaceholderScreen(title: 'Create Account'),
         AppRoutes.guestMode: (context) =>
             const PlaceholderScreen(title: 'Guest Mode'),
+        AppRoutes.projectDetail: (context) =>
+            const PlaceholderScreen(title: 'Project Detail'),
+        AppRoutes.createProject: (context) =>
+            const PlaceholderScreen(title: 'Create Project'),
+        AppRoutes.lidar: (context) =>
+            const PlaceholderScreen(title: 'LiDAR Scanner'),
+        AppRoutes.profile: (context) =>
+            const PlaceholderScreen(title: 'Profile'),
       },
       debugShowCheckedModeBanner: false,
     );

@@ -13,8 +13,8 @@
 
 # --- Configuration ---
 GRAPHQL_ENDPOINT="https://api.vron.stage.motorenflug.at/graphql"
-DEFAULT_EMAIL="rusuandreicristian+10@gmail.com"
-DEFAULT_PASSWORD="QuackQuackIAmADuck"
+DEFAULT_EMAIL="tkamsker@gmail.com"
+DEFAULT_PASSWORD="Test123!"
 X_VRON_PLATFORM_HEADER="merchants"
 
 # Use provided credentials or defaults

@@ -1,0 +1,297 @@
+# Tasks: Home Screen - Project List
+
+**Input**: Design screenshot from `/Requirements/Projectlist.jpg` and spec from `/specs/002-home-screen-projects/spec.md`
+**Prerequisites**: Authentication complete (001-main-screen-login), GraphQL service available
+
+**Tests**: Test-First Development is MANDATORY per constitution. All tests MUST be written and FAIL before implementation.
+
+**Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
+
+## Format: `[ID] [P?] [Story] Description`
+
+- **[P]**: Can run in parallel (different files, no dependencies)
+- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3, US4)
+- Include exact file paths in descriptions
+
+## Path Conventions
+
+- **Mobile (Flutter)**: `lib/` for source code, `test/` for tests at repository root
+- File structure follows feature-based organization per plan.md
+
+---
+
+## Phase 1: Setup (Shared Infrastructure)
+
+**Purpose**: Project initialization and directory structure for home screen feature
+
+- [ ] T101 Create feature directory structure lib/features/home/ with subdirectories: screens/, widgets/, services/, models/
+- [ ] T102 [P] Create test directory structure test/features/home/ with subdirectories: screens/, widgets/, services/, models/
+- [ ] T103 [P] Add required dependencies to pubspec.yaml: cached_network_image (^3.3.0), intl (^0.18.1)
+- [ ] T104 [P] Create i18n directory structure lib/core/i18n/ with files for en, de, pt translations
+
+---
+
+## Phase 2: Data Models & Services (Blocking Prerequisites)
+
+**Purpose**: Core data structures and API integration that MUST be complete before ANY user story can be implemented
+
+**⚠️ CRITICAL**: No user story work can begin until this phase is complete
+
+- [ ] T105 Create Project model in lib/features/home/models/project.dart with fields: id, title, description, status, imageUrl, updatedAt, teamInfo
+- [ ] T106 [P] Create ProjectStatus enum in lib/features/home/models/project_status.dart (Active, Paused, Archived)
+- [ ] T107 Create ProjectService in lib/features/home/services/project_service.dart with GraphQL query for fetching projects
+- [ ] T108 [P] Add projects query to GraphQL schema documentation
+- [ ] T109 Update GraphQLService in lib/core/services/graphql_service.dart to handle authenticated requests
+
+**Checkpoint**: Data layer ready - user story implementation can now begin in parallel
+
+---
+
+## Phase 3: User Story 1 - View Project List (Priority: P1) 🎯 MVP
+
+**Goal**: Display home screen with project list, bottom navigation, and all UI elements matching design
+
+**Independent Test**: Launch app after login, verify all UI elements visible and projects load from API
+
+### Tests for User Story 1 (TDD - Write FIRST, ensure FAIL) ⚠️
+
+> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
+
+- [ ] T110 [P] [US1] Write unit tests for Project model in test/features/home/models/project_test.dart (fromJson, toJson, equality)
+- [ ] T111 [P] [US1] Write unit tests for ProjectService in test/features/home/services/project_service_test.dart (fetchProjects success, error handling)
+- [ ] T112 [P] [US1] Write widget test for ProjectCard in test/features/home/widgets/project_card_test.dart (displays all fields, image loading, status badge colors)
+- [ ] T113 [P] [US1] Write widget test for BottomNavBar in test/features/home/widgets/bottom_nav_bar_test.dart (displays all tabs, active state, tap behavior)
+- [ ] T114 [P] [US1] Write widget test for FloatingActionButton in test/features/home/widgets/floating_action_button_test.dart (displays, tap behavior)
+- [ ] T115 [US1] Write widget test for HomeScreen in test/features/home/screens/home_screen_test.dart (all elements present, layout matches design, loading states)
+- [ ] T116 [US1] Write integration test for project list loading in test/integration/home_screen_test.dart (API call, data display, error handling)
+
+**Run tests: All should FAIL (Red phase)**
+
+### Implementation for User Story 1
+
+- [ ] T117 [P] [US1] Implement Project model in lib/features/home/models/project.dart with JSON serialization
+- [ ] T118 [P] [US1] Implement ProjectStatus enum in lib/features/home/models/project_status.dart with color mappings
+- [ ] T119 [P] [US1] Implement ProjectService in lib/features/home/services/project_service.dart with GraphQL query
+- [ ] T120 [P] [US1] Create ProjectCard widget in lib/features/home/widgets/project_card.dart with image, title, status, description, metadata
+- [ ] T121 [P] [US1] Create BottomNavBar widget in lib/features/home/widgets/bottom_nav_bar.dart with Home, Projects, LiDAR, Profile tabs
+- [ ] T122 [P] [US1] Create custom FloatingActionButton widget in lib/features/home/widgets/custom_fab.dart
+- [ ] T123 [US1] Compose HomeScreen in lib/features/home/screens/home_screen.dart using all widgets (depends on T120-T122)
+- [ ] T124 [US1] Add semantic labels to all widgets for screen reader accessibility
+- [ ] T125 [US1] Implement loading state with skeleton screens or progress indicators
+- [ ] T126 [US1] Implement error state with retry button
+- [ ] T127 [US1] Implement empty state when no projects exist
+- [ ] T128 [US1] Update navigation in lib/features/auth/screens/main_screen.dart to navigate to HomeScreen after login
+
+**Run tests: All should PASS (Green phase)**
+
+**Checkpoint**: At this point, User Story 1 should be fully functional - home screen displays with projects loaded from API
+
+---
+
+## Phase 4: User Story 2 - Search and Filter Projects (Priority: P2)
+
+**Goal**: Enable search and filtering functionality to help users find projects quickly
+
+**Independent Test**: Enter search queries and toggle filters, verify project list updates correctly
+
+### Tests for User Story 2 (TDD - Write FIRST, ensure FAIL) ⚠️
+
+- [ ] T129 [P] [US2] Write widget test for SearchBar in test/features/home/widgets/search_bar_test.dart (displays, focus behavior, text input)
+- [ ] T130 [P] [US2] Write widget test for FilterTabs in test/features/home/widgets/filter_tabs_test.dart (displays all tabs, active state, tap behavior)
+- [ ] T131 [P] [US2] Write unit tests for search logic in test/features/home/screens/home_screen_test.dart (case-insensitive matching, real-time updates)
+- [ ] T132 [P] [US2] Write unit tests for filter logic in test/features/home/screens/home_screen_test.dart (All, Active, Archived filters work correctly)
+- [ ] T133 [US2] Write integration test for search and filter in test/integration/home_screen_test.dart (search updates list, filters work, combined search+filter)
+
+**Run tests: All should FAIL (Red phase)**
+
+### Implementation for User Story 2
+
+- [ ] T134 [P] [US2] Create SearchBar widget in lib/features/home/widgets/search_bar.dart with text input and clear button
+- [ ] T135 [P] [US2] Create FilterTabs widget in lib/features/home/widgets/filter_tabs.dart with All, Active, Archived, Sort tabs
+- [ ] T136 [US2] Implement search logic in lib/features/home/screens/home_screen.dart (filter projects by title)
+- [ ] T137 [US2] Implement filter logic in lib/features/home/screens/home_screen.dart (filter by status)
+- [ ] T138 [US2] Add state management for search query and active filter in lib/features/home/screens/home_screen.dart
+- [ ] T139 [US2] Implement no results state when search returns empty
+- [ ] T140 [US2] Add search and filter UI to HomeScreen layout
+
+**Run tests: All should PASS (Green phase)**
+
+**Checkpoint**: At this point, User Stories 1 AND 2 work - home screen displays and search/filter functionality works
+
+---
+
+## Phase 5: User Story 3 - Navigate to Project and App Sections (Priority: P2)
+
+**Goal**: Enable navigation from home screen to project details and other app sections
+
+**Independent Test**: Tap project cards and navigation tabs, verify correct navigation occurs
+
+### Tests for User Story 3 (TDD - Write FIRST, ensure FAIL) ⚠️
+
+- [ ] T141 [P] [US3] Write integration test for project navigation in test/integration/home_screen_test.dart (tap "Enter project" navigates correctly)
+- [ ] T142 [P] [US3] Write integration test for bottom nav in test/integration/home_screen_test.dart (tap LiDAR, Profile tabs navigate correctly)
+- [ ] T143 [P] [US3] Write integration test for FAB in test/integration/home_screen_test.dart (tap + button navigates to create project)
+- [ ] T144 [US3] Write integration test for profile icon in test/integration/home_screen_test.dart (tap profile icon shows menu or navigates)
+
+**Run tests: All should FAIL (Red phase)**
+
+### Implementation for User Story 3
+
+- [ ] T145 [P] [US3] Implement "Enter project" button handler in lib/features/home/widgets/project_card.dart to navigate with project ID
+- [ ] T146 [P] [US3] Implement bottom nav tab handlers in lib/features/home/widgets/bottom_nav_bar.dart
+- [ ] T147 [P] [US3] Implement FAB handler in lib/features/home/screens/home_screen.dart to navigate to create project
+- [ ] T148 [P] [US3] Implement profile icon handler in lib/features/home/screens/home_screen.dart
+- [ ] T149 [US3] Create route definitions in lib/core/navigation/routes.dart for new screens (projectDetail, createProject, lidar, profile)
+- [ ] T150 [US3] Create placeholder screens for: ProjectDetailScreen, CreateProjectScreen, LidarScreen, ProfileScreen
+- [ ] T151 [US3] Register all routes in lib/main.dart
+
+**Run tests: All should PASS (Green phase)**
+
+**Checkpoint**: At this point, User Stories 1, 2 AND 3 work - full navigation functionality implemented
+
+---
+
+## Phase 6: User Story 4 - Internationalization (Priority: P3)
+
+**Goal**: Add multi-language support for all static text on home screen
+
+**Independent Test**: Change language setting, verify all text updates correctly
+
+### Tests for User Story 4 (TDD - Write FIRST, ensure FAIL) ⚠️
+
+- [ ] T152 [P] [US4] Write unit tests for i18n service in test/core/i18n/i18n_service_test.dart (load translations, get text, change language)
+- [ ] T153 [P] [US4] Write widget tests for HomeScreen in different languages in test/features/home/screens/home_screen_i18n_test.dart
+- [ ] T154 [US4] Write integration test for language switching in test/integration/home_screen_test.dart
+
+**Run tests: All should FAIL (Red phase)**
+
+### Implementation for User Story 4
+
+- [ ] T155 [P] [US4] Create translation files: lib/core/i18n/en.json, lib/core/i18n/de.json, lib/core/i18n/pt.json
+- [ ] T156 [P] [US4] Add all home screen strings to translation files (heading, subtitle, search placeholder, filter labels, button text)
+- [ ] T157 [US4] Create i18n service in lib/core/i18n/i18n_service.dart to load and manage translations
+- [ ] T158 [US4] Update HomeScreen to use i18n service for all static text
+- [ ] T159 [US4] Update all home screen widgets to use i18n service
+- [ ] T160 [US4] Implement locale formatting for timestamps (updatedAt) using intl package
+- [ ] T161 [US4] Add language detection from user auth or device locale in lib/main.dart
+
+**Run tests: All should PASS (Green phase)**
+
+**Checkpoint**: All user stories complete - full home screen with all functionality and internationalization
+
+---
+
+## Phase 7: Polish & Cross-Cutting Concerns
+
+**Purpose**: Final improvements affecting the entire feature
+
+- [ ] T162 [P] Implement pull-to-refresh functionality in lib/features/home/screens/home_screen.dart
+- [ ] T163 [P] Add image caching configuration for project thumbnails using cached_network_image
+- [ ] T164 [P] Implement progressive image loading with placeholders
+- [ ] T165 [P] Add haptic feedback to interactive elements
+- [ ] T166 [P] Run flutter analyze and fix all linting issues
+- [ ] T167 [P] Run flutter format . to ensure code formatting consistency
+- [ ] T168 [P] Run accessibility audit using Flutter semantic tree
+- [ ] T169 [P] Verify all touch targets are minimum 44x44 logical pixels
+- [ ] T170 Verify design match with Requirements/Projectlist.jpg (colors, spacing, typography)
+- [ ] T171 [P] Run performance profiling with Flutter DevTools - confirm 60fps and <2s load time
+- [ ] T172 Test on physical device with real API data
+
+---
+
+## Dependencies & Execution Order
+
+### Phase Dependencies
+
+- **Setup (Phase 1)**: No dependencies - can start immediately
+- **Data Models (Phase 2)**: Depends on Setup completion (T101-T104) - BLOCKS all user stories
+- **User Story 1 (Phase 3)**: Depends on Data Models (T105-T109) - No dependencies on other stories
+- **User Story 2 (Phase 4)**: Depends on User Story 1 (T117-T128) - Needs home screen to add search/filter
+- **User Story 3 (Phase 5)**: Depends on User Story 1 (T117-T128) - Needs home screen to add navigation
+- **User Story 4 (Phase 6)**: Depends on User Story 1 (T117-T128) - Adds i18n to existing UI
+- **Polish (Phase 7)**: Depends on all user stories (T110-T161) being complete
+
+### User Story Dependencies
+
+- **User Story 1 (P1)**: Independent - Can start after Data Models (Phase 2)
+- **User Story 2 (P2)**: Depends on US1 implementation (needs home screen to add search/filter)
+- **User Story 3 (P2)**: Depends on US1 implementation (needs home screen to add navigation)
+- **User Story 4 (P3)**: Depends on US1 implementation (needs home screen to add i18n)
+
+**Note**: US2, US3, and US4 could be implemented in parallel after US1 is done, as they modify different aspects.
+
+### Within Each User Story
+
+- **TDD Order**: Tests FIRST (marked T0XX), implementation SECOND (marked T0YY where YY > XX)
+- **Widget dependencies**: Models → Services → individual widgets → composed screen
+- **Tests are parallelizable**: All test files marked [P] can be written simultaneously
+- **Widgets are parallelizable**: Individual widget implementations marked [P] can be done simultaneously
+- **Screen composition**: HomeScreen depends on all widgets being complete
+
+### Parallel Opportunities
+
+- **Setup Phase**: All tasks (T101-T104) can run in parallel
+- **Data Models Phase**: Model, enum, service (T105-T108) can run in parallel
+- **US1 Tests**: All test files (T110-T116) can be written in parallel
+- **US1 Widgets**: Models, service, and all widgets (T117-T122) can be implemented in parallel
+- **US2 Tests**: All search/filter tests (T129-T133) can be written in parallel
+- **US2 Widgets**: SearchBar and FilterTabs (T134-T135) can be implemented in parallel
+- **US3 Tests**: All navigation tests (T141-T144) can be written in parallel
+- **US3 Navigation**: All handlers (T145-T148) can be implemented in parallel
+- **US4 Tests**: All i18n tests (T152-T154) can be written in parallel
+- **US4 Translations**: All translation files (T155-T156) can be created in parallel
+- **Polish Phase**: Most tasks (T162-T169) can run in parallel
+
+---
+
+## Implementation Strategy
+
+### MVP First (User Story 1 Only)
+
+1. Complete Phase 1: Setup (T101-T104)
+2. Complete Phase 2: Data Models (T105-T109) - CRITICAL checkpoint
+3. Write all US1 tests (T110-T116) - should FAIL
+4. Implement all US1 components (T117-T128) - tests should PASS
+5. **STOP and VALIDATE**: Launch app, login, verify home screen displays with projects
+6. Demo/review before proceeding to US2
+
+### Incremental Delivery
+
+1. Complete Setup + Data Models → Foundation ready
+2. Add User Story 1 (T110-T128) → Test independently → Demo (MVP!)
+3. Add User Story 2 (T129-T140) → Test independently → Demo (search/filter works)
+4. Add User Story 3 (T141-T151) → Test independently → Demo (navigation works)
+5. Add User Story 4 (T152-T161) → Test independently → Demo (i18n works)
+6. Polish (T162-T172) → Final QA → Deploy
+
+### Parallel Team Strategy
+
+With multiple developers:
+
+1. **Team completes Setup + Data Models together** (T101-T109)
+2. **US1 Split**:
+   - Developer A: Write all tests (T110-T116)
+   - Developer B: Implement models + service (T117-T119)
+   - Developer C: Implement widgets (T120-T122)
+   - Developer A: Compose screen after widgets ready (T123-T128)
+3. **After US1 Complete**:
+   - Developer A: User Story 2 (search/filter) (T129-T140)
+   - Developer B: User Story 3 (navigation) (T141-T151)
+   - Developer C: User Story 4 (i18n) (T152-T161)
+4. **Polish together** (T162-T172)
+
+---
+
+## Notes
+
+- **TDD is mandatory**: All tests MUST be written before implementation per constitution
+- **[P] tasks** = different files, no dependencies - can execute in parallel
+- **[US#] label** maps task to specific user story for traceability
+- Each user story is independently testable and delivers incremental value
+- **Red-Green-Refactor**: Write failing test → Implement minimal code → Refactor
+- Commit after each task or logical group (e.g., all US1 tests, all US1 widgets)
+- Stop at checkpoints to validate story independently before proceeding
+- All file paths are absolute from repository root
+- Design screenshot (Requirements/Projectlist.jpg) is source of truth for visual implementation
+- Authentication must be complete before home screen can be tested
+- GraphQL API must provide projects query with authentication support
