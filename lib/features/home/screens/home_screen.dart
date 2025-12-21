@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:vronmobile2/core/i18n/i18n_service.dart';
 import 'package:vronmobile2/core/navigation/routes.dart';
 import 'package:vronmobile2/features/home/models/project.dart';
 import 'package:vronmobile2/features/home/services/project_service.dart';
@@ -208,14 +209,14 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your projects',
+            'home.title'.tr(),
             style: Theme.of(
               context,
             ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
-            'Jump back into your workspace',
+            'home.subtitle'.tr(),
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
@@ -231,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
-          hintText: 'Search projects',
+          hintText: 'home.searchPlaceholder'.tr(),
           prefixIcon: const Icon(Icons.search),
           suffixIcon: _searchQuery.isNotEmpty
               ? IconButton(
@@ -277,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // TODO: Implement sort
             },
             icon: const Icon(Icons.sort),
-            label: const Text('Sort'),
+            label: Text('home.sort'.tr()),
           ),
         ],
       ),
@@ -286,8 +287,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildFilterChip(String label) {
     final isSelected = _selectedFilter == label;
+
+    // Translate label for display
+    String displayLabel;
+    switch (label) {
+      case 'All':
+        displayLabel = 'home.filterAll'.tr();
+        break;
+      case 'Active':
+        displayLabel = 'home.filterActive'.tr();
+        break;
+      case 'Archived':
+        displayLabel = 'home.filterArchived'.tr();
+        break;
+      default:
+        displayLabel = label;
+    }
+
     return FilterChip(
-      label: Text(label),
+      label: Text(displayLabel),
       selected: isSelected,
       onSelected: (selected) {
         if (selected) {
@@ -336,7 +354,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
             Text(
-              'Failed to load projects',
+              'home.loadingError'.tr(),
               style: Theme.of(context).textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
@@ -351,7 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _loadProjects,
-              child: const Text('Retry'),
+              child: Text('home.retry'.tr()),
             ),
           ],
         ),
@@ -369,15 +387,17 @@ class _HomeScreenState extends State<HomeScreen> {
             Icon(Icons.folder_open, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
-              _searchQuery.isNotEmpty ? 'No projects found' : 'No projects yet',
+              _searchQuery.isNotEmpty
+                  ? 'home.noResults'.tr()
+                  : 'home.noProjects'.tr(),
               style: Theme.of(context).textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               _searchQuery.isNotEmpty
-                  ? 'Try a different search term'
-                  : 'Create your first project to get started',
+                  ? 'home.noResultsMessage'.tr()
+                  : 'home.noProjectsMessage'.tr(),
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
@@ -388,7 +408,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ElevatedButton.icon(
                 onPressed: _handleCreateProject,
                 icon: const Icon(Icons.add),
-                label: const Text('Create Project'),
+                label: Text('home.createProject'.tr()),
               ),
             ],
           ],
@@ -407,13 +427,13 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Recent projects',
+                'home.recentProjects'.tr(),
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               Text(
-                '${_filteredProjects.length} total',
+                'home.totalCount'.tr(params: {'count': _filteredProjects.length}),
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
