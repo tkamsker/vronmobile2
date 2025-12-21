@@ -161,12 +161,22 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     );
   }
 
-  void _handleProjectDataTap(Project project) {
-    // TODO: Navigate to project data edit screen (feature 011)
-    // For now, show placeholder
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Navigate to Project Data for ${project.name}')),
+  Future<void> _handleProjectDataTap(Project project) async {
+    // Navigate to project data edit screen
+    final result = await Navigator.pushNamed(
+      context,
+      '/project-data',
+      arguments: {
+        'projectId': project.id,
+        'initialName': project.name,
+        'initialDescription': project.description,
+      },
     );
+
+    // If changes were saved, refresh the project data
+    if (result == true) {
+      _loadProject();
+    }
   }
 
   void _handleProductsTap(Project project) {
