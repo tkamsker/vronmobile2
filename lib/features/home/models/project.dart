@@ -6,6 +6,7 @@ class Project {
   final String id;
   final String slug;
   final String name;
+  final String description; // NEW: Long-form project description
   final String imageUrl;
   final bool isLive;
   final DateTime? liveDate;
@@ -15,6 +16,7 @@ class Project {
     required this.id,
     required this.slug,
     required this.name,
+    required this.description,
     required this.imageUrl,
     required this.isLive,
     this.liveDate,
@@ -35,10 +37,22 @@ class Project {
       }
     }
 
+    // Extract description from I18NField structure (NEW)
+    String projectDescription = '';
+    if (json['description'] != null) {
+      final descField = json['description'];
+      if (descField is Map<String, dynamic> && descField['text'] != null) {
+        projectDescription = descField['text'] as String;
+      } else if (descField is String) {
+        projectDescription = descField;
+      }
+    }
+
     return Project(
       id: json['id'] as String,
       slug: json['slug'] as String? ?? '',
       name: projectName,
+      description: projectDescription,
       imageUrl: json['imageUrl'] as String? ?? '',
       isLive: json['isLive'] as bool? ?? false,
       liveDate: json['liveDate'] != null
@@ -125,6 +139,7 @@ class Project {
     String? id,
     String? slug,
     String? name,
+    String? description,
     String? imageUrl,
     bool? isLive,
     DateTime? liveDate,
@@ -134,6 +149,7 @@ class Project {
       id: id ?? this.id,
       slug: slug ?? this.slug,
       name: name ?? this.name,
+      description: description ?? this.description,
       imageUrl: imageUrl ?? this.imageUrl,
       isLive: isLive ?? this.isLive,
       liveDate: liveDate ?? this.liveDate,
@@ -149,6 +165,7 @@ class Project {
         other.id == id &&
         other.slug == slug &&
         other.name == name &&
+        other.description == description &&
         other.imageUrl == imageUrl &&
         other.isLive == isLive &&
         other.liveDate == liveDate;
@@ -156,7 +173,7 @@ class Project {
 
   @override
   int get hashCode {
-    return Object.hash(id, slug, name, imageUrl, isLive, liveDate);
+    return Object.hash(id, slug, name, description, imageUrl, isLive, liveDate);
   }
 
   @override
