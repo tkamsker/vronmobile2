@@ -19,9 +19,7 @@ void main() {
     testWidgets('displays project title', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectCard(project: testProject),
-          ),
+          home: Scaffold(body: ProjectCard(project: testProject)),
         ),
       );
 
@@ -31,9 +29,7 @@ void main() {
     testWidgets('displays project description', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectCard(project: testProject),
-          ),
+          home: Scaffold(body: ProjectCard(project: testProject)),
         ),
       );
 
@@ -46,9 +42,7 @@ void main() {
     testWidgets('displays project status badge', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectCard(project: testProject),
-          ),
+          home: Scaffold(body: ProjectCard(project: testProject)),
         ),
       );
 
@@ -60,9 +54,7 @@ void main() {
     ) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectCard(project: testProject),
-          ),
+          home: Scaffold(body: ProjectCard(project: testProject)),
         ),
       );
 
@@ -78,9 +70,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectCard(project: pausedProject),
-          ),
+          home: Scaffold(body: ProjectCard(project: pausedProject)),
         ),
       );
 
@@ -90,14 +80,13 @@ void main() {
     testWidgets(
       'displays status badge with correct color for archived status',
       (tester) async {
-        final archivedProject =
-            testProject.copyWith(status: ProjectStatus.archived);
+        final archivedProject = testProject.copyWith(
+          status: ProjectStatus.archived,
+        );
 
         await tester.pumpWidget(
           MaterialApp(
-            home: Scaffold(
-              body: ProjectCard(project: archivedProject),
-            ),
+            home: Scaffold(body: ProjectCard(project: archivedProject)),
           ),
         );
 
@@ -108,9 +97,7 @@ void main() {
     testWidgets('displays team info', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectCard(project: testProject),
-          ),
+          home: Scaffold(body: ProjectCard(project: testProject)),
         ),
       );
 
@@ -120,9 +107,7 @@ void main() {
     testWidgets('displays updated time', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectCard(project: testProject),
-          ),
+          home: Scaffold(body: ProjectCard(project: testProject)),
         ),
       );
 
@@ -133,9 +118,7 @@ void main() {
     testWidgets('displays "Enter project" button', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectCard(project: testProject),
-          ),
+          home: Scaffold(body: ProjectCard(project: testProject)),
         ),
       );
 
@@ -173,9 +156,7 @@ void main() {
     testWidgets('displays project image', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectCard(project: testProject),
-          ),
+          home: Scaffold(body: ProjectCard(project: testProject)),
         ),
       );
 
@@ -188,9 +169,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectCard(project: projectWithoutImage),
-          ),
+          home: Scaffold(body: ProjectCard(project: projectWithoutImage)),
         ),
       );
 
@@ -201,9 +180,7 @@ void main() {
     testWidgets('has proper card elevation and shape', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectCard(project: testProject),
-          ),
+          home: Scaffold(body: ProjectCard(project: testProject)),
         ),
       );
 
@@ -214,9 +191,7 @@ void main() {
     testWidgets('has accessible semantic label', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectCard(project: testProject),
-          ),
+          home: Scaffold(body: ProjectCard(project: testProject)),
         ),
       );
 

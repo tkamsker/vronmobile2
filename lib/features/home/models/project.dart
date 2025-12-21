@@ -105,8 +105,8 @@ class Project {
     // Could be derived from subscription or other fields in future
     if (subscription.renewalInterval != null) {
       return subscription.renewalInterval == 'YEARLY'
-        ? 'Yearly plan'
-        : 'Monthly plan';
+          ? 'Yearly plan'
+          : 'Monthly plan';
     }
     return subscription.statusLabel;
   }
@@ -115,9 +115,9 @@ class Project {
   DateTime get updatedAt {
     // Use liveDate or renewsAt as a proxy for "updated"
     return liveDate ??
-           subscription.renewsAt ??
-           subscription.expiresAt ??
-           DateTime.now();
+        subscription.renewsAt ??
+        subscription.expiresAt ??
+        DateTime.now();
   }
 
   /// Create a copy of this Project with some fields replaced
@@ -156,14 +156,7 @@ class Project {
 
   @override
   int get hashCode {
-    return Object.hash(
-      id,
-      slug,
-      name,
-      imageUrl,
-      isLive,
-      liveDate,
-    );
+    return Object.hash(id, slug, name, imageUrl, isLive, liveDate);
   }
 
   @override
@@ -171,4 +164,3 @@ class Project {
     return 'Project(id: $id, name: $name, slug: $slug, isLive: $isLive)';
   }
 }
-

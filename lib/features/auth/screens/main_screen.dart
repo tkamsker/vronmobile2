@@ -99,8 +99,9 @@ class _MainScreenState extends State<MainScreen> {
         if (!mounted) return;
 
         if (result.isSuccess) {
-          if (kDebugMode)
+          if (kDebugMode) {
             print('✅ [UI] Login successful - navigating to home screen');
+          }
 
           final userEmail = result.data?['email'] as String?;
 

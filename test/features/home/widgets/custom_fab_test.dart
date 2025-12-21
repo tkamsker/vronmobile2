@@ -7,9 +7,7 @@ void main() {
     testWidgets('displays plus icon', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            floatingActionButton: CustomFAB(onPressed: () {}),
-          ),
+          home: Scaffold(floatingActionButton: CustomFAB(onPressed: () {})),
         ),
       );
 
@@ -40,9 +38,7 @@ void main() {
     testWidgets('has correct size (56x56 logical pixels)', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            floatingActionButton: CustomFAB(onPressed: () {}),
-          ),
+          home: Scaffold(floatingActionButton: CustomFAB(onPressed: () {})),
         ),
       );
 
@@ -54,23 +50,20 @@ void main() {
     testWidgets('has correct blue color', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            floatingActionButton: CustomFAB(onPressed: () {}),
-          ),
+          home: Scaffold(floatingActionButton: CustomFAB(onPressed: () {})),
         ),
       );
 
-      final fabWidget =
-          tester.widget<FloatingActionButton>(find.byType(FloatingActionButton));
+      final fabWidget = tester.widget<FloatingActionButton>(
+        find.byType(FloatingActionButton),
+      );
       expect(fabWidget.backgroundColor, isNotNull);
     });
 
     testWidgets('has accessible semantic label', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            floatingActionButton: CustomFAB(onPressed: () {}),
-          ),
+          home: Scaffold(floatingActionButton: CustomFAB(onPressed: () {})),
         ),
       );
 
@@ -82,14 +75,13 @@ void main() {
     testWidgets('has proper elevation', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            floatingActionButton: CustomFAB(onPressed: () {}),
-          ),
+          home: Scaffold(floatingActionButton: CustomFAB(onPressed: () {})),
         ),
       );
 
-      final fabWidget =
-          tester.widget<FloatingActionButton>(find.byType(FloatingActionButton));
+      final fabWidget = tester.widget<FloatingActionButton>(
+        find.byType(FloatingActionButton),
+      );
       expect(fabWidget.elevation, greaterThan(0));
     });
   });

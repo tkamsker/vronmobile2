@@ -12,11 +12,7 @@ void main() {
     });
 
     testWidgets('T116: loads and displays projects from API', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Should show loading indicator initially
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -30,11 +26,7 @@ void main() {
     });
 
     testWidgets('displays project list with all expected data', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Wait for projects to load
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -53,32 +45,21 @@ void main() {
     });
 
     testWidgets('handles API error gracefully', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Wait for API call to complete/fail
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
       // Should display error state if API fails
       // Note: This test expects an error since backend may not be available
-      expect(
-        find.textContaining('Failed'),
-        findsAny,
-      );
+      expect(find.textContaining('Failed'), findsAny);
 
       // Should have retry button
       expect(find.widgetWithText(ElevatedButton, 'Retry'), findsAny);
     });
 
     testWidgets('retry button refetches projects after error', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Wait for initial load/error
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -98,17 +79,15 @@ void main() {
     });
 
     testWidgets('search filters projects correctly', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Wait for projects to load
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
       // Get initial project count
-      final initialProjectCount = tester.widgetList(find.byType(ProjectCard)).length;
+      final initialProjectCount = tester
+          .widgetList(find.byType(ProjectCard))
+          .length;
 
       if (initialProjectCount > 0) {
         // Enter search text
@@ -116,8 +95,9 @@ void main() {
         await tester.pump();
 
         // Project list should update
-        final filteredProjectCount =
-            tester.widgetList(find.byType(ProjectCard)).length;
+        final filteredProjectCount = tester
+            .widgetList(find.byType(ProjectCard))
+            .length;
 
         // Filtered count should be less than or equal to initial count
         expect(filteredProjectCount, lessThanOrEqualTo(initialProjectCount));
@@ -125,11 +105,7 @@ void main() {
     });
 
     testWidgets('filter tabs change displayed projects', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Wait for projects to load
       await tester.pumpAndSettle(const Duration(seconds: 5));
@@ -161,8 +137,8 @@ void main() {
           home: const HomeScreen(),
           routes: {
             '/project-detail': (context) => const Scaffold(
-                  body: Center(child: Text('Project Detail Screen')),
-                ),
+              body: Center(child: Text('Project Detail Screen')),
+            ),
           },
         ),
       );
@@ -185,12 +161,10 @@ void main() {
         MaterialApp(
           home: const HomeScreen(),
           routes: {
-            '/lidar': (context) => const Scaffold(
-                  body: Center(child: Text('LiDAR Screen')),
-                ),
-            '/profile': (context) => const Scaffold(
-                  body: Center(child: Text('Profile Screen')),
-                ),
+            '/lidar': (context) =>
+                const Scaffold(body: Center(child: Text('LiDAR Screen'))),
+            '/profile': (context) =>
+                const Scaffold(body: Center(child: Text('Profile Screen'))),
           },
         ),
       );
@@ -212,8 +186,8 @@ void main() {
           home: const HomeScreen(),
           routes: {
             '/create-project': (context) => const Scaffold(
-                  body: Center(child: Text('Create Project Screen')),
-                ),
+              body: Center(child: Text('Create Project Screen')),
+            ),
           },
         ),
       );
@@ -230,20 +204,13 @@ void main() {
     });
 
     testWidgets('pull-to-refresh reloads project list', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Wait for initial load
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
       // Perform pull-to-refresh
-      await tester.drag(
-        find.byType(HomeScreen),
-        const Offset(0, 300),
-      );
+      await tester.drag(find.byType(HomeScreen), const Offset(0, 300));
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
       // Should reload projects

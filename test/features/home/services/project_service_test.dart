@@ -93,9 +93,7 @@ void main() {
 
       test('returns empty list when no projects exist', () async {
         // Arrange
-        final mockData = {
-          'projects': [],
-        };
+        final mockData = {'projects': []};
 
         mockGraphQLService.mockResult = QueryResult(
           data: mockData,
@@ -112,9 +110,7 @@ void main() {
 
       test('returns empty list when projects is null', () async {
         // Arrange
-        final mockData = {
-          'projects': null,
-        };
+        final mockData = {'projects': null};
 
         mockGraphQLService.mockResult = QueryResult(
           data: mockData,
@@ -146,10 +142,7 @@ void main() {
         );
 
         // Act & Assert
-        expect(
-          () => projectService.fetchProjects(),
-          throwsA(isA<Exception>()),
-        );
+        expect(() => projectService.fetchProjects(), throwsA(isA<Exception>()));
       });
 
       test('throws exception on network error', () async {
@@ -157,10 +150,7 @@ void main() {
         mockGraphQLService.mockException = Exception('Network error');
 
         // Act & Assert
-        expect(
-          () => projectService.fetchProjects(),
-          throwsA(isA<Exception>()),
-        );
+        expect(() => projectService.fetchProjects(), throwsA(isA<Exception>()));
       });
     });
 

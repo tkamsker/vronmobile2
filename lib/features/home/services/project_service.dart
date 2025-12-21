@@ -8,11 +8,9 @@ class ProjectService {
   final GraphQLService _graphqlService;
   final String _language;
 
-  ProjectService({
-    GraphQLService? graphqlService,
-    String language = 'EN',
-  })  : _graphqlService = graphqlService ?? GraphQLService(),
-        _language = language;
+  ProjectService({GraphQLService? graphqlService, String language = 'EN'})
+    : _graphqlService = graphqlService ?? GraphQLService(),
+      _language = language;
 
   /// GraphQL query to fetch all projects for the authenticated user
   /// Based on the getProjects query from the VRon API
@@ -110,9 +108,7 @@ class ProjectService {
   }
 
   /// Fetch projects filtered by subscription status
-  Future<List<Project>> fetchProjectsBySubscriptionStatus(
-    String status,
-  ) async {
+  Future<List<Project>> fetchProjectsBySubscriptionStatus(String status) async {
     final allProjects = await fetchProjects();
     return allProjects
         .where((project) => project.subscription.status == status)
@@ -123,8 +119,7 @@ class ProjectService {
   Future<List<Project>> fetchActiveProjects() async {
     final allProjects = await fetchProjects();
     return allProjects
-        .where((project) =>
-            project.isLive && project.subscription.isActive)
+        .where((project) => project.isLive && project.subscription.isActive)
         .toList();
   }
 

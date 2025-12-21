@@ -4,10 +4,7 @@ import 'package:flutter/material.dart';
 class CustomFAB extends StatelessWidget {
   final VoidCallback onPressed;
 
-  const CustomFAB({
-    super.key,
-    required this.onPressed,
-  });
+  const CustomFAB({super.key, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -18,11 +15,7 @@ class CustomFAB extends StatelessWidget {
         onPressed: onPressed,
         backgroundColor: const Color(0xFF2196F3), // Blue color from design
         elevation: 6,
-        child: const Icon(
-          Icons.add,
-          size: 32,
-          color: Colors.white,
-        ),
+        child: const Icon(Icons.add, size: 32, color: Colors.white),
       ),
     );
   }

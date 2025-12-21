@@ -7,42 +7,26 @@ import 'package:vronmobile2/features/home/widgets/custom_fab.dart';
 void main() {
   group('HomeScreen Widget', () {
     testWidgets('displays "Your projects" heading', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       expect(find.text('Your projects'), findsOneWidget);
     });
 
     testWidgets('displays subtitle text', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       expect(find.text('Jump back into your workspace'), findsOneWidget);
     });
 
     testWidgets('displays search bar', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       expect(find.byType(TextField), findsOneWidget);
       expect(find.text('Search projects'), findsOneWidget);
     });
 
     testWidgets('displays filter tabs', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       expect(find.text('All'), findsOneWidget);
       expect(find.text('Active'), findsOneWidget);
@@ -51,31 +35,19 @@ void main() {
     });
 
     testWidgets('displays bottom navigation bar', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       expect(find.byType(BottomNavBar), findsOneWidget);
     });
 
     testWidgets('displays floating action button', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       expect(find.byType(CustomFAB), findsOneWidget);
     });
 
     testWidgets('displays profile icon in app bar', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Should have a profile icon or avatar in top-right
       expect(find.byType(AppBar), findsOneWidget);
@@ -84,11 +56,7 @@ void main() {
     testWidgets('displays loading indicator while fetching projects', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Initially should show loading state
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -97,11 +65,7 @@ void main() {
     testWidgets('displays error message when project fetch fails', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Wait for loading to complete
       await tester.pumpAndSettle();
@@ -112,11 +76,7 @@ void main() {
     });
 
     testWidgets('displays empty state when no projects exist', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Wait for loading to complete
       await tester.pumpAndSettle();
@@ -129,11 +89,7 @@ void main() {
     testWidgets('displays project count in "Recent projects" section', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Wait for loading to complete
       await tester.pumpAndSettle();
@@ -143,11 +99,7 @@ void main() {
     });
 
     testWidgets('has accessible semantic labels', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Verify screen has semantic tree
       expect(find.byType(Semantics), findsWidgets);
@@ -156,11 +108,7 @@ void main() {
     testWidgets('search bar filters projects when text is entered', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Wait for projects to load
       await tester.pumpAndSettle();
@@ -174,11 +122,7 @@ void main() {
     });
 
     testWidgets('filter tabs update project list when tapped', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Wait for projects to load
       await tester.pumpAndSettle();
@@ -192,20 +136,13 @@ void main() {
     });
 
     testWidgets('supports pull-to-refresh', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
 
       // Wait for initial load
       await tester.pumpAndSettle();
 
       // Perform pull-to-refresh gesture
-      await tester.drag(
-        find.byType(RefreshIndicator),
-        const Offset(0, 300),
-      );
+      await tester.drag(find.byType(RefreshIndicator), const Offset(0, 300));
       await tester.pumpAndSettle();
 
       // Should refresh project list

@@ -32,10 +32,7 @@ void main() {
     });
 
     test('creates Project from JSON with missing optional fields', () {
-      final json = {
-        'id': 'proj_456',
-        'title': 'Product Roadmap',
-      };
+      final json = {'id': 'proj_456', 'title': 'Product Roadmap'};
 
       final project = Project.fromJson(json);
 

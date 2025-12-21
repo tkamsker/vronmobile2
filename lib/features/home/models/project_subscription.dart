@@ -109,7 +109,9 @@ class ProjectSubscriptionPrices {
   factory ProjectSubscriptionPrices.fromJson(Map<String, dynamic> json) {
     return ProjectSubscriptionPrices(
       currency: json['currency'] as String? ?? 'EUR',
-      monthly: json['monthly'] != null ? (json['monthly'] as num).toDouble() : 0.0,
+      monthly: json['monthly'] != null
+          ? (json['monthly'] as num).toDouble()
+          : 0.0,
       yearly: json['yearly'] != null ? (json['yearly'] as num).toDouble() : 0.0,
     );
   }
