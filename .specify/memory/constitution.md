@@ -38,9 +38,9 @@ Test-Driven Development (TDD) is mandatory for all feature implementation:
 - Tests MUST fail initially, demonstrating the feature gap
 - Implementation proceeds only after test failure is confirmed
 - Red-Green-Refactor cycle is strictly enforced:
-1. **Red**: Write a failing test that defines desired behavior
-2. **Green**: Write minimal code to make the test pass
-3. **Refactor**: Improve code quality while keeping tests green
+ 1. **Red**: Write a failing test that defines desired behavior
+ 2. **Green**: Write minimal code to make the test pass
+ 3. **Refactor**: Improve code quality while keeping tests green
 - Widget tests are required for UI components
 - Integration tests are required for user journeys spanning multiple screens
 - Unit tests are required for business logic, services, and utilities
@@ -68,9 +68,9 @@ Embrace Flutter and Dart idioms while respecting platform conventions:
 - Use Flutter's widget composition patterns (not inheritance)
 - Follow Dart's effective style guide for naming and structure
 - Respect platform-specific UI patterns:
-- Material Design for Android
-- Cupertino widgets for iOS where appropriate
-- Platform-adaptive widgets when cross-platform consistency matters
+ - Material Design for Android
+ - Cupertino widgets for iOS where appropriate
+ - Platform-adaptive widgets when cross-platform consistency matters
 - State management should be explicit and predictable (Provider, Riverpod, Bloc, or built-in setState)
 - Async operations must use Dart's Future/Stream/async-await patterns
 - Handle platform differences explicitly (Platform.isIOS, Platform.isAndroid)
@@ -132,16 +132,16 @@ Automated pipelines ensure consistent quality and enable rapid delivery:
 - **Branch Strategy**: Branch naming: `###-feature-name` where ### is issue/task number
 - **Commit Discipline**: Atomic commits with clear messages; commit after each logical task
 - **Build Automation**: CI pipeline runs on every to dev stage or main branch PR: 
-- Linting and code formatting checks
-- Unit and widget tests
-- Integration tests (if applicable)
-- Build verification for iOS and Android
+ - Linting and code formatting checks
+ - Unit and widget tests
+ - Integration tests (if applicable)
+ - Build verification for iOS and Android
 - **Code Review**: All changes require peer review before merge
 - **Release Management**: Semantic versioning (MAJOR.MINOR.PATCH+BUILD)
-- MAJOR: Breaking changes or major feature releases
-- MINOR: New features, backward compatible
-- PATCH: Bug fixes
-- BUILD: Incremental build number for stores
+ - MAJOR: Breaking changes or major feature releases
+ - MINOR: New features, backward compatible
+ - PATCH: Bug fixes
+ - BUILD: Incremental build number for stores
 - **Deployment**: Automated deployment to TestFlight (iOS) and Internal Testing (Android) on main branch
 - **Rollback Plan**: Maintain ability to roll back to previous version within 1 hour
 
