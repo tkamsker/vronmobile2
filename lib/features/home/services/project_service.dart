@@ -48,19 +48,32 @@ class ProjectService {
     }
   ''';
 
-  /// GraphQL query to fetch Product data for update operations
-  /// Projects are Products in backend - need Product fields for mutation
-  /// Only fetches fields required for VRonUpdateProduct mutation
-  static const String _getProductQuery = '''
-    query GetProduct(\$id: ID!) {
-      product(id: \$id) {
+  /// GraphQL query to fetch single VR project detail
+  /// Use this for project detail screen instead of filtering getProjects
+  static const String _getVRProjectQuery = '''
+    query GetVRProject(\$input: VRGetProjectInput!, \$lang: Language!) {
+      getVRProject(input: \$input) {
         id
-        title
-        description
-        status
-        tracksInventory
-        categoryId
-        tags
+        slug
+        name {
+          text(lang: \$lang)
+        }
+        description {
+          text(lang: \$lang)
+        }
+        liveDate
+        isOwner
+        subscription {
+          isTrial
+          status
+          canChoosePlan
+          renewalInterval
+          prices {
+            currency
+            monthly
+            yearly
+          }
+        }
       }
     }
   ''';
@@ -159,25 +172,62 @@ class ProjectService {
         .toList();
   }
 
-  /// Fetch a single project by ID with full details
+  /// Fetch a single project by ID with full details using getVRProject query
   /// Returns a Project object or throws an exception on error
-  /// Note: Backend doesn't have a single project query, so we fetch all and filter
   Future<Project> getProjectDetail(String projectId) async {
     try {
       if (kDebugMode) {
-        print('📦 [PROJECTS] Fetching project detail for ID: $projectId (language: $_language)...');
+        print('📦 [PROJECTS] Fetching VR project detail for ID: $projectId (language: $_language)...');
       }
 
-      // Backend doesn't have project(id) query, use getProjects and filter
-      final allProjects = await fetchProjects();
-
-      final project = allProjects.firstWhere(
-        (p) => p.id == projectId,
-        orElse: () => throw Exception('Project not found: $projectId'),
+      // Use getVRProject query for detailed project data
+      final result = await _graphqlService.query(
+        _getVRProjectQuery,
+        variables: {
+          'input': {'id': projectId},
+          'lang': _language,
+        },
       );
 
+      if (result.hasException) {
+        final exception = result.exception;
+        if (kDebugMode) {
+          print('❌ [PROJECTS] GraphQL exception: ${exception.toString()}');
+        }
+
+        if (exception?.graphqlErrors.isNotEmpty ?? false) {
+          final error = exception!.graphqlErrors.first;
+          if (kDebugMode) {
+            print('❌ [PROJECTS] GraphQL error: ${error.message}');
+          }
+          throw Exception('Failed to fetch project detail: ${error.message}');
+        }
+
+        throw Exception('Failed to fetch project detail: ${exception.toString()}');
+      }
+
+      if (result.data == null || result.data!['getVRProject'] == null) {
+        if (kDebugMode) print('⚠️ [PROJECTS] No VR project data in response');
+        throw Exception('Project not found: $projectId');
+      }
+
+      final projectData = result.data!['getVRProject'] as Map<String, dynamic>;
+
+      // Convert VRProject response to Project model
+      // Note: VRProject doesn't have imageUrl or isLive at root level
+      final project = Project.fromJson({
+        'id': projectData['id'],
+        'slug': projectData['slug'],
+        'name': projectData['name'],
+        'description': projectData['description'],
+        'imageUrl': '', // VRProject doesn't have this field
+        'isLive': projectData['liveDate'] != null, // Infer from liveDate
+        'liveDate': projectData['liveDate'],
+        'subscription': projectData['subscription'],
+      });
+
       if (kDebugMode) {
-        print('✅ [PROJECTS] Fetched project detail: ${project.name} (${project.id})');
+        print('✅ [PROJECTS] Fetched VR project detail: ${project.name} (${project.id})');
         print('  - Status: ${project.statusLabel}');
         print('  - Description: ${project.description}');
       }
