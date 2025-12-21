@@ -103,10 +103,7 @@ class ProjectService {
   }) async {
     final result = await _graphql.query(
       _getProjectDetailQuery,
-      variables: {
-        'id': projectId,
-        'lang': lang,
-      },
+      variables: {'id': projectId, 'lang': lang},
     );
 
     return _graphql.handleResult(result, (data) {
@@ -122,10 +119,7 @@ class ProjectService {
   ) async {
     final result = await _graphql.mutate(
       _updateProjectMutation,
-      variables: {
-        'id': projectId,
-        'input': input,
-      },
+      variables: {'id': projectId, 'input': input},
     );
 
     return _graphql.handleResult(result, (data) {

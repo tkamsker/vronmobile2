@@ -36,7 +36,8 @@ class Project {
           : null,
       subscription: json['subscription'] != null
           ? ProjectSubscription.fromJson(
-              json['subscription'] as Map<String, dynamic>)
+              json['subscription'] as Map<String, dynamic>,
+            )
           : null,
     );
   }

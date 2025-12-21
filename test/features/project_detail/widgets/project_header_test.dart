@@ -4,8 +4,9 @@ import 'package:vronmobile2/features/project_detail/widgets/project_header.dart'
 
 void main() {
   group('ProjectHeader Widget Tests', () {
-    testWidgets('displays project image when imageUrl is provided',
-        (WidgetTester tester) async {
+    testWidgets('displays project image when imageUrl is provided', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       const testImageUrl = 'https://example.com/image.jpg';
       const testName = 'Test Project';
@@ -35,11 +36,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: ProjectHeader(
-              imageUrl: null,
-              name: testName,
-              isLive: false,
-            ),
+            body: ProjectHeader(imageUrl: null, name: testName, isLive: false),
           ),
         ),
       );
@@ -48,8 +45,9 @@ void main() {
       expect(find.text(testName), findsOneWidget);
     });
 
-    testWidgets('displays live status badge when isLive is true',
-        (WidgetTester tester) async {
+    testWidgets('displays live status badge when isLive is true', (
+      WidgetTester tester,
+    ) async {
       // Act
       await tester.pumpWidget(
         const MaterialApp(
@@ -68,8 +66,9 @@ void main() {
       expect(find.textContaining('Live'), findsOneWidget);
     });
 
-    testWidgets('does not display live badge when isLive is false',
-        (WidgetTester tester) async {
+    testWidgets('does not display live badge when isLive is false', (
+      WidgetTester tester,
+    ) async {
       // Act
       await tester.pumpWidget(
         const MaterialApp(
@@ -87,8 +86,9 @@ void main() {
       expect(find.textContaining('Live'), findsNothing);
     });
 
-    testWidgets('displays placeholder when imageUrl is null',
-        (WidgetTester tester) async {
+    testWidgets('displays placeholder when imageUrl is null', (
+      WidgetTester tester,
+    ) async {
       // Act
       await tester.pumpWidget(
         const MaterialApp(

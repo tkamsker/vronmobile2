@@ -33,12 +33,8 @@ class GraphQLService {
       cache: GraphQLCache(store: InMemoryStore()),
       link: link,
       defaultPolicies: DefaultPolicies(
-        query: Policies(
-          fetch: FetchPolicy.networkOnly,
-        ),
-        mutate: Policies(
-          fetch: FetchPolicy.networkOnly,
-        ),
+        query: Policies(fetch: FetchPolicy.networkOnly),
+        mutate: Policies(fetch: FetchPolicy.networkOnly),
       ),
     );
   }
@@ -64,8 +60,10 @@ class GraphQLService {
   }
 
   /// Execute GraphQL query
-  Future<QueryResult> query(String query,
-      {Map<String, dynamic>? variables}) async {
+  Future<QueryResult> query(
+    String query, {
+    Map<String, dynamic>? variables,
+  }) async {
     final QueryOptions options = QueryOptions(
       document: gql(query),
       variables: variables ?? {},
@@ -75,8 +73,10 @@ class GraphQLService {
   }
 
   /// Execute GraphQL mutation
-  Future<QueryResult> mutate(String mutation,
-      {Map<String, dynamic>? variables}) async {
+  Future<QueryResult> mutate(
+    String mutation, {
+    Map<String, dynamic>? variables,
+  }) async {
     final MutationOptions options = MutationOptions(
       document: gql(mutation),
       variables: variables ?? {},

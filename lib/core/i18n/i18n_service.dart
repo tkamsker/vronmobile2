@@ -64,8 +64,9 @@ class I18nService extends ChangeNotifier {
   /// Load translations from JSON file
   Future<void> _loadTranslations(String languageCode) async {
     try {
-      final String jsonString =
-          await rootBundle.loadString('lib/core/i18n/$languageCode.json');
+      final String jsonString = await rootBundle.loadString(
+        'lib/core/i18n/$languageCode.json',
+      );
       _translations = json.decode(jsonString) as Map<String, dynamic>;
     } catch (e) {
       debugPrint('Error loading translations for $languageCode: $e');

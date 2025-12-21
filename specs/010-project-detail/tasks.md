@@ -58,26 +58,26 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T009 [P] [US1] Write widget test for ProjectHeader in test/features/project_detail/widgets/project_header_test.dart (test image display, name, status badge)
-- [ ] T010 [P] [US1] Write widget test for ProjectInfoSection in test/features/project_detail/widgets/project_info_section_test.dart (test description, subscription, dates)
-- [ ] T011 [P] [US1] Write widget test for ProjectActionButtons in test/features/project_detail/widgets/project_action_buttons_test.dart (test button rendering and tap handlers)
-- [ ] T012 [US1] Write widget test for ProjectDetailScreen in test/features/project_detail/screens/project_detail_screen_test.dart (test loading, success, error states with FutureBuilder)
-- [ ] T013 [US1] Write integration test in test/integration/project_detail_navigation_test.dart (test full navigation flow from home to detail)
+- [X] T009 [P] [US1] Write widget test for ProjectHeader in test/features/project_detail/widgets/project_header_test.dart (test image display, name, status badge)
+- [X] T010 [P] [US1] Write widget test for ProjectInfoSection in test/features/project_detail/widgets/project_info_section_test.dart (test description, subscription, dates)
+- [X] T011 [P] [US1] Write widget test for ProjectActionButtons in test/features/project_detail/widgets/project_action_buttons_test.dart (test button rendering and tap handlers)
+- [X] T012 [US1] Write widget test for ProjectDetailScreen in test/features/project_detail/screens/project_detail_screen_test.dart (test loading, success, error states with FutureBuilder)
+- [X] T013 [US1] Write integration test in test/integration/project_detail_navigation_test.dart (test full navigation flow from home to detail)
 
 **Run tests: All should FAIL (Red phase)**
 
 ### Implementation for User Story 1
 
-- [ ] T014 [P] [US1] Create ProjectHeader widget in lib/features/project_detail/widgets/project_header.dart (display cached image, project name, status badge)
-- [ ] T015 [P] [US1] Create ProjectInfoSection widget in lib/features/project_detail/widgets/project_info_section.dart (display description, subscription info, live date, last updated)
-- [ ] T016 [P] [US1] Create ProjectActionButtons widget in lib/features/project_detail/widgets/project_action_buttons.dart (navigation buttons for "Project Data" and "Products")
-- [ ] T017 [US1] Create ProjectDetailScreen in lib/features/project_detail/screens/project_detail_screen.dart (StatefulWidget with FutureBuilder, compose all widgets)
-- [ ] T018 [US1] Implement loading state with CircularProgressIndicator in ProjectDetailScreen
-- [ ] T019 [US1] Implement error state with error message and retry button in ProjectDetailScreen
-- [ ] T020 [US1] Implement success state with project data display in ProjectDetailScreen
-- [ ] T021 [US1] Add pull-to-refresh functionality with RefreshIndicator in ProjectDetailScreen
-- [ ] T022 [US1] Update main.dart routes to use ProjectDetailScreen instead of PlaceholderScreen for AppRoutes.projectDetail
-- [ ] T023 [US1] Add semantic labels to all widgets for screen reader accessibility
+- [X] T014 [P] [US1] Create ProjectHeader widget in lib/features/project_detail/widgets/project_header.dart (display cached image, project name, status badge)
+- [X] T015 [P] [US1] Create ProjectInfoSection widget in lib/features/project_detail/widgets/project_info_section.dart (display description, subscription info, live date, last updated)
+- [X] T016 [P] [US1] Create ProjectActionButtons widget in lib/features/project_detail/widgets/project_action_buttons.dart (navigation buttons for "Project Data" and "Products")
+- [X] T017 [US1] Create ProjectDetailScreen in lib/features/project_detail/screens/project_detail_screen.dart (StatefulWidget with FutureBuilder, compose all widgets)
+- [X] T018 [US1] Implement loading state with CircularProgressIndicator in ProjectDetailScreen
+- [X] T019 [US1] Implement error state with error message and retry button in ProjectDetailScreen
+- [X] T020 [US1] Implement success state with project data display in ProjectDetailScreen
+- [X] T021 [US1] Add pull-to-refresh functionality with RefreshIndicator in ProjectDetailScreen
+- [X] T022 [US1] Update main.dart routes to use ProjectDetailScreen instead of PlaceholderScreen for AppRoutes.projectDetail
+- [X] T023 [US1] Add semantic labels to all widgets for screen reader accessibility
 
 **Run tests: All should PASS (Green phase)**
 
@@ -89,14 +89,14 @@
 
 **Purpose**: Final improvements affecting the entire feature
 
-- [ ] T024 [P] Run flutter analyze and fix all linting issues
-- [ ] T025 [P] Run dart format . to ensure code formatting consistency
-- [ ] T026 [P] Verify all touch targets are minimum 44x44 logical pixels
-- [ ] T027 [P] Verify image loading with progressive placeholders using cached_network_image
-- [ ] T028 [P] Verify contrast ratios meet WCAG AA standards for all text
-- [ ] T029 Verify design match with Requirements/ProjectDetail.jpg
-- [ ] T030 Test on physical device with real API data (verify < 1 second load time)
-- [ ] T031 [P] Verify all i18n strings display correctly in English, German, and Portuguese
+- [X] T024 [P] Run flutter analyze and fix all linting issues
+- [X] T025 [P] Run dart format . to ensure code formatting consistency
+- [X] T026 [P] Verify all touch targets are minimum 44x44 logical pixels
+- [X] T027 [P] Verify image loading with progressive placeholders using cached_network_image
+- [X] T028 [P] Verify contrast ratios meet WCAG AA standards for all text
+- [X] T029 Verify design match with Requirements/ProjectDetail.jpg
+- [X] T030 Test on physical device with real API data (verify < 1 second load time)
+- [X] T031 [P] Verify all i18n strings display correctly in English, German, and Portuguese
 
 ---
 
