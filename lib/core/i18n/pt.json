@@ -1,0 +1,111 @@
+{
+  "home": {
+    "title": "Seus projetos",
+    "subtitle": "Volte ao seu espaço de trabalho",
+    "searchPlaceholder": "Pesquisar projetos",
+    "filterAll": "Todos",
+    "filterActive": "Ativos",
+    "filterArchived": "Arquivados",
+    "sort": "Ordenar",
+    "recentProjects": "Projetos recentes",
+    "totalCount": "{count} no total",
+    "enterProject": "Abrir projeto",
+    "noProjects": "Ainda não há projetos",
+    "noProjectsMessage": "Crie seu primeiro projeto para começar",
+    "noResults": "Nenhum projeto encontrado",
+    "noResultsMessage": "Tente um termo de pesquisa diferente",
+    "createProject": "Criar Projeto",
+    "loadingError": "Falha ao carregar projetos",
+    "retry": "Tentar novamente",
+    "updatedTime": {
+      "justNow": "Atualizado agora",
+      "minutesAgo": "Atualizado há {minutes}m",
+      "hoursAgo": "Atualizado há {hours}h",
+      "daysAgo": "Atualizado há {days}d",
+      "monthsAgo": "Atualizado há {months} meses",
+      "yearsAgo": "Atualizado há {years} anos"
+    },
+    "status": {
+      "live": "Ativo",
+      "liveTrial": "Ativo (Teste)",
+      "liveInactive": "Ativo (Inativo)",
+      "notLive": "Não Ativo"
+    },
+    "subscription": {
+      "monthlyPlan": "Plano mensal",
+      "yearlyPlan": "Plano anual",
+      "liveStatus": "Ativo",
+      "notPublished": "Não publicado",
+      "trial": "Teste",
+      "activeSubscription": "Assinatura ativa",
+      "expired": "Expirado"
+    }
+  },
+  "navigation": {
+    "home": "Início",
+    "projects": "Projetos",
+    "lidar": "LiDAR",
+    "profile": "Perfil"
+  },
+  "language": {
+    "title": "Idioma",
+    "subtitle": "Escolha como o aplicativo fala com você",
+    "appLanguage": "Idioma do aplicativo",
+    "appLanguageDescription": "Aplica-se a menus e rótulos",
+    "preferredLanguage": "Idioma preferido",
+    "preferredLanguageDescription": "Selecione um idioma para a interface do aplicativo",
+    "saveButton": "Salvar idioma",
+    "changesNote": "As alterações entram em vigor imediatamente em todas as telas",
+    "current": "Atual",
+    "recommended": "Recomendado com base na sua região",
+    "languages": {
+      "en_US": "English (US)",
+      "en_GB": "English (UK)",
+      "en_GB_description": "Ortografia e formatos para o Reino Unido",
+      "de": "Deutsch",
+      "de_description": "Alemão",
+      "fr": "Français",
+      "fr_description": "Francês",
+      "es": "Español",
+      "es_description": "Espanhol",
+      "ja": "日本語",
+      "ja_description": "Japonês",
+      "pt": "Português",
+      "pt_description": "Português"
+    }
+  },
+  "profile": {
+    "title": "Configurações",
+    "subtitle": "Gerencie sua conta e preferências",
+    "signedIn": "Conectado",
+    "lastSynced": "Última sincronização há {time}",
+    "account": "Conta",
+    "accountDescription": "Perfil, segurança e contas conectadas",
+    "changePassword": "Alterar senha",
+    "changePasswordDescription": "Atualize sua senha de login",
+    "connectedAccounts": "Contas conectadas",
+    "connectedAccountsDescription": "Use contas sociais para fazer login",
+    "google": "Google",
+    "facebook": "Facebook",
+    "appPreferences": "Preferências do aplicativo",
+    "appPreferencesDescription": "Personalize a aparência e o comportamento do aplicativo",
+    "darkMode": "Modo escuro",
+    "darkModeDescription": "Reduza o brilho e use tema escuro",
+    "notifications": "Notificações",
+    "notificationsDescription": "Receba alertas sobre atualizações de projetos",
+    "languageSetting": "Idioma",
+    "languageSettingDescription": "Alterar o idioma do aplicativo",
+    "logOut": "Sair",
+    "logOutMessage": "Você pode fazer login novamente a qualquer momento com seu e-mail ou contas conectadas"
+  },
+  "common": {
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "ok": "OK",
+    "yes": "Sim",
+    "no": "Não",
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso"
+  }
+}

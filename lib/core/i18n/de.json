@@ -1,0 +1,111 @@
+{
+  "home": {
+    "title": "Ihre Projekte",
+    "subtitle": "Kehren Sie zu Ihrem Arbeitsbereich zurück",
+    "searchPlaceholder": "Projekte durchsuchen",
+    "filterAll": "Alle",
+    "filterActive": "Aktiv",
+    "filterArchived": "Archiviert",
+    "sort": "Sortieren",
+    "recentProjects": "Letzte Projekte",
+    "totalCount": "{count} gesamt",
+    "enterProject": "Projekt öffnen",
+    "noProjects": "Noch keine Projekte",
+    "noProjectsMessage": "Erstellen Sie Ihr erstes Projekt",
+    "noResults": "Keine Projekte gefunden",
+    "noResultsMessage": "Versuchen Sie einen anderen Suchbegriff",
+    "createProject": "Projekt erstellen",
+    "loadingError": "Projekte konnten nicht geladen werden",
+    "retry": "Wiederholen",
+    "updatedTime": {
+      "justNow": "Gerade aktualisiert",
+      "minutesAgo": "Vor {minutes}m aktualisiert",
+      "hoursAgo": "Vor {hours}h aktualisiert",
+      "daysAgo": "Vor {days}T aktualisiert",
+      "monthsAgo": "Vor {months}M aktualisiert",
+      "yearsAgo": "Vor {years}J aktualisiert"
+    },
+    "status": {
+      "live": "Live",
+      "liveTrial": "Live (Testversion)",
+      "liveInactive": "Live (Inaktiv)",
+      "notLive": "Nicht Live"
+    },
+    "subscription": {
+      "monthlyPlan": "Monatsabo",
+      "yearlyPlan": "Jahresabo",
+      "liveStatus": "Live",
+      "notPublished": "Nicht veröffentlicht",
+      "trial": "Testversion",
+      "activeSubscription": "Aktives Abonnement",
+      "expired": "Abgelaufen"
+    }
+  },
+  "navigation": {
+    "home": "Startseite",
+    "projects": "Projekte",
+    "lidar": "LiDAR",
+    "profile": "Profil"
+  },
+  "language": {
+    "title": "Sprache",
+    "subtitle": "Wählen Sie die Sprache der App",
+    "appLanguage": "App-Sprache",
+    "appLanguageDescription": "Gilt für Menüs und Beschriftungen",
+    "preferredLanguage": "Bevorzugte Sprache",
+    "preferredLanguageDescription": "Wählen Sie eine Sprache für die App-Oberfläche",
+    "saveButton": "Sprache speichern",
+    "changesNote": "Änderungen werden sofort auf allen Bildschirmen wirksam",
+    "current": "Aktuell",
+    "recommended": "Empfohlen basierend auf Ihrer Region",
+    "languages": {
+      "en_US": "English (US)",
+      "en_GB": "English (UK)",
+      "en_GB_description": "Rechtschreibung und Formate für UK",
+      "de": "Deutsch",
+      "de_description": "German",
+      "fr": "Français",
+      "fr_description": "Französisch",
+      "es": "Español",
+      "es_description": "Spanisch",
+      "ja": "日本語",
+      "ja_description": "Japanisch",
+      "pt": "Português",
+      "pt_description": "Portugiesisch"
+    }
+  },
+  "profile": {
+    "title": "Einstellungen",
+    "subtitle": "Verwalten Sie Ihr Konto und Ihre Einstellungen",
+    "signedIn": "Angemeldet",
+    "lastSynced": "Zuletzt synchronisiert vor {time}",
+    "account": "Konto",
+    "accountDescription": "Profil, Sicherheit und verbundene Konten",
+    "changePassword": "Passwort ändern",
+    "changePasswordDescription": "Aktualisieren Sie Ihr Anmeldepasswort",
+    "connectedAccounts": "Verbundene Konten",
+    "connectedAccountsDescription": "Soziale Konten zur Anmeldung verwenden",
+    "google": "Google",
+    "facebook": "Facebook",
+    "appPreferences": "App-Einstellungen",
+    "appPreferencesDescription": "Passen Sie das Aussehen und Verhalten der App an",
+    "darkMode": "Dunkelmodus",
+    "darkModeDescription": "Helligkeit reduzieren und dunkles Design verwenden",
+    "notifications": "Benachrichtigungen",
+    "notificationsDescription": "Benachrichtigungen für Projektaktualisierungen erhalten",
+    "languageSetting": "Sprache",
+    "languageSettingDescription": "Ändern Sie die Sprache der App",
+    "logOut": "Abmelden",
+    "logOutMessage": "Sie können sich jederzeit mit Ihrer E-Mail oder verbundenen Konten wieder anmelden"
+  },
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "ok": "OK",
+    "yes": "Ja",
+    "no": "Nein",
+    "loading": "Lädt...",
+    "error": "Fehler",
+    "success": "Erfolg"
+  }
+}
