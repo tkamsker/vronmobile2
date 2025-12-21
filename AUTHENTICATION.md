@@ -45,8 +45,8 @@ mutation SignOut {
 
 ```json
 {
-  "email": "rusuandreicristian+10@gmail.com",
-  "password": "QuackQuackIAmADuck"
+  "email": "tkamsker@gmail.com",
+  "password": "Test123!"
 }
 ```
 

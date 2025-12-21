@@ -13,4 +13,12 @@ class AppRoutes {
   // Other authentication routes
   static const String emailAuth = '/email-auth';
   static const String forgotPassword = '/forgot-password';
+
+  // Project routes
+  static const String projectDetail = '/project-detail';
+  static const String createProject = '/create-project';
+
+  // Main app routes
+  static const String lidar = '/lidar';
+  static const String profile = '/profile';
 }
