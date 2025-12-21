@@ -47,6 +47,44 @@ class ProjectService {
     }
   ''';
 
+  /// GraphQL query to fetch a single project by ID
+  /// Based on the project query from the VRon API (UC10: Project Detail)
+  static const String _projectDetailQuery = '''
+    query GetProjectDetail(\$id: ID!, \$lang: Language!) {
+      project(id: \$id) {
+        id
+        slug
+        imageUrl
+        isLive
+        liveDate
+        name {
+          text(lang: \$lang)
+        }
+        description {
+          text(lang: \$lang)
+        }
+        subscription {
+          isActive
+          isTrial
+          status
+          canChoosePlan
+          hasExpired
+          currency
+          price
+          renewalInterval
+          startedAt
+          expiresAt
+          renewsAt
+          prices {
+            currency
+            monthly
+            yearly
+          }
+        }
+      }
+    }
+  ''';
+
   /// Fetch all projects for the authenticated user
   /// Returns a list of Project objects or throws an exception on error
   Future<List<Project>> fetchProjects() async {
@@ -130,5 +168,59 @@ class ProjectService {
     return allProjects
         .where((project) => project.name.toLowerCase().contains(lowerQuery))
         .toList();
+  }
+
+  /// Fetch a single project by ID with full details
+  /// Returns a Project object or throws an exception on error
+  Future<Project> getProjectDetail(String projectId) async {
+    try {
+      if (kDebugMode) {
+        print('📦 [PROJECTS] Fetching project detail for ID: $projectId (language: $_language)...');
+      }
+
+      final result = await _graphqlService.query(
+        _projectDetailQuery,
+        variables: {
+          'id': projectId,
+          'lang': _language,
+        },
+      );
+
+      if (result.hasException) {
+        final exception = result.exception;
+        if (kDebugMode) {
+          print('❌ [PROJECTS] GraphQL exception: ${exception.toString()}');
+        }
+
+        if (exception?.graphqlErrors.isNotEmpty ?? false) {
+          final error = exception!.graphqlErrors.first;
+          if (kDebugMode) {
+            print('❌ [PROJECTS] GraphQL error: ${error.message}');
+          }
+          throw Exception('Failed to fetch project detail: ${error.message}');
+        }
+
+        throw Exception('Failed to fetch project detail: ${exception.toString()}');
+      }
+
+      if (result.data == null || result.data!['project'] == null) {
+        if (kDebugMode) print('⚠️ [PROJECTS] No project data in response for ID: $projectId');
+        throw Exception('Project not found: $projectId');
+      }
+
+      final projectData = result.data!['project'] as Map<String, dynamic>;
+      final project = Project.fromJson(projectData);
+
+      if (kDebugMode) {
+        print('✅ [PROJECTS] Fetched project detail: ${project.name} (${project.id})');
+        print('  - Status: ${project.statusLabel}');
+        print('  - Description: ${project.description}');
+      }
+
+      return project;
+    } catch (e) {
+      if (kDebugMode) print('❌ [PROJECTS] Error fetching project detail: ${e.toString()}');
+      rethrow;
+    }
   }
 }
