@@ -8,9 +8,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PasswordInput(
-              controller: TextEditingController(),
-            ),
+            body: PasswordInput(controller: TextEditingController()),
           ),
         ),
       );
@@ -23,9 +21,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: PasswordInput(controller: controller),
-          ),
+          home: Scaffold(body: PasswordInput(controller: controller)),
         ),
       );
 
@@ -38,23 +34,21 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: PasswordInput(controller: controller),
-          ),
+          home: Scaffold(body: PasswordInput(controller: controller)),
         ),
       );
 
       expect(find.byIcon(Icons.visibility), findsOneWidget);
     });
 
-    testWidgets('toggles password visibility when icon is tapped', (tester) async {
+    testWidgets('toggles password visibility when icon is tapped', (
+      tester,
+    ) async {
       final controller = TextEditingController();
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: PasswordInput(controller: controller),
-          ),
+          home: Scaffold(body: PasswordInput(controller: controller)),
         ),
       );
 
@@ -104,7 +98,9 @@ void main() {
       expect(find.text('Password is required'), findsOneWidget);
     });
 
-    testWidgets('does not display error for non-empty password', (tester) async {
+    testWidgets('does not display error for non-empty password', (
+      tester,
+    ) async {
       final controller = TextEditingController(text: 'password123');
       final formKey = GlobalKey<FormState>();
 
@@ -132,9 +128,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: PasswordInput(controller: controller),
-          ),
+          home: Scaffold(body: PasswordInput(controller: controller)),
         ),
       );
 

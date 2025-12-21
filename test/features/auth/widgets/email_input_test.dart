@@ -7,11 +7,7 @@ void main() {
     testWidgets('displays email label', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: EmailInput(
-              controller: TextEditingController(),
-            ),
-          ),
+          home: Scaffold(body: EmailInput(controller: TextEditingController())),
         ),
       );
 
@@ -23,9 +19,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: EmailInput(controller: controller),
-          ),
+          home: Scaffold(body: EmailInput(controller: controller)),
         ),
       );
 
@@ -38,9 +32,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: EmailInput(controller: controller),
-          ),
+          home: Scaffold(body: EmailInput(controller: controller)),
         ),
       );
 
@@ -70,7 +62,9 @@ void main() {
       expect(find.text('Email is required'), findsOneWidget);
     });
 
-    testWidgets('displays validation error for invalid email format', (tester) async {
+    testWidgets('displays validation error for invalid email format', (
+      tester,
+    ) async {
       final controller = TextEditingController(text: 'notanemail');
       final formKey = GlobalKey<FormState>();
 
@@ -121,9 +115,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: EmailInput(controller: controller),
-          ),
+          home: Scaffold(body: EmailInput(controller: controller)),
         ),
       );
 

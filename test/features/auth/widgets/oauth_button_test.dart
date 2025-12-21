@@ -43,7 +43,9 @@ void main() {
       expect(wasPressed, true);
     });
 
-    testWidgets('shows loading indicator when isLoading is true', (tester) async {
+    testWidgets('shows loading indicator when isLoading is true', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -73,7 +75,10 @@ void main() {
         ),
       );
 
-      expect(find.bySemanticsLabel('Sign in with Google button'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Sign in with Google button'),
+        findsOneWidget,
+      );
     });
   });
 
@@ -130,7 +135,10 @@ void main() {
         ),
       );
 
-      expect(find.bySemanticsLabel('Sign in with Facebook button'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Sign in with Facebook button'),
+        findsOneWidget,
+      );
     });
   });
 

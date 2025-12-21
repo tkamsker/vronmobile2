@@ -107,7 +107,10 @@ class AppTheme {
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: errorColor, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         labelStyle: const TextStyle(color: textSecondary),
         hintStyle: const TextStyle(color: textHint),
       ),
@@ -119,13 +122,8 @@ class AppTheme {
           foregroundColor: buttonText,
           disabledBackgroundColor: buttonDisabled,
           minimumSize: const Size(double.infinity, 48),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
         ),
       ),
 
@@ -134,10 +132,7 @@ class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: primaryColor,
           minimumSize: const Size(44, 44),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-          ),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
         ),
       ),
     );

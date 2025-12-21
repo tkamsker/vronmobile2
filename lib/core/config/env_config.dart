@@ -11,12 +11,14 @@ class EnvConfig {
 
   /// GraphQL HTTP endpoint for queries and mutations
   static String get graphqlEndpoint {
-    return dotenv.env['GRAPHQL_ENDPOINT'] ?? 'https://api.vron.stage.motorenflug.at/graphql';
+    return dotenv.env['GRAPHQL_ENDPOINT'] ??
+        'https://api.vron.stage.motorenflug.at/graphql';
   }
 
   /// GraphQL WebSocket endpoint for subscriptions
   static String get graphqlWsEndpoint {
-    return dotenv.env['GRAPHQL_WS_ENDPOINT'] ?? 'wss://api.vron.stage.motorenflug.at/graphql';
+    return dotenv.env['GRAPHQL_WS_ENDPOINT'] ??
+        'wss://api.vron.stage.motorenflug.at/graphql';
   }
 
   /// Current environment (development, staging, production)
@@ -28,5 +30,11 @@ class EnvConfig {
   static bool get isDebug {
     final debug = dotenv.env['DEBUG'] ?? 'false';
     return debug.toLowerCase() == 'true';
+  }
+
+  /// Merchant web app base URL
+  static String get merchantUrl {
+    return dotenv.env['MERCHANT_URL'] ??
+        'https://app.vron.stage.motorenflug.at';
   }
 }

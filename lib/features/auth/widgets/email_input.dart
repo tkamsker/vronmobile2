@@ -7,11 +7,7 @@ class EmailInput extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode? focusNode;
 
-  const EmailInput({
-    super.key,
-    required this.controller,
-    this.focusNode,
-  });
+  const EmailInput({super.key, required this.controller, this.focusNode});
 
   @override
   Widget build(BuildContext context) {
