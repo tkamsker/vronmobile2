@@ -1,0 +1,81 @@
+# Query to fetch detailed project information by ID
+# Feature: Project Detail and Data Management (UC10, UC11)
+# Used in: ProjectDetailScreen, ProjectDataScreen
+#
+# This query fetches comprehensive project data including subscription details
+# for displaying in the project detail view and populating the edit form.
+#
+# Parameters:
+#   - $id: ID! - The unique project identifier
+#   - $lang: Language! - The language for I18N fields (EN, DE, PT)
+#
+# Returns: Project object with all detail fields
+
+query getProjectDetail($id: ID!, $lang: Language!) {
+  project(id: $id) {
+    # Core identifiers
+    id
+    slug
+
+    # I18N fields (name and description)
+    name {
+      text(lang: $lang)
+    }
+    description {
+      text(lang: $lang)
+    }
+
+    # Media and status
+    imageUrl
+    isLive
+    liveDate
+
+    # Subscription details for status badge and display
+    subscription {
+      isActive
+      isTrial
+      status
+      canChoosePlan
+      hasExpired
+      currency
+      price
+      renewalInterval
+      startedAt
+      expiresAt
+      renewsAt
+      prices {
+        currency
+        monthly
+        yearly
+      }
+    }
+  }
+}
+
+# Example Response:
+# {
+#   "project": {
+#     "id": "proj_abc123",
+#     "slug": "marketing-analytics",
+#     "name": {
+#       "text": "Marketing Analytics"
+#     },
+#     "description": {
+#       "text": "Realtime overview of campaign performance across channels."
+#     },
+#     "imageUrl": "https://cdn.vron.com/projects/proj_abc123/thumb.jpg",
+#     "isLive": true,
+#     "liveDate": "2024-11-15T10:30:00Z",
+#     "subscription": {
+#       "isActive": true,
+#       "isTrial": false,
+#       "status": "ACTIVE",
+#       ...
+#     }
+#   }
+# }
+
+# Error Scenarios:
+# - Project not found: Returns null or GraphQL error
+# - Unauthorized: GraphQL error with authentication message
+# - Invalid ID format: GraphQL error with validation message
