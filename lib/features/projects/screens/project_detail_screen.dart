@@ -60,15 +60,23 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   }
 
   Future<void> _handleSaveProjectData(String name, String description) async {
-    // TODO: Implement updateProject mutation (UC11 - Phase 4)
-    // For now, just update local state
-    if (_project != null) {
-      setState(() {
-        _project = _project!.copyWith(
-          name: name,
-          description: description,
-        );
-      });
+    if (_project == null) return;
+
+    try {
+      // Call updateProject mutation
+      await _projectService.updateProject(
+        projectId: _project!.id,
+        name: name,
+        description: description,
+      );
+
+      // Automatic refresh after successful save (per clarification #1: last-write-wins)
+      // Reload project to show any server-side changes or concurrent modifications
+      await _loadProjectDetail();
+    } catch (e) {
+      // Error is already handled by ProjectDataTab
+      // Just rethrow so the tab can display the error
+      rethrow;
     }
   }
 
