@@ -48,6 +48,15 @@ class ProjectService {
     }
   ''';
 
+  /// GraphQL mutation to update project (actually a Product in backend)
+  /// Per ProjectMutation.md: Projects are implemented as Products in the backend
+  /// Uses VRonUpdateProduct mutation with title field (not name)
+  static const String _updateProjectMutation = '''
+    mutation UpdateProduct(\$input: VRonUpdateProductInput!) {
+      VRonUpdateProduct(input: \$input)
+    }
+  ''';
+
   /// Fetch all projects for the authenticated user
   /// Returns a list of Project objects or throws an exception on error
   Future<List<Project>> fetchProjects() async {
@@ -163,26 +172,66 @@ class ProjectService {
     }
   }
 
-  /// Update project master data (NOT AVAILABLE - backend doesn't support it)
-  /// This is a placeholder method - backend doesn't have updateProject mutation
-  /// Throws exception indicating feature is not available
+  /// Update project master data via VRonUpdateProduct mutation
+  /// Per ProjectMutation.md: Projects are Products in backend, name→title mapping
+  /// Returns updated Project object or throws an exception on error
   Future<Project> updateProject({
     required String projectId,
     required String name,
     required String description,
   }) async {
-    if (kDebugMode) {
-      print('⚠️ [PROJECTS] Update project called but NOT AVAILABLE in backend');
-      print('  - Project ID: $projectId');
-      print('  - Requested name: $name');
-      print('  - Requested description: $description');
-    }
+    try {
+      if (kDebugMode) {
+        print('📝 [PROJECTS] Updating project/product $projectId (language: $_language)...');
+        print('  - Title (name): $name');
+        print('  - Description: $description');
+      }
 
-    // Backend doesn't support project updates yet
-    throw Exception(
-      'Project updates are not available yet. '
-      'The backend API doesn\'t support the updateProject mutation. '
-      'Please contact support to enable this feature.'
-    );
+      // Projects are Products in backend - use VRonUpdateProduct mutation
+      // Map: name → title (per ProjectMutation.md documentation)
+      final result = await _graphqlService.query(
+        _updateProjectMutation,
+        variables: {
+          'input': {
+            'id': projectId,
+            'title': name, // name field maps to title in backend
+            'description': description,
+          },
+        },
+      );
+
+      if (result.hasException) {
+        final exception = result.exception;
+        if (kDebugMode) {
+          print('❌ [PROJECTS] GraphQL exception: ${exception.toString()}');
+        }
+
+        if (exception?.graphqlErrors.isNotEmpty ?? false) {
+          final error = exception!.graphqlErrors.first;
+          if (kDebugMode) {
+            print('❌ [PROJECTS] GraphQL error: ${error.message}');
+          }
+          throw Exception('Failed to update project: ${error.message}');
+        }
+
+        throw Exception('Failed to update project: ${exception.toString()}');
+      }
+
+      if (kDebugMode) {
+        print('✅ [PROJECTS] Update mutation successful, refreshing project data...');
+      }
+
+      // Mutation returns just a success indicator, need to refetch the project
+      final updatedProject = await getProjectDetail(projectId);
+
+      if (kDebugMode) {
+        print('✅ [PROJECTS] Project updated successfully: ${updatedProject.name}');
+      }
+
+      return updatedProject;
+    } catch (e) {
+      if (kDebugMode) print('❌ [PROJECTS] Error updating project: ${e.toString()}');
+      rethrow;
+    }
   }
 }
