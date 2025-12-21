@@ -49,7 +49,7 @@ class ProjectSubscription {
           ? DateTime.parse(json['renewsAt'] as String)
           : null,
       prices: ProjectSubscriptionPrices.fromJson(
-        json['prices'] as Map<String, dynamic>? ?? {},
+        (json['prices'] as Map<dynamic, dynamic>?)?.cast<String, dynamic>() ?? {},
       ),
     );
   }

@@ -1,128 +1,322 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vronmobile2/features/home/models/project.dart';
-import 'package:vronmobile2/features/home/models/project_status.dart';
+import 'package:vronmobile2/features/home/models/project_subscription.dart';
 
 void main() {
   group('Project Model', () {
     final testDate = DateTime.parse('2025-12-20T10:30:00Z');
 
-    test('creates Project from valid JSON', () {
+    // Helper to create a test subscription
+    ProjectSubscription createTestSubscription({
+      bool isActive = true,
+      bool isTrial = false,
+      String status = 'ACTIVE',
+      String renewalInterval = 'MONTHLY',
+    }) {
+      return ProjectSubscription(
+        isActive: isActive,
+        isTrial: isTrial,
+        status: status,
+        canChoosePlan: false,
+        hasExpired: false,
+        currency: 'EUR',
+        price: 29.99,
+        renewalInterval: renewalInterval,
+        startedAt: testDate,
+        expiresAt: testDate.add(const Duration(days: 30)),
+        renewsAt: testDate.add(const Duration(days: 30)),
+        prices: const ProjectSubscriptionPrices(
+          currency: 'EUR',
+          monthly: 29.99,
+          yearly: 299.99,
+        ),
+      );
+    }
+
+    test('creates Project from valid JSON with I18NField', () {
       final json = {
         'id': 'proj_123',
-        'title': 'Marketing Analytics',
-        'description': 'Realtime overview of campaign performance.',
-        'status': 'active',
+        'slug': 'marketing-analytics',
+        'name': {'text': 'Marketing Analytics'},
         'imageUrl': 'https://cdn.vron.one/projects/proj_123/thumbnail.jpg',
-        'updatedAt': '2025-12-20T10:30:00Z',
-        'teamInfo': '4 teammates',
+        'isLive': true,
+        'liveDate': '2025-12-20T10:30:00Z',
+        'subscription': {
+          'isActive': true,
+          'isTrial': false,
+          'status': 'ACTIVE',
+          'canChoosePlan': false,
+          'hasExpired': false,
+          'currency': 'EUR',
+          'price': 29.99,
+          'renewalInterval': 'MONTHLY',
+          'startedAt': '2025-12-20T10:30:00Z',
+          'expiresAt': '2026-01-20T10:30:00Z',
+          'renewsAt': '2026-01-20T10:30:00Z',
+          'prices': {'currency': 'EUR', 'monthly': 29.99, 'yearly': 299.99},
+        },
       };
 
       final project = Project.fromJson(json);
 
       expect(project.id, 'proj_123');
-      expect(project.title, 'Marketing Analytics');
-      expect(project.description, 'Realtime overview of campaign performance.');
-      expect(project.status, ProjectStatus.active);
+      expect(project.slug, 'marketing-analytics');
+      expect(project.name, 'Marketing Analytics');
       expect(
         project.imageUrl,
         'https://cdn.vron.one/projects/proj_123/thumbnail.jpg',
       );
-      expect(project.updatedAt, testDate);
-      expect(project.teamInfo, '4 teammates');
+      expect(project.isLive, true);
+      expect(project.liveDate, testDate);
+      expect(project.subscription.isActive, true);
+      expect(project.subscription.status, 'ACTIVE');
     });
 
-    test('creates Project from JSON with missing optional fields', () {
-      final json = {'id': 'proj_456', 'title': 'Product Roadmap'};
+    test('creates Project from JSON with direct string name', () {
+      final json = {
+        'id': 'proj_456',
+        'slug': 'product-roadmap',
+        'name': 'Product Roadmap',
+        'imageUrl': '',
+        'isLive': false,
+        'subscription': {},
+      };
 
       final project = Project.fromJson(json);
 
       expect(project.id, 'proj_456');
-      expect(project.title, 'Product Roadmap');
-      expect(project.description, '');
-      expect(project.status, ProjectStatus.active);
-      expect(project.imageUrl, '');
-      expect(project.teamInfo, '');
+      expect(project.slug, 'product-roadmap');
+      expect(project.name, 'Product Roadmap');
+      expect(project.isLive, false);
+      expect(project.liveDate, null);
     });
 
-    test('converts Project to JSON', () {
-      final project = Project(
-        id: 'proj_789',
-        title: 'Mobile UX Refresh',
-        description: 'Iterating on onboarding and nav patterns.',
-        status: ProjectStatus.paused,
-        imageUrl: 'https://cdn.vron.one/projects/proj_789/thumbnail.jpg',
-        updatedAt: testDate,
-        teamInfo: 'Solo',
-      );
+    test('creates Project from JSON with missing optional fields', () {
+      final json = {
+        'id': 'proj_789',
+        'slug': 'test-project',
+        'name': {'text': 'Test Project'},
+        'isLive': true,
+        'subscription': {'isActive': false, 'status': 'NOT_STARTED'},
+      };
 
-      final json = project.toJson();
+      final project = Project.fromJson(json);
 
-      expect(json['id'], 'proj_789');
-      expect(json['title'], 'Mobile UX Refresh');
-      expect(json['description'], 'Iterating on onboarding and nav patterns.');
-      expect(json['status'], 'paused');
-      expect(
-        json['imageUrl'],
-        'https://cdn.vron.one/projects/proj_789/thumbnail.jpg',
+      expect(project.id, 'proj_789');
+      expect(project.name, 'Test Project');
+      expect(project.imageUrl, '');
+      expect(project.isLive, true);
+      expect(project.subscription.isActive, false);
+    });
+
+    test('statusLabel returns correct values', () {
+      // Live + Active
+      final liveActive = Project(
+        id: '1',
+        slug: 'test',
+        name: 'Test',
+        imageUrl: '',
+        isLive: true,
+        subscription: createTestSubscription(isActive: true, isTrial: false),
       );
-      expect(json['updatedAt'], '2025-12-20T10:30:00.000Z');
-      expect(json['teamInfo'], 'Solo');
+      expect(liveActive.statusLabel, 'Live');
+
+      // Live + Trial
+      final liveTrial = Project(
+        id: '2',
+        slug: 'test',
+        name: 'Test',
+        imageUrl: '',
+        isLive: true,
+        subscription: createTestSubscription(isActive: false, isTrial: true),
+      );
+      expect(liveTrial.statusLabel, 'Live (Trial)');
+
+      // Live + Inactive
+      final liveInactive = Project(
+        id: '3',
+        slug: 'test',
+        name: 'Test',
+        imageUrl: '',
+        isLive: true,
+        subscription: createTestSubscription(isActive: false, isTrial: false),
+      );
+      expect(liveInactive.statusLabel, 'Live (Inactive)');
+
+      // Not Live
+      final notLive = Project(
+        id: '4',
+        slug: 'test',
+        name: 'Test',
+        imageUrl: '',
+        isLive: false,
+        subscription: createTestSubscription(),
+      );
+      expect(notLive.statusLabel, 'Not Live');
+    });
+
+    test('statusColorHex returns correct colors', () {
+      // Green for Live + Active
+      final liveActive = Project(
+        id: '1',
+        slug: 'test',
+        name: 'Test',
+        imageUrl: '',
+        isLive: true,
+        subscription: createTestSubscription(isActive: true),
+      );
+      expect(liveActive.statusColorHex, '#4CAF50');
+
+      // Orange for Live + Trial
+      final liveTrial = Project(
+        id: '2',
+        slug: 'test',
+        name: 'Test',
+        imageUrl: '',
+        isLive: true,
+        subscription: createTestSubscription(isActive: false, isTrial: true),
+      );
+      expect(liveTrial.statusColorHex, '#FF9800');
+
+      // Gray for Not Live
+      final notLive = Project(
+        id: '3',
+        slug: 'test',
+        name: 'Test',
+        imageUrl: '',
+        isLive: false,
+        subscription: createTestSubscription(),
+      );
+      expect(notLive.statusColorHex, '#9E9E9E');
+
+      // Red for Live + Inactive
+      final liveInactive = Project(
+        id: '4',
+        slug: 'test',
+        name: 'Test',
+        imageUrl: '',
+        isLive: true,
+        subscription: createTestSubscription(isActive: false, isTrial: false),
+      );
+      expect(liveInactive.statusColorHex, '#F44336');
+    });
+
+    test('shortDescription returns correct descriptions', () {
+      final liveActive = Project(
+        id: '1',
+        slug: 'test',
+        name: 'Test',
+        imageUrl: '',
+        isLive: true,
+        subscription: createTestSubscription(isActive: true),
+      );
+      expect(liveActive.shortDescription, 'Live • Active subscription');
+
+      final notLiveTrial = Project(
+        id: '2',
+        slug: 'test',
+        name: 'Test',
+        imageUrl: '',
+        isLive: false,
+        subscription: createTestSubscription(isTrial: true),
+      );
+      expect(notLiveTrial.shortDescription, 'Not published • Trial');
+    });
+
+    test('teamInfo derives from subscription', () {
+      final monthly = Project(
+        id: '1',
+        slug: 'test',
+        name: 'Test',
+        imageUrl: '',
+        isLive: true,
+        subscription: createTestSubscription(renewalInterval: 'MONTHLY'),
+      );
+      expect(monthly.teamInfo, 'Monthly plan');
+
+      final yearly = Project(
+        id: '2',
+        slug: 'test',
+        name: 'Test',
+        imageUrl: '',
+        isLive: true,
+        subscription: createTestSubscription(renewalInterval: 'YEARLY'),
+      );
+      expect(yearly.teamInfo, 'Yearly plan');
+    });
+
+    test('updatedAt uses liveDate or subscription dates', () {
+      final withLiveDate = Project(
+        id: '1',
+        slug: 'test',
+        name: 'Test',
+        imageUrl: '',
+        isLive: true,
+        liveDate: testDate,
+        subscription: createTestSubscription(),
+      );
+      expect(withLiveDate.updatedAt, testDate);
+
+      final withoutLiveDate = Project(
+        id: '2',
+        slug: 'test',
+        name: 'Test',
+        imageUrl: '',
+        isLive: true,
+        subscription: createTestSubscription(),
+      );
+      expect(withoutLiveDate.updatedAt, isNotNull);
     });
 
     test('copyWith creates new instance with updated fields', () {
       final original = Project(
         id: 'proj_001',
-        title: 'Original Title',
-        description: 'Original description',
-        status: ProjectStatus.active,
+        slug: 'original-slug',
+        name: 'Original Title',
         imageUrl: 'https://example.com/image.jpg',
-        updatedAt: testDate,
-        teamInfo: '5 teammates',
+        isLive: false,
+        subscription: createTestSubscription(),
       );
 
       final updated = original.copyWith(
-        title: 'Updated Title',
-        status: ProjectStatus.archived,
+        name: 'Updated Title',
+        isLive: true,
       );
 
       expect(updated.id, 'proj_001');
-      expect(updated.title, 'Updated Title');
-      expect(updated.description, 'Original description');
-      expect(updated.status, ProjectStatus.archived);
-      expect(updated.imageUrl, 'https://example.com/image.jpg');
-      expect(updated.updatedAt, testDate);
-      expect(updated.teamInfo, '5 teammates');
+      expect(updated.name, 'Updated Title');
+      expect(updated.isLive, true);
+      expect(updated.slug, 'original-slug');
     });
 
     test('equality works correctly', () {
       final project1 = Project(
         id: 'proj_001',
-        title: 'Test Project',
-        description: 'Description',
-        status: ProjectStatus.active,
+        slug: 'test-project',
+        name: 'Test Project',
         imageUrl: 'https://example.com/image.jpg',
-        updatedAt: testDate,
-        teamInfo: '3 teammates',
+        isLive: true,
+        liveDate: testDate,
+        subscription: createTestSubscription(),
       );
 
       final project2 = Project(
         id: 'proj_001',
-        title: 'Test Project',
-        description: 'Description',
-        status: ProjectStatus.active,
+        slug: 'test-project',
+        name: 'Test Project',
         imageUrl: 'https://example.com/image.jpg',
-        updatedAt: testDate,
-        teamInfo: '3 teammates',
+        isLive: true,
+        liveDate: testDate,
+        subscription: createTestSubscription(),
       );
 
       final project3 = Project(
         id: 'proj_002',
-        title: 'Different Project',
-        description: 'Description',
-        status: ProjectStatus.active,
+        slug: 'different-project',
+        name: 'Different Project',
         imageUrl: 'https://example.com/image.jpg',
-        updatedAt: testDate,
-        teamInfo: '3 teammates',
+        isLive: false,
+        subscription: createTestSubscription(),
       );
 
       expect(project1, equals(project2));
@@ -133,19 +327,19 @@ void main() {
     test('toString returns readable format', () {
       final project = Project(
         id: 'proj_123',
-        title: 'Test Project',
-        description: 'Description',
-        status: ProjectStatus.active,
+        slug: 'test-project',
+        name: 'Test Project',
         imageUrl: 'https://example.com/image.jpg',
-        updatedAt: testDate,
-        teamInfo: '2 teammates',
+        isLive: true,
+        subscription: createTestSubscription(),
       );
 
       final result = project.toString();
 
       expect(result, contains('proj_123'));
       expect(result, contains('Test Project'));
-      expect(result, contains('Active'));
+      expect(result, contains('test-project'));
+      expect(result, contains('true')); // isLive
     });
   });
 }

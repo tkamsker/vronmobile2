@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:vronmobile2/core/services/graphql_service.dart';
-import 'package:vronmobile2/features/home/models/project.dart';
-import 'package:vronmobile2/features/home/models/project_status.dart';
 import 'package:vronmobile2/features/home/services/project_service.dart';
 
 // Mock GraphQL service for testing
@@ -31,10 +29,11 @@ void main() {
 
     // Valid GraphQL document for mocking
     final mockDocument = gql('''
-      query GetProjects {
-        projects {
+      query GetProjects(\$lang: Language!) {
+        getProjects(input: {}) {
           id
-          title
+          slug
+          name { text(lang: \$lang) }
         }
       }
     ''');
@@ -48,26 +47,37 @@ void main() {
       test('returns list of projects on successful API call', () async {
         // Arrange
         final mockData = {
-          'projects': [
+          'getProjects': [
             {
               'id': 'proj_123',
-              'title': 'Marketing Analytics',
-              'description': 'Realtime overview of campaign performance.',
-              'status': 'active',
-              'imageUrl':
-                  'https://cdn.vron.one/projects/proj_123/thumbnail.jpg',
-              'updatedAt': '2025-12-20T10:30:00Z',
-              'teamInfo': '4 teammates',
+              'slug': 'marketing-analytics',
+              'name': {'text': 'Marketing Analytics'},
+              'imageUrl': 'https://cdn.vron.one/projects/proj_123/thumbnail.jpg',
+              'isLive': true,
+              'liveDate': '2025-12-20T10:30:00Z',
+              'subscription': {
+                'isActive': true,
+                'isTrial': false,
+                'status': 'ACTIVE',
+                'canChoosePlan': false,
+                'hasExpired': false,
+                'prices': {'currency': 'EUR', 'monthly': 29.99, 'yearly': 299.99},
+              },
             },
             {
               'id': 'proj_456',
-              'title': 'Product Roadmap',
-              'description': 'Plan feature releases across quarters.',
-              'status': 'paused',
-              'imageUrl':
-                  'https://cdn.vron.one/projects/proj_456/thumbnail.jpg',
-              'updatedAt': '2025-12-19T15:45:00Z',
-              'teamInfo': '7 teammates',
+              'slug': 'product-roadmap',
+              'name': {'text': 'Product Roadmap'},
+              'imageUrl': 'https://cdn.vron.one/projects/proj_456/thumbnail.jpg',
+              'isLive': false,
+              'subscription': {
+                'isActive': false,
+                'isTrial': true,
+                'status': 'TRIAL_EXPIRED',
+                'canChoosePlan': true,
+                'hasExpired': true,
+                'prices': {'currency': 'EUR', 'monthly': 29.99, 'yearly': 299.99},
+              },
             },
           ],
         };
@@ -84,16 +94,16 @@ void main() {
         // Assert
         expect(projects.length, 2);
         expect(projects[0].id, 'proj_123');
-        expect(projects[0].title, 'Marketing Analytics');
-        expect(projects[0].status, ProjectStatus.active);
+        expect(projects[0].name, 'Marketing Analytics');
+        expect(projects[0].isLive, true);
         expect(projects[1].id, 'proj_456');
-        expect(projects[1].title, 'Product Roadmap');
-        expect(projects[1].status, ProjectStatus.paused);
+        expect(projects[1].name, 'Product Roadmap');
+        expect(projects[1].isLive, false);
       });
 
       test('returns empty list when no projects exist', () async {
         // Arrange
-        final mockData = {'projects': []};
+        final mockData = {'getProjects': []};
 
         mockGraphQLService.mockResult = QueryResult(
           data: mockData,
@@ -108,9 +118,9 @@ void main() {
         expect(projects, isEmpty);
       });
 
-      test('returns empty list when projects is null', () async {
+      test('returns empty list when getProjects is null', () async {
         // Arrange
-        final mockData = {'projects': null};
+        final mockData = {'getProjects': null};
 
         mockGraphQLService.mockResult = QueryResult(
           data: mockData,
@@ -154,37 +164,46 @@ void main() {
       });
     });
 
-    group('fetchProjectsByStatus', () {
-      test('filters projects by active status', () async {
+    group('fetchProjectsByLiveStatus', () {
+      test('filters projects by live status', () async {
         // Arrange
         final mockData = {
-          'projects': [
+          'getProjects': [
             {
               'id': 'proj_123',
-              'title': 'Project 1',
-              'description': '',
-              'status': 'active',
+              'slug': 'project-1',
+              'name': {'text': 'Project 1'},
               'imageUrl': '',
-              'updatedAt': '2025-12-20T10:30:00Z',
-              'teamInfo': '',
+              'isLive': true,
+              'subscription': {
+                'isActive': true,
+                'status': 'ACTIVE',
+                'prices': {},
+              },
             },
             {
               'id': 'proj_456',
-              'title': 'Project 2',
-              'description': '',
-              'status': 'paused',
+              'slug': 'project-2',
+              'name': {'text': 'Project 2'},
               'imageUrl': '',
-              'updatedAt': '2025-12-20T10:30:00Z',
-              'teamInfo': '',
+              'isLive': false,
+              'subscription': {
+                'isActive': false,
+                'status': 'NOT_STARTED',
+                'prices': {},
+              },
             },
             {
               'id': 'proj_789',
-              'title': 'Project 3',
-              'description': '',
-              'status': 'active',
+              'slug': 'project-3',
+              'name': {'text': 'Project 3'},
               'imageUrl': '',
-              'updatedAt': '2025-12-20T10:30:00Z',
-              'teamInfo': '',
+              'isLive': true,
+              'subscription': {
+                'isActive': true,
+                'status': 'ACTIVE',
+                'prices': {},
+              },
             },
           ],
         };
@@ -196,46 +215,150 @@ void main() {
         );
 
         // Act
-        final projects = await projectService.fetchProjectsByStatus('active');
+        final projects = await projectService.fetchProjectsByLiveStatus(true);
 
         // Assert
         expect(projects.length, 2);
-        expect(projects[0].status, ProjectStatus.active);
-        expect(projects[1].status, ProjectStatus.active);
+        expect(projects[0].isLive, true);
+        expect(projects[1].isLive, true);
+      });
+    });
+
+    group('fetchProjectsBySubscriptionStatus', () {
+      test('filters projects by subscription status', () async {
+        // Arrange
+        final mockData = {
+          'getProjects': [
+            {
+              'id': 'proj_123',
+              'slug': 'project-1',
+              'name': {'text': 'Project 1'},
+              'imageUrl': '',
+              'isLive': true,
+              'subscription': {
+                'isActive': true,
+                'status': 'ACTIVE',
+                'prices': {},
+              },
+            },
+            {
+              'id': 'proj_456',
+              'slug': 'project-2',
+              'name': {'text': 'Project 2'},
+              'imageUrl': '',
+              'isLive': false,
+              'subscription': {
+                'isActive': false,
+                'status': 'TRIAL_EXPIRED',
+                'prices': {},
+              },
+            },
+          ],
+        };
+
+        mockGraphQLService.mockResult = QueryResult(
+          data: mockData,
+          source: QueryResultSource.network,
+          options: QueryOptions(document: mockDocument),
+        );
+
+        // Act
+        final projects = await projectService.fetchProjectsBySubscriptionStatus('ACTIVE');
+
+        // Assert
+        expect(projects.length, 1);
+        expect(projects[0].subscription.status, 'ACTIVE');
+      });
+    });
+
+    group('fetchActiveProjects', () {
+      test('filters projects that are live and have active subscription', () async {
+        // Arrange
+        final mockData = {
+          'getProjects': [
+            {
+              'id': 'proj_123',
+              'slug': 'project-1',
+              'name': {'text': 'Project 1'},
+              'imageUrl': '',
+              'isLive': true,
+              'subscription': {
+                'isActive': true,
+                'status': 'ACTIVE',
+                'prices': {},
+              },
+            },
+            {
+              'id': 'proj_456',
+              'slug': 'project-2',
+              'name': {'text': 'Project 2'},
+              'imageUrl': '',
+              'isLive': true,
+              'subscription': {
+                'isActive': false,
+                'status': 'TRIAL_EXPIRED',
+                'prices': {},
+              },
+            },
+            {
+              'id': 'proj_789',
+              'slug': 'project-3',
+              'name': {'text': 'Project 3'},
+              'imageUrl': '',
+              'isLive': false,
+              'subscription': {
+                'isActive': true,
+                'status': 'ACTIVE',
+                'prices': {},
+              },
+            },
+          ],
+        };
+
+        mockGraphQLService.mockResult = QueryResult(
+          data: mockData,
+          source: QueryResultSource.network,
+          options: QueryOptions(document: mockDocument),
+        );
+
+        // Act
+        final projects = await projectService.fetchActiveProjects();
+
+        // Assert
+        expect(projects.length, 1);
+        expect(projects[0].isLive, true);
+        expect(projects[0].subscription.isActive, true);
       });
     });
 
     group('searchProjects', () {
-      test('searches projects by title (case-insensitive)', () async {
+      test('searches projects by name (case-insensitive)', () async {
         // Arrange
         final mockData = {
-          'projects': [
+          'getProjects': [
             {
               'id': 'proj_123',
-              'title': 'Marketing Analytics',
-              'description': '',
-              'status': 'active',
+              'slug': 'marketing-analytics',
+              'name': {'text': 'Marketing Analytics'},
               'imageUrl': '',
-              'updatedAt': '2025-12-20T10:30:00Z',
-              'teamInfo': '',
+              'isLive': true,
+              'subscription': {'isActive': true, 'status': 'ACTIVE', 'prices': {}},
             },
             {
               'id': 'proj_456',
-              'title': 'Product Roadmap',
-              'description': '',
-              'status': 'active',
+              'slug': 'product-roadmap',
+              'name': {'text': 'Product Roadmap'},
               'imageUrl': '',
-              'updatedAt': '2025-12-20T10:30:00Z',
-              'teamInfo': '',
+              'isLive': true,
+              'subscription': {'isActive': true, 'status': 'ACTIVE', 'prices': {}},
             },
             {
               'id': 'proj_789',
-              'title': 'Mobile Marketing',
-              'description': '',
-              'status': 'active',
+              'slug': 'mobile-marketing',
+              'name': {'text': 'Mobile Marketing'},
               'imageUrl': '',
-              'updatedAt': '2025-12-20T10:30:00Z',
-              'teamInfo': '',
+              'isLive': true,
+              'subscription': {'isActive': true, 'status': 'ACTIVE', 'prices': {}},
             },
           ],
         };
@@ -251,22 +374,21 @@ void main() {
 
         // Assert
         expect(projects.length, 2);
-        expect(projects[0].title, 'Marketing Analytics');
-        expect(projects[1].title, 'Mobile Marketing');
+        expect(projects[0].name, 'Marketing Analytics');
+        expect(projects[1].name, 'Mobile Marketing');
       });
 
       test('returns empty list when no matches found', () async {
         // Arrange
         final mockData = {
-          'projects': [
+          'getProjects': [
             {
               'id': 'proj_123',
-              'title': 'Marketing Analytics',
-              'description': '',
-              'status': 'active',
+              'slug': 'marketing-analytics',
+              'name': {'text': 'Marketing Analytics'},
               'imageUrl': '',
-              'updatedAt': '2025-12-20T10:30:00Z',
-              'teamInfo': '',
+              'isLive': true,
+              'subscription': {'isActive': true, 'status': 'ACTIVE', 'prices': {}},
             },
           ],
         };
@@ -278,7 +400,7 @@ void main() {
         );
 
         // Act
-        final projects = await projectService.searchProjects('nomatch');
+        final projects = await projectService.searchProjects('nonexistent');
 
         // Assert
         expect(projects, isEmpty);
