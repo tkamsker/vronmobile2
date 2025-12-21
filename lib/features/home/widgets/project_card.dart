@@ -7,11 +7,7 @@ class ProjectCard extends StatelessWidget {
   final Project project;
   final Function(String projectId)? onTap;
 
-  const ProjectCard({
-    super.key,
-    required this.project,
-    this.onTap,
-  });
+  const ProjectCard({super.key, required this.project, this.onTap});
 
   String _formatUpdateTime(DateTime updatedAt) {
     final now = DateTime.now();
@@ -35,13 +31,12 @@ class ProjectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: '${project.name} project, ${project.statusLabel}, ${project.shortDescription}',
+      label:
+          '${project.name} project, ${project.statusLabel}, ${project.shortDescription}',
       button: true,
       child: Card(
         elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,10 +77,7 @@ class ProjectCard extends StatelessWidget {
                   if (project.shortDescription.isNotEmpty)
                     Text(
                       project.shortDescription,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -95,10 +87,7 @@ class ProjectCard extends StatelessWidget {
                   // Metadata row (updated time + team info)
                   Text(
                     '${_formatUpdateTime(project.updatedAt)} · ${project.teamInfo}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[500],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
 
                   const SizedBox(height: 16),
@@ -146,11 +135,7 @@ class ProjectCard extends StatelessWidget {
         height: 200,
         color: Colors.grey[300],
         child: const Center(
-          child: Icon(
-            Icons.image,
-            size: 64,
-            color: Colors.grey,
-          ),
+          child: Icon(Icons.image, size: 64, color: Colors.grey),
         ),
       );
     }
@@ -163,19 +148,13 @@ class ProjectCard extends StatelessWidget {
       placeholder: (context, url) => Container(
         height: 200,
         color: Colors.grey[200],
-        child: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        child: const Center(child: CircularProgressIndicator()),
       ),
       errorWidget: (context, url, error) => Container(
         height: 200,
         color: Colors.grey[300],
         child: const Center(
-          child: Icon(
-            Icons.broken_image,
-            size: 64,
-            color: Colors.grey,
-          ),
+          child: Icon(Icons.broken_image, size: 64, color: Colors.grey),
         ),
       ),
     );
@@ -185,7 +164,7 @@ class ProjectCard extends StatelessWidget {
     // Parse color from hex string
     final colorHex = project.statusColorHex.replaceAll('#', '');
     final color = Color(int.parse('FF$colorHex', radix: 16));
-    final backgroundColor = color.withOpacity(0.1);
+    final backgroundColor = color.withValues(alpha: 0.1);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

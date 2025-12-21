@@ -26,7 +26,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   String _searchQuery = '';
-  String _selectedFilter = 'All'; // Track selected filter: All, Active, Archived
+  String _selectedFilter =
+      'All'; // Track selected filter: All, Active, Archived
 
   @override
   void initState() {
@@ -151,17 +152,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(),
-      body: RefreshIndicator(
-        onRefresh: _loadProjects,
-        child: _buildBody(),
-      ),
+      body: RefreshIndicator(onRefresh: _loadProjects, child: _buildBody()),
       bottomNavigationBar: BottomNavBar(
         currentIndex: 0, // Home tab is active
         onTap: _handleBottomNavTap,
       ),
-      floatingActionButton: CustomFAB(
-        onPressed: _handleCreateProject,
-      ),
+      floatingActionButton: CustomFAB(onPressed: _handleCreateProject),
     );
   }
 
@@ -177,10 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: _handleProfileTap,
             child: CircleAvatar(
               backgroundColor: Colors.grey[300],
-              child: Icon(
-                Icons.person,
-                color: Colors.grey[700],
-              ),
+              child: Icon(Icons.person, color: Colors.grey[700]),
             ),
           ),
         ),
@@ -196,9 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildHeader(),
           _buildSearchBar(),
           _buildFilterTabs(),
-          Expanded(
-            child: _buildContent(),
-          ),
+          Expanded(child: _buildContent()),
         ],
       ),
     );
@@ -212,16 +203,16 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Text(
             'Your projects',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             'Jump back into your workspace',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
           ),
         ],
       ),
@@ -297,15 +288,13 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       },
       backgroundColor: Colors.grey[100],
-      selectedColor: Theme.of(context).primaryColor.withOpacity(0.1),
+      selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
       labelStyle: TextStyle(
         color: isSelected ? Theme.of(context).primaryColor : Colors.grey[700],
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       ),
       side: BorderSide(
-        color: isSelected
-            ? Theme.of(context).primaryColor
-            : Colors.grey[300]!,
+        color: isSelected ? Theme.of(context).primaryColor : Colors.grey[300]!,
       ),
     );
   }
@@ -327,9 +316,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildLoadingState() {
-    return const Center(
-      child: CircularProgressIndicator(),
-    );
+    return const Center(child: CircularProgressIndicator());
   }
 
   Widget _buildErrorState() {
@@ -339,11 +326,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red[300],
-            ),
+            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
             Text(
               'Failed to load projects',
@@ -353,9 +336,9 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 8),
             Text(
               _errorMessage ?? 'Unknown error',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -376,11 +359,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.folder_open,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.folder_open, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               _searchQuery.isNotEmpty ? 'No projects found' : 'No projects yet',
@@ -392,9 +371,9 @@ class _HomeScreenState extends State<HomeScreen> {
               _searchQuery.isNotEmpty
                   ? 'Try a different search term'
                   : 'Create your first project to get started',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               textAlign: TextAlign.center,
             ),
             if (_searchQuery.isEmpty) ...[
@@ -422,15 +401,15 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Text(
                 'Recent projects',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               Text(
                 '${_filteredProjects.length} total',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               ),
             ],
           ),

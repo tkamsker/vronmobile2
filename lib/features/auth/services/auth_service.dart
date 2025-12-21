@@ -87,8 +87,9 @@ class AuthService {
         }
         if (exception?.graphqlErrors.isNotEmpty ?? false) {
           final error = exception!.graphqlErrors.first;
-          if (kDebugMode)
+          if (kDebugMode) {
             print('❌ [AUTH] GraphQL error message: ${error.message}');
+          }
           return AuthResult.failure(error.message);
         }
         return AuthResult.failure(

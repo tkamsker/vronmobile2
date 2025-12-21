@@ -8,10 +8,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            bottomNavigationBar: BottomNavBar(
-              currentIndex: 0,
-              onTap: (_) {},
-            ),
+            bottomNavigationBar: BottomNavBar(currentIndex: 0, onTap: (_) {}),
           ),
         ),
       );
@@ -26,10 +23,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            bottomNavigationBar: BottomNavBar(
-              currentIndex: 0,
-              onTap: (_) {},
-            ),
+            bottomNavigationBar: BottomNavBar(currentIndex: 0, onTap: (_) {}),
           ),
         ),
       );
@@ -44,16 +38,14 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            bottomNavigationBar: BottomNavBar(
-              currentIndex: 0,
-              onTap: (_) {},
-            ),
+            bottomNavigationBar: BottomNavBar(currentIndex: 0, onTap: (_) {}),
           ),
         ),
       );
 
-      final bottomNav =
-          tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
+      final bottomNav = tester.widget<BottomNavigationBar>(
+        find.byType(BottomNavigationBar),
+      );
       expect(bottomNav.currentIndex, 0);
     });
 
@@ -63,16 +55,14 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            bottomNavigationBar: BottomNavBar(
-              currentIndex: 1,
-              onTap: (_) {},
-            ),
+            bottomNavigationBar: BottomNavBar(currentIndex: 1, onTap: (_) {}),
           ),
         ),
       );
 
-      final bottomNav =
-          tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
+      final bottomNav = tester.widget<BottomNavigationBar>(
+        find.byType(BottomNavigationBar),
+      );
       expect(bottomNav.currentIndex, 1);
     });
 
@@ -80,16 +70,14 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            bottomNavigationBar: BottomNavBar(
-              currentIndex: 2,
-              onTap: (_) {},
-            ),
+            bottomNavigationBar: BottomNavBar(currentIndex: 2, onTap: (_) {}),
           ),
         ),
       );
 
-      final bottomNav =
-          tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
+      final bottomNav = tester.widget<BottomNavigationBar>(
+        find.byType(BottomNavigationBar),
+      );
       expect(bottomNav.currentIndex, 2);
     });
 
@@ -99,16 +87,14 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            bottomNavigationBar: BottomNavBar(
-              currentIndex: 3,
-              onTap: (_) {},
-            ),
+            bottomNavigationBar: BottomNavBar(currentIndex: 3, onTap: (_) {}),
           ),
         ),
       );
 
-      final bottomNav =
-          tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
+      final bottomNav = tester.widget<BottomNavigationBar>(
+        find.byType(BottomNavigationBar),
+      );
       expect(bottomNav.currentIndex, 3);
     });
 
@@ -212,10 +198,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            bottomNavigationBar: BottomNavBar(
-              currentIndex: 0,
-              onTap: (_) {},
-            ),
+            bottomNavigationBar: BottomNavBar(currentIndex: 0, onTap: (_) {}),
           ),
         ),
       );
@@ -233,16 +216,14 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            bottomNavigationBar: BottomNavBar(
-              currentIndex: 0,
-              onTap: (_) {},
-            ),
+            bottomNavigationBar: BottomNavBar(currentIndex: 0, onTap: (_) {}),
           ),
         ),
       );
 
-      final bottomNav =
-          tester.widget<BottomNavigationBar>(find.byType(BottomNavigationBar));
+      final bottomNav = tester.widget<BottomNavigationBar>(
+        find.byType(BottomNavigationBar),
+      );
       expect(bottomNav.selectedItemColor, isNotNull);
       expect(bottomNav.unselectedItemColor, isNotNull);
     });
