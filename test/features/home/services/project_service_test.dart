@@ -480,5 +480,101 @@ void main() {
         );
       });
     });
+
+    // T048-T050: Tests for updateProject mutation (TDD - these should FAIL initially)
+    group('updateProject', () {
+      test('T048: updates project successfully and returns updated project', () async {
+        // Arrange
+        const projectId = 'proj_123';
+        const updatedName = 'Updated Project Name';
+        const updatedDescription = 'Updated description';
+
+        final mockData = {
+          'updateProject': {
+            'id': projectId,
+            'slug': 'marketing-analytics',
+            'name': {'text': updatedName},
+            'description': {'text': updatedDescription},
+            'imageUrl': 'https://cdn.vron.one/projects/proj_123/thumbnail.jpg',
+            'isLive': true,
+            'liveDate': '2025-12-20T10:30:00Z',
+            'subscription': {
+              'isActive': true,
+              'isTrial': false,
+              'status': 'ACTIVE',
+              'canChoosePlan': false,
+              'hasExpired': false,
+              'currency': 'EUR',
+              'price': 29.99,
+              'renewalInterval': 'MONTHLY',
+              'startedAt': '2025-12-20T10:30:00Z',
+              'expiresAt': '2026-01-20T10:30:00Z',
+              'renewsAt': '2026-01-20T10:30:00Z',
+              'prices': {'currency': 'EUR', 'monthly': 29.99, 'yearly': 299.99},
+            },
+          },
+        };
+
+        mockGraphQLService.mockResult = QueryResult(
+          data: mockData,
+          source: QueryResultSource.network,
+          options: QueryOptions(document: mockDocument),
+        );
+
+        // Act
+        final updatedProject = await projectService.updateProject(
+          projectId: projectId,
+          name: updatedName,
+          description: updatedDescription,
+        );
+
+        // Assert
+        expect(updatedProject.id, projectId);
+        expect(updatedProject.name, updatedName);
+        expect(updatedProject.description, updatedDescription);
+      });
+
+      test('T049: throws exception on validation error', () async {
+        // Arrange
+        mockGraphQLService.mockResult = QueryResult(
+          data: null,
+          source: QueryResultSource.network,
+          options: QueryOptions(document: mockDocument),
+          exception: OperationException(
+            graphqlErrors: [
+              GraphQLError(
+                message: 'Validation failed: Name is required',
+                extensions: {'code': 'VALIDATION_ERROR'},
+              ),
+            ],
+          ),
+        );
+
+        // Act & Assert
+        expect(
+          () => projectService.updateProject(
+            projectId: 'proj_123',
+            name: '',
+            description: 'Test',
+          ),
+          throwsA(isA<Exception>()),
+        );
+      });
+
+      test('T050: throws exception on network error', () async {
+        // Arrange
+        mockGraphQLService.mockException = Exception('Network error');
+
+        // Act & Assert
+        expect(
+          () => projectService.updateProject(
+            projectId: 'proj_123',
+            name: 'Test',
+            description: 'Test description',
+          ),
+          throwsA(isA<Exception>()),
+        );
+      });
+    });
   });
 }
