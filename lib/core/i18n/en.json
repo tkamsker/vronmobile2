@@ -1,0 +1,52 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "success": "Success"
+  },
+  "projectDetail": {
+    "title": "Project Details",
+    "loading": "Loading project...",
+    "error": "Failed to load project",
+    "retry": "Tap to retry",
+    "projectData": "Project Data",
+    "products": "Products",
+    "liveStatus": "Live",
+    "trialStatus": "Trial",
+    "subscription": "Subscription",
+    "lastUpdated": "Last updated {date}",
+    "description": "Description",
+    "noDescription": "No description available"
+  },
+  "projectData": {
+    "title": "Edit Project",
+    "subtitle": "Update project information",
+    "nameLabel": "Project Name",
+    "namePlaceholder": "Enter project name",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Enter project description (optional)",
+    "saveButton": "Save Changes",
+    "cancelButton": "Cancel",
+    "unsavedChangesTitle": "Unsaved Changes",
+    "unsavedChangesMessage": "You have unsaved changes. Are you sure you want to leave?",
+    "discardButton": "Discard",
+    "keepEditingButton": "Keep Editing",
+    "saveSuccess": "Project updated successfully",
+    "validation": {
+      "nameRequired": "Project name is required",
+      "nameTooShort": "Project name must be at least 3 characters",
+      "nameTooLong": "Project name must be less than 100 characters",
+      "descriptionTooLong": "Description must be less than 500 characters"
+    },
+    "errors": {
+      "notFound": "Project not found",
+      "unauthorized": "You don't have permission to edit this project",
+      "conflict": "This project was updated by another user. Please refresh and try again.",
+      "network": "Connection error. Please check your internet connection.",
+      "unknown": "An error occurred. Please try again."
+    }
+  }
+}

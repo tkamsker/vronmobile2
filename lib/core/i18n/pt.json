@@ -1,0 +1,52 @@
+{
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro",
+    "retry": "Tentar novamente",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "success": "Sucesso"
+  },
+  "projectDetail": {
+    "title": "Detalhes do Projeto",
+    "loading": "Carregando projeto...",
+    "error": "Falha ao carregar projeto",
+    "retry": "Toque para tentar novamente",
+    "projectData": "Dados do Projeto",
+    "products": "Produtos",
+    "liveStatus": "Ao vivo",
+    "trialStatus": "Teste",
+    "subscription": "Assinatura",
+    "lastUpdated": "Última atualização {date}",
+    "description": "Descrição",
+    "noDescription": "Nenhuma descrição disponível"
+  },
+  "projectData": {
+    "title": "Editar Projeto",
+    "subtitle": "Atualizar informações do projeto",
+    "nameLabel": "Nome do Projeto",
+    "namePlaceholder": "Digite o nome do projeto",
+    "descriptionLabel": "Descrição",
+    "descriptionPlaceholder": "Digite a descrição do projeto (opcional)",
+    "saveButton": "Salvar Alterações",
+    "cancelButton": "Cancelar",
+    "unsavedChangesTitle": "Alterações Não Salvas",
+    "unsavedChangesMessage": "Você tem alterações não salvas. Tem certeza de que deseja sair?",
+    "discardButton": "Descartar",
+    "keepEditingButton": "Continuar Editando",
+    "saveSuccess": "Projeto atualizado com sucesso",
+    "validation": {
+      "nameRequired": "Nome do projeto é obrigatório",
+      "nameTooShort": "Nome do projeto deve ter pelo menos 3 caracteres",
+      "nameTooLong": "Nome do projeto deve ter menos de 100 caracteres",
+      "descriptionTooLong": "Descrição deve ter menos de 500 caracteres"
+    },
+    "errors": {
+      "notFound": "Projeto não encontrado",
+      "unauthorized": "Você não tem permissão para editar este projeto",
+      "conflict": "Este projeto foi atualizado por outro usuário. Por favor, atualize e tente novamente.",
+      "network": "Erro de conexão. Verifique sua conexão com a internet.",
+      "unknown": "Ocorreu um erro. Por favor, tente novamente."
+    }
+  }
+}

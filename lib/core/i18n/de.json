@@ -1,0 +1,52 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "error": "Fehler",
+    "retry": "Wiederholen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "success": "Erfolg"
+  },
+  "projectDetail": {
+    "title": "Projektdetails",
+    "loading": "Projekt wird geladen...",
+    "error": "Projekt konnte nicht geladen werden",
+    "retry": "Tippen zum Wiederholen",
+    "projectData": "Projektdaten",
+    "products": "Produkte",
+    "liveStatus": "Live",
+    "trialStatus": "Testversion",
+    "subscription": "Abonnement",
+    "lastUpdated": "Zuletzt aktualisiert {date}",
+    "description": "Beschreibung",
+    "noDescription": "Keine Beschreibung verfügbar"
+  },
+  "projectData": {
+    "title": "Projekt bearbeiten",
+    "subtitle": "Projektinformationen aktualisieren",
+    "nameLabel": "Projektname",
+    "namePlaceholder": "Projektname eingeben",
+    "descriptionLabel": "Beschreibung",
+    "descriptionPlaceholder": "Beschreibung eingeben (optional)",
+    "saveButton": "Änderungen speichern",
+    "cancelButton": "Abbrechen",
+    "unsavedChangesTitle": "Ungespeicherte Änderungen",
+    "unsavedChangesMessage": "Sie haben ungespeicherte Änderungen. Möchten Sie wirklich fortfahren?",
+    "discardButton": "Verwerfen",
+    "keepEditingButton": "Weiter bearbeiten",
+    "saveSuccess": "Projekt erfolgreich aktualisiert",
+    "validation": {
+      "nameRequired": "Projektname ist erforderlich",
+      "nameTooShort": "Projektname muss mindestens 3 Zeichen lang sein",
+      "nameTooLong": "Projektname darf nicht länger als 100 Zeichen sein",
+      "descriptionTooLong": "Beschreibung darf nicht länger als 500 Zeichen sein"
+    },
+    "errors": {
+      "notFound": "Projekt nicht gefunden",
+      "unauthorized": "Sie haben keine Berechtigung, dieses Projekt zu bearbeiten",
+      "conflict": "Dieses Projekt wurde von einem anderen Benutzer aktualisiert. Bitte aktualisieren Sie und versuchen Sie es erneut.",
+      "network": "Verbindungsfehler. Bitte überprüfen Sie Ihre Internetverbindung.",
+      "unknown": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
+    }
+  }
+}
