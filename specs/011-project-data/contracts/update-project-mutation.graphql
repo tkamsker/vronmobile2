@@ -1,0 +1,42 @@
+# GraphQL Mutation: Update Project Data
+# Feature: 011-project-data
+# Service: VRon GraphQL API
+
+mutation UpdateProject($id: ID!, $input: ProjectUpdateInput!) {
+  updateProject(id: $id, input: $input) {
+    id
+    slug
+    name {
+      text(lang: EN)
+    }
+    description {
+      text(lang: EN)
+    }
+    # Returns updated project data
+  }
+}
+
+# Input Type:
+# ProjectUpdateInput {
+#   name: String
+#   description: String
+#   # Additional fields as per API schema
+# }
+
+# Expected Response:
+# {
+#   "data": {
+#     "updateProject": {
+#       "id": "proj_123",
+#       "slug": "marketing-analytics",
+#       "name": { "text": "Updated Project Name" },
+#       "description": { "text": "Updated description..." }
+#     }
+#   }
+# }
+
+# Error Cases:
+# - Project not found: { "errors": [{ "message": "Project not found" }] }
+# - Unauthorized: { "errors": [{ "message": "Unauthorized" }] }
+# - Validation error: { "errors": [{ "message": "Invalid input: ..." }] }
+# - Concurrent update conflict: { "errors": [{ "message": "Conflict" }] }
