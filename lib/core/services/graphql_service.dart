@@ -1,76 +1,124 @@
+import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:vronmobile2/core/config/env_config.dart';
-import 'package:vronmobile2/core/services/token_storage.dart';
 
-/// GraphQL client service
-/// Provides configured GraphQL client with authentication support
+/// GraphQL service for API communication with VRon backend
 class GraphQLService {
-  final TokenStorage _tokenStorage;
+  static final GraphQLService _instance = GraphQLService._internal();
+  factory GraphQLService() => _instance;
+  GraphQLService._internal();
+
   GraphQLClient? _client;
+  String? _authToken;
 
-  GraphQLService({TokenStorage? tokenStorage})
-    : _tokenStorage = tokenStorage ?? TokenStorage();
+  /// API endpoint for VRon GraphQL API
+  static const String apiEndpoint =
+      'https://api.vron.stage.motorenflug.at/graphql';
 
-  /// Gets or creates the GraphQL client
-  /// Configures authentication header with AUTH_CODE if available
-  /// Also adds X-VRon-Platform header for merchant platform
-  Future<GraphQLClient> getClient() async {
-    if (_client != null) {
-      return _client!;
-    }
+  /// Initialize GraphQL client with optional auth token
+  void initialize({String? authToken}) {
+    _authToken = authToken;
 
-    // Get AUTH_CODE if available
-    final authCode = await _tokenStorage.getAuthCode();
+    final HttpLink httpLink = HttpLink(apiEndpoint);
 
-    // Configure HTTP link with headers
-    final httpLink = HttpLink(
-      EnvConfig.graphqlEndpoint,
-      defaultHeaders: {'X-VRon-Platform': 'merchants'},
-    );
-
+    // Add auth link if token is provided
     Link link = httpLink;
-
-    // Configure auth link if AUTH_CODE exists
-    if (authCode != null && authCode.isNotEmpty) {
-      final authLink = AuthLink(getToken: () async => 'Bearer $authCode');
+    if (_authToken != null) {
+      final AuthLink authLink = AuthLink(
+        getToken: () async => 'Bearer $_authToken',
+      );
       link = authLink.concat(httpLink);
     }
 
-    // Create client
     _client = GraphQLClient(
-      link: link,
       cache: GraphQLCache(store: InMemoryStore()),
+      link: link,
+      defaultPolicies: DefaultPolicies(
+        query: Policies(fetch: FetchPolicy.networkOnly),
+        mutate: Policies(fetch: FetchPolicy.networkOnly),
+      ),
     );
+  }
 
+  /// Get GraphQL client instance
+  GraphQLClient get client {
+    if (_client == null) {
+      initialize();
+    }
     return _client!;
   }
 
-  /// Creates a new client with updated authentication
-  /// Call this after login/logout to refresh the auth token
-  Future<GraphQLClient> refreshClient() async {
-    _client = null;
-    return await getClient();
+  /// Update auth token and reinitialize client
+  void setAuthToken(String token) {
+    _authToken = token;
+    initialize(authToken: token);
   }
 
-  /// Executes a GraphQL query
+  /// Clear auth token and reinitialize client
+  void clearAuthToken() {
+    _authToken = null;
+    initialize();
+  }
+
+  /// Execute GraphQL query
   Future<QueryResult> query(
     String query, {
     Map<String, dynamic>? variables,
   }) async {
-    final client = await getClient();
-    return await client.query(
-      QueryOptions(document: gql(query), variables: variables ?? {}),
+    final QueryOptions options = QueryOptions(
+      document: gql(query),
+      variables: variables ?? {},
     );
+
+    return await client.query(options);
   }
 
-  /// Executes a GraphQL mutation
+  /// Execute GraphQL mutation
   Future<QueryResult> mutate(
     String mutation, {
     Map<String, dynamic>? variables,
   }) async {
-    final client = await getClient();
-    return await client.mutate(
-      MutationOptions(document: gql(mutation), variables: variables ?? {}),
+    final MutationOptions options = MutationOptions(
+      document: gql(mutation),
+      variables: variables ?? {},
     );
+
+    return await client.mutate(options);
+  }
+
+  /// Handle query/mutation result and extract data or throw error
+  T handleResult<T>(
+    QueryResult result,
+    T Function(Map<String, dynamic> data) onSuccess,
+  ) {
+    if (result.hasException) {
+      debugPrint('GraphQL Error: ${result.exception.toString()}');
+      throw Exception(_parseError(result.exception!));
+    }
+
+    if (result.data == null) {
+      throw Exception('No data returned from GraphQL query');
+    }
+
+    return onSuccess(result.data!);
+  }
+
+  /// Parse GraphQL exception to user-friendly error message
+  String _parseError(OperationException exception) {
+    if (exception.linkException != null) {
+      final linkException = exception.linkException;
+      if (linkException is NetworkException) {
+        return 'Network error. Please check your internet connection.';
+      } else if (linkException is ServerException) {
+        return 'Server error. Please try again later.';
+      }
+      return 'Connection error. Please try again.';
+    }
+
+    if (exception.graphqlErrors.isNotEmpty) {
+      final error = exception.graphqlErrors.first;
+      return error.message;
+    }
+
+    return 'An unexpected error occurred. Please try again.';
   }
 }

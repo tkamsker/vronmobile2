@@ -1,30 +1,48 @@
-import 'package:flutter/foundation.dart';
 import 'package:vronmobile2/core/services/graphql_service.dart';
 import 'package:vronmobile2/features/home/models/project.dart';
 
 /// Service for managing project data via GraphQL API
-/// Based on the VRon API specification
 class ProjectService {
-  final GraphQLService _graphqlService;
-  final String _language;
+  final GraphQLService _graphql = GraphQLService();
 
-  ProjectService({GraphQLService? graphqlService, String language = 'EN'})
-    : _graphqlService = graphqlService ?? GraphQLService(),
-      _language = language;
-
-  /// GraphQL query to fetch all projects for the authenticated user
-  /// Based on the getProjects query from the VRon API
-  static const String _projectsQuery = '''
+  /// GraphQL query for fetching project list
+  static const String _getProjectsQuery = '''
     query GetProjects(\$lang: Language!) {
-      getProjects(input: {}) {
+      projects {
         id
         slug
-        imageUrl
-        isLive
-        liveDate
         name {
           text(lang: \$lang)
         }
+        description {
+          text(lang: \$lang)
+        }
+        imageUrl
+        isLive
+        subscription {
+          isActive
+          isTrial
+          status
+        }
+      }
+    }
+  ''';
+
+  /// GraphQL query for fetching single project detail
+  static const String _getProjectDetailQuery = '''
+    query GetProjectDetail(\$id: ID!, \$lang: Language!) {
+      project(id: \$id) {
+        id
+        slug
+        name {
+          text(lang: \$lang)
+        }
+        description {
+          text(lang: \$lang)
+        }
+        imageUrl
+        isLive
+        liveDate
         subscription {
           isActive
           isTrial
@@ -47,88 +65,66 @@ class ProjectService {
     }
   ''';
 
-  /// Fetch all projects for the authenticated user
-  /// Returns a list of Project objects or throws an exception on error
-  Future<List<Project>> fetchProjects() async {
-    try {
-      if (kDebugMode) {
-        print('📦 [PROJECTS] Fetching projects (language: $_language)...');
-      }
-
-      final result = await _graphqlService.query(
-        _projectsQuery,
-        variables: {'lang': _language},
-      );
-
-      if (result.hasException) {
-        final exception = result.exception;
-        if (kDebugMode) {
-          print('❌ [PROJECTS] GraphQL exception: ${exception.toString()}');
+  /// GraphQL mutation for updating project
+  static const String _updateProjectMutation = '''
+    mutation UpdateProject(\$id: ID!, \$input: ProjectUpdateInput!) {
+      updateProject(id: \$id, input: \$input) {
+        id
+        slug
+        name {
+          text(lang: EN)
         }
-
-        if (exception?.graphqlErrors.isNotEmpty ?? false) {
-          final error = exception!.graphqlErrors.first;
-          if (kDebugMode) {
-            print('❌ [PROJECTS] GraphQL error: ${error.message}');
-          }
-          throw Exception('Failed to fetch projects: ${error.message}');
+        description {
+          text(lang: EN)
         }
-
-        throw Exception('Failed to fetch projects: ${exception.toString()}');
       }
+    }
+  ''';
 
-      if (result.data == null || result.data!['getProjects'] == null) {
-        if (kDebugMode) print('⚠️ [PROJECTS] No projects data in response');
-        return [];
-      }
+  /// Fetch list of projects
+  Future<List<Project>> getProjects({String lang = 'EN'}) async {
+    final result = await _graphql.query(
+      _getProjectsQuery,
+      variables: {'lang': lang},
+    );
 
-      final projectsData = result.data!['getProjects'] as List;
-      final projects = projectsData
+    return _graphql.handleResult(result, (data) {
+      final projectsData = data['projects'] as List<dynamic>;
+      return projectsData
           .map((json) => Project.fromJson(json as Map<String, dynamic>))
           .toList();
-
-      if (kDebugMode) {
-        print('✅ [PROJECTS] Fetched ${projects.length} projects');
-        for (final project in projects) {
-          print('  - ${project.name} (${project.id}) - ${project.statusLabel}');
-        }
-      }
-
-      return projects;
-    } catch (e) {
-      if (kDebugMode) print('❌ [PROJECTS] Error: ${e.toString()}');
-      rethrow;
-    }
+    });
   }
 
-  /// Fetch projects filtered by live status
-  Future<List<Project>> fetchProjectsByLiveStatus(bool isLive) async {
-    final allProjects = await fetchProjects();
-    return allProjects.where((project) => project.isLive == isLive).toList();
+  /// Fetch single project detail by ID
+  Future<Project> fetchProjectDetail(
+    String projectId, {
+    String lang = 'EN',
+  }) async {
+    final result = await _graphql.query(
+      _getProjectDetailQuery,
+      variables: {'id': projectId, 'lang': lang},
+    );
+
+    return _graphql.handleResult(result, (data) {
+      final projectData = data['project'] as Map<String, dynamic>;
+      return Project.fromJson(projectData);
+    });
   }
 
-  /// Fetch projects filtered by subscription status
-  Future<List<Project>> fetchProjectsBySubscriptionStatus(String status) async {
-    final allProjects = await fetchProjects();
-    return allProjects
-        .where((project) => project.subscription.status == status)
-        .toList();
-  }
+  /// Update project data (name, description, etc.)
+  Future<Project> updateProject(
+    String projectId,
+    Map<String, dynamic> input,
+  ) async {
+    final result = await _graphql.mutate(
+      _updateProjectMutation,
+      variables: {'id': projectId, 'input': input},
+    );
 
-  /// Fetch active projects (live and with active subscription)
-  Future<List<Project>> fetchActiveProjects() async {
-    final allProjects = await fetchProjects();
-    return allProjects
-        .where((project) => project.isLive && project.subscription.isActive)
-        .toList();
-  }
-
-  /// Search projects by name
-  Future<List<Project>> searchProjects(String query) async {
-    final allProjects = await fetchProjects();
-    final lowerQuery = query.toLowerCase();
-    return allProjects
-        .where((project) => project.name.toLowerCase().contains(lowerQuery))
-        .toList();
+    return _graphql.handleResult(result, (data) {
+      final projectData = data['updateProject'] as Map<String, dynamic>;
+      return Project.fromJson(projectData);
+    });
   }
 }

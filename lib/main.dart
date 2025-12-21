@@ -3,10 +3,13 @@ import 'package:vronmobile2/core/theme/app_theme.dart';
 import 'package:vronmobile2/core/navigation/routes.dart';
 import 'package:vronmobile2/core/config/env_config.dart';
 import 'package:vronmobile2/core/i18n/i18n_service.dart';
+import 'package:vronmobile2/core/services/graphql_service.dart';
 import 'package:vronmobile2/features/auth/screens/main_screen.dart';
 import 'package:vronmobile2/features/home/screens/home_screen.dart';
 import 'package:vronmobile2/features/profile/screens/language_screen.dart';
 import 'package:vronmobile2/features/profile/screens/profile_screen.dart';
+import 'package:vronmobile2/features/project_data/screens/project_data_screen.dart';
+import 'package:vronmobile2/features/project_detail/screens/project_detail_screen.dart';
 
 void main() async {
   // Ensure Flutter is initialized before loading environment
@@ -17,6 +20,9 @@ void main() async {
 
   // Load environment configuration from .env file
   await EnvConfig.initialize();
+
+  // Initialize GraphQL service
+  GraphQLService().initialize();
 
   runApp(const VronApp());
 }
@@ -35,23 +41,41 @@ class VronApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           initialRoute: AppRoutes.main,
           routes: {
-        AppRoutes.main: (context) => const MainScreen(),
-        AppRoutes.home: (context) {
-          final email = ModalRoute.of(context)?.settings.arguments as String?;
-          return HomeScreen(userEmail: email);
-        },
-        AppRoutes.createAccount: (context) =>
-            const PlaceholderScreen(title: 'Create Account'),
-        AppRoutes.guestMode: (context) =>
-            const PlaceholderScreen(title: 'Guest Mode'),
-        AppRoutes.projectDetail: (context) =>
-            const PlaceholderScreen(title: 'Project Detail'),
-        AppRoutes.createProject: (context) =>
-            const PlaceholderScreen(title: 'Create Project'),
-        AppRoutes.lidar: (context) =>
-            const PlaceholderScreen(title: 'LiDAR Scanner'),
-        AppRoutes.profile: (context) => const ProfileScreen(),
-        AppRoutes.language: (context) => const LanguageScreen(),
+            AppRoutes.main: (context) => const MainScreen(),
+            AppRoutes.home: (context) {
+              final email = ModalRoute.of(context)?.settings.arguments as String?;
+              return HomeScreen(userEmail: email);
+            },
+            AppRoutes.createAccount: (context) =>
+                const PlaceholderScreen(title: 'Create Account'),
+            AppRoutes.guestMode: (context) =>
+                const PlaceholderScreen(title: 'Guest Mode'),
+            AppRoutes.projectDetail: (context) {
+              // Extract project ID from arguments
+              final args =
+                  ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+              final projectId = args?['projectId'] as String? ?? '';
+              return ProjectDetailScreen(projectId: projectId);
+            },
+            AppRoutes.projectData: (context) {
+              // Extract arguments for project data edit screen
+              final args =
+                  ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+              final projectId = args?['projectId'] as String? ?? '';
+              final initialName = args?['initialName'] as String? ?? '';
+              final initialDescription = args?['initialDescription'] as String? ?? '';
+              return ProjectDataScreen(
+                projectId: projectId,
+                initialName: initialName,
+                initialDescription: initialDescription,
+              );
+            },
+            AppRoutes.createProject: (context) =>
+                const PlaceholderScreen(title: 'Create Project'),
+            AppRoutes.lidar: (context) =>
+                const PlaceholderScreen(title: 'LiDAR Scanner'),
+            AppRoutes.profile: (context) => const ProfileScreen(),
+            AppRoutes.language: (context) => const LanguageScreen(),
           },
           debugShowCheckedModeBanner: false,
         );
