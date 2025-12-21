@@ -1,6 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:vronmobile2/features/home/models/project.dart';
 
 /// Widget displaying a project card with image, title, status, description, and action button
