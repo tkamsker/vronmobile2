@@ -14,6 +14,7 @@ class ProjectService {
 
   /// GraphQL query to fetch all projects for the authenticated user
   /// Based on the getProjects query from the VRon API
+  /// NOTE: Backend doesn't support 'description' field yet - it will default to empty string
   static const String _projectsQuery = '''
     query GetProjects(\$lang: Language!) {
       getProjects(input: {}) {
@@ -23,9 +24,6 @@ class ProjectService {
         isLive
         liveDate
         name {
-          text(lang: \$lang)
-        }
-        description {
           text(lang: \$lang)
         }
         subscription {
@@ -52,16 +50,14 @@ class ProjectService {
 
   /// GraphQL mutation to update project master data
   /// Based on the updateProject mutation from the VRon API (UC11: Project Data)
-  /// Note: Slug is read-only per clarification #3, only name and description are editable
+  /// NOTE: Backend doesn't support 'description' field - only name can be updated
+  /// Slug is read-only per clarification #3
   static const String _updateProjectMutation = '''
     mutation UpdateProject(\$id: ID!, \$data: UpdateProjectInput!, \$lang: Language!) {
       updateProject(id: \$id, data: \$data) {
         id
         slug
         name {
-          text(lang: \$lang)
-        }
-        description {
           text(lang: \$lang)
         }
         imageUrl
@@ -204,19 +200,20 @@ class ProjectService {
     }
   }
 
-  /// Update project master data (name and description only, slug is read-only)
+  /// Update project master data (name only - backend doesn't support description yet)
   /// Returns updated Project object or throws an exception on error
   /// Automatically uses last-write-wins strategy per clarification #1
+  /// NOTE: Description parameter is accepted but NOT sent to backend (not supported)
   Future<Project> updateProject({
     required String projectId,
     required String name,
-    required String description,
+    required String description, // Accepted but not used (backend doesn't support)
   }) async {
     try {
       if (kDebugMode) {
         print('📝 [PROJECTS] Updating project $projectId (language: $_language)...');
         print('  - Name: $name');
-        print('  - Description: $description');
+        print('  - Description: $description (not sent - backend doesn\'t support)');
       }
 
       final result = await _graphqlService.query(
@@ -225,7 +222,7 @@ class ProjectService {
           'id': projectId,
           'data': {
             'name': name,
-            'description': description,
+            // Note: description not supported by backend
             // Note: slug is read-only per clarification #3
           },
           'lang': _language,
