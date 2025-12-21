@@ -2,7 +2,8 @@ import 'package:vronmobile2/features/home/models/project_subscription.dart';
 
 /// Model representing a project from the VRon API
 /// Based on the getProjects GraphQL query response
-/// Projects are implemented as Products in the backend
+/// NOTE: Projects are Products in backend, but Project GraphQL type
+/// doesn't expose Product-specific fields (status, tracksInventory, etc.)
 class Project {
   final String id;
   final String slug;
@@ -13,12 +14,6 @@ class Project {
   final DateTime? liveDate;
   final ProjectSubscription subscription;
 
-  // Product-specific fields (required for mutations)
-  final String status; // ProductStatus (e.g., "DRAFT", "PUBLISHED")
-  final bool tracksInventory; // Whether inventory tracking is enabled
-  final String? categoryId; // Product category ID (optional)
-  final List<String> tags; // Product tags
-
   const Project({
     required this.id,
     required this.slug,
@@ -28,10 +23,6 @@ class Project {
     required this.isLive,
     this.liveDate,
     required this.subscription,
-    required this.status,
-    required this.tracksInventory,
-    this.categoryId,
-    this.tags = const [],
   });
 
   /// Create Project from JSON (from API response)
@@ -59,12 +50,6 @@ class Project {
       }
     }
 
-    // Extract tags array
-    List<String> projectTags = [];
-    if (json['tags'] != null && json['tags'] is List) {
-      projectTags = (json['tags'] as List).map((e) => e.toString()).toList();
-    }
-
     return Project(
       id: json['id'] as String,
       slug: json['slug'] as String? ?? '',
@@ -78,10 +63,6 @@ class Project {
       subscription: ProjectSubscription.fromJson(
         (json['subscription'] as Map<dynamic, dynamic>?)?.cast<String, dynamic>() ?? {},
       ),
-      status: json['status'] as String? ?? 'DRAFT',
-      tracksInventory: json['tracksInventory'] as bool? ?? false,
-      categoryId: json['categoryId'] as String?,
-      tags: projectTags,
     );
   }
 
@@ -165,10 +146,6 @@ class Project {
     bool? isLive,
     DateTime? liveDate,
     ProjectSubscription? subscription,
-    String? status,
-    bool? tracksInventory,
-    String? categoryId,
-    List<String>? tags,
   }) {
     return Project(
       id: id ?? this.id,
@@ -179,10 +156,6 @@ class Project {
       isLive: isLive ?? this.isLive,
       liveDate: liveDate ?? this.liveDate,
       subscription: subscription ?? this.subscription,
-      status: status ?? this.status,
-      tracksInventory: tracksInventory ?? this.tracksInventory,
-      categoryId: categoryId ?? this.categoryId,
-      tags: tags ?? this.tags,
     );
   }
 
@@ -197,14 +170,12 @@ class Project {
         other.description == description &&
         other.imageUrl == imageUrl &&
         other.isLive == isLive &&
-        other.liveDate == liveDate &&
-        other.status == status &&
-        other.tracksInventory == tracksInventory;
+        other.liveDate == liveDate;
   }
 
   @override
   int get hashCode {
-    return Object.hash(id, slug, name, description, imageUrl, isLive, liveDate, status, tracksInventory);
+    return Object.hash(id, slug, name, description, imageUrl, isLive, liveDate);
   }
 
   @override
