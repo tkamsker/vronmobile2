@@ -4,7 +4,7 @@ Auto-generated from all feature plans. Last updated: 2025-12-21
 
 ## Active Technologies
 
-- Dart 3.10+ / Flutter 3.10+ (011-project-data)
+- Dart 3.10+ / Flutter 3.10+ (010-project-detail, 011-project-data)
 
 ## Project Structure
 
@@ -23,6 +23,7 @@ Dart 3.10+ / Flutter 3.10+: Follow standard conventions
 
 ## Recent Changes
 
+- 010-project-detail: Added Dart 3.10+ / Flutter 3.10+
 - 011-project-data: Added Dart 3.10+ / Flutter 3.10+
 
 <!-- MANUAL ADDITIONS START -->

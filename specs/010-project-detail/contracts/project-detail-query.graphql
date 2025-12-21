@@ -1,0 +1,65 @@
+# GraphQL Query: Get Project Detail
+# Feature: 010-project-detail
+# Service: VRon GraphQL API
+
+query GetProjectDetail($id: ID!, $lang: Language!) {
+  project(id: $id) {
+    id
+    slug
+    name {
+      text(lang: $lang)
+    }
+    description {
+      text(lang: $lang)
+    }
+    imageUrl
+    isLive
+    liveDate
+    subscription {
+      isActive
+      isTrial
+      status
+      canChoosePlan
+      hasExpired
+      currency
+      price
+      renewalInterval
+      startedAt
+      expiresAt
+      renewsAt
+      prices {
+        currency
+        monthly
+        yearly
+      }
+    }
+    # Note: Additional fields available per Requirements/ReadProjects.md
+    # but not needed for this feature per spec requirements
+  }
+}
+
+# Expected Response Structure:
+# {
+#   "data": {
+#     "project": {
+#       "id": "proj_123",
+#       "slug": "marketing-analytics",
+#       "name": { "text": "Marketing Analytics" },
+#       "description": { "text": "Project description..." },
+#       "imageUrl": "https://cdn.vron.one/...",
+#       "isLive": true,
+#       "liveDate": "2025-12-20T10:30:00Z",
+#       "subscription": {
+#         "isActive": true,
+#         "isTrial": false,
+#         "status": "ACTIVE",
+#         ...
+#       }
+#     }
+#   }
+# }
+
+# Error Cases:
+# - Project not found: { "errors": [{ "message": "Project not found" }] }
+# - Unauthorized: { "errors": [{ "message": "Unauthorized" }] }
+# - Invalid ID: { "errors": [{ "message": "Invalid project ID" }] }
