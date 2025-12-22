@@ -7,6 +7,7 @@ import 'package:vronmobile2/features/auth/screens/main_screen.dart';
 import 'package:vronmobile2/features/home/screens/home_screen.dart';
 import 'package:vronmobile2/features/profile/screens/language_screen.dart';
 import 'package:vronmobile2/features/profile/screens/profile_screen.dart';
+import 'package:vronmobile2/features/products/screens/product_detail_screen.dart';
 import 'package:vronmobile2/features/projects/screens/project_detail_screen.dart';
 
 void main() async {
@@ -54,6 +55,13 @@ class VronApp extends StatelessWidget {
         },
         AppRoutes.createProject: (context) =>
             const PlaceholderScreen(title: 'Create Project'),
+        AppRoutes.productDetail: (context) {
+          final productId = ModalRoute.of(context)?.settings.arguments as String?;
+          if (productId == null) {
+            return const PlaceholderScreen(title: 'Error: No product ID');
+          }
+          return ProductDetailScreen(productId: productId);
+        },
         AppRoutes.lidar: (context) =>
             const PlaceholderScreen(title: 'LiDAR Scanner'),
         AppRoutes.profile: (context) => const ProfileScreen(),

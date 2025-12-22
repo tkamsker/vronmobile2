@@ -18,6 +18,9 @@ class AppRoutes {
   static const String projectDetail = '/project-detail';
   static const String createProject = '/create-project';
 
+  // Product routes
+  static const String productDetail = '/product-detail';
+
   // Main app routes
   static const String lidar = '/lidar';
   static const String profile = '/profile';

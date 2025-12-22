@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vronmobile2/core/navigation/routes.dart';
 import 'package:vronmobile2/features/home/models/project.dart';
 import 'package:vronmobile2/features/products/models/product.dart';
 import 'package:vronmobile2/features/products/services/product_service.dart';
@@ -349,11 +350,10 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
                   return ProductCard(
                     product: product,
                     onTap: () {
-                      // TODO: Navigate to product detail (Phase 2)
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('View product: ${product.title}'),
-                        ),
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.productDetail,
+                        arguments: product.id,
                       );
                     },
                     onEdit: () {
