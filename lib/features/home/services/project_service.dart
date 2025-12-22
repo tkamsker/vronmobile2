@@ -14,6 +14,7 @@ class ProjectService {
 
   /// GraphQL query to fetch all projects for the authenticated user
   /// Based on the getProjects query from the VRon API
+  /// NOTE: Project type doesn't have Product fields (status, tracksInventory, etc.)
   static const String _projectsQuery = '''
     query GetProjects(\$lang: Language!) {
       getProjects(input: {}) {
@@ -44,6 +45,44 @@ class ProjectService {
           }
         }
       }
+    }
+  ''';
+
+  /// GraphQL query to fetch single VR project detail
+  /// Use this for project detail screen instead of filtering getProjects
+  static const String _getVRProjectQuery = '''
+    query GetVRProject(\$input: VRGetProjectInput!, \$lang: Language!) {
+      getVRProject(input: \$input) {
+        id
+        slug
+        name {
+          text(lang: \$lang)
+        }
+        description {
+          text(lang: \$lang)
+        }
+        liveDate
+        isOwner
+        subscription {
+          isTrial
+          status
+          canChoosePlan
+          renewalInterval
+          prices {
+            currency
+            monthly
+            yearly
+          }
+        }
+      }
+    }
+  ''';
+
+  /// GraphQL mutation to update project details
+  /// Uses UpdateProject mutation with UpdateProjectDetailsInput
+  static const String _updateProjectMutation = '''
+    mutation UpdateProject(\$input: UpdateProjectDetailsInput!) {
+      updateProjectDetails(input: \$input)
     }
   ''';
 
@@ -130,5 +169,136 @@ class ProjectService {
     return allProjects
         .where((project) => project.name.toLowerCase().contains(lowerQuery))
         .toList();
+  }
+
+  /// Fetch a single project by ID with full details using getVRProject query
+  /// Returns a Project object or throws an exception on error
+  Future<Project> getProjectDetail(String projectId) async {
+    try {
+      if (kDebugMode) {
+        print('📦 [PROJECTS] Fetching VR project detail for ID: $projectId (language: $_language)...');
+      }
+
+      // Use getVRProject query for detailed project data
+      final result = await _graphqlService.query(
+        _getVRProjectQuery,
+        variables: {
+          'input': {'id': projectId},
+          'lang': _language,
+        },
+      );
+
+      if (result.hasException) {
+        final exception = result.exception;
+        if (kDebugMode) {
+          print('❌ [PROJECTS] GraphQL exception: ${exception.toString()}');
+        }
+
+        if (exception?.graphqlErrors.isNotEmpty ?? false) {
+          final error = exception!.graphqlErrors.first;
+          if (kDebugMode) {
+            print('❌ [PROJECTS] GraphQL error: ${error.message}');
+          }
+          throw Exception('Failed to fetch project detail: ${error.message}');
+        }
+
+        throw Exception('Failed to fetch project detail: ${exception.toString()}');
+      }
+
+      if (result.data == null || result.data!['getVRProject'] == null) {
+        if (kDebugMode) print('⚠️ [PROJECTS] No VR project data in response');
+        throw Exception('Project not found: $projectId');
+      }
+
+      final projectData = result.data!['getVRProject'] as Map<String, dynamic>;
+
+      // Convert VRProject response to Project model
+      // Note: VRProject doesn't have imageUrl or isLive at root level
+      final project = Project.fromJson({
+        'id': projectData['id'],
+        'slug': projectData['slug'],
+        'name': projectData['name'],
+        'description': projectData['description'],
+        'imageUrl': '', // VRProject doesn't have this field
+        'isLive': projectData['liveDate'] != null, // Infer from liveDate
+        'liveDate': projectData['liveDate'],
+        'subscription': projectData['subscription'],
+      });
+
+      if (kDebugMode) {
+        print('✅ [PROJECTS] Fetched VR project detail: ${project.name} (${project.id})');
+        print('  - Status: ${project.statusLabel}');
+        print('  - Description: ${project.description}');
+      }
+
+      return project;
+    } catch (e) {
+      if (kDebugMode) print('❌ [PROJECTS] Error fetching project detail: ${e.toString()}');
+      rethrow;
+    }
+  }
+
+  /// Update project master data via UpdateProject mutation
+  /// Uses updateProjectDetails with projectId, name, slug, and description
+  /// Returns updated Project object or throws an exception on error
+  Future<Project> updateProject({
+    required String projectId,
+    required String name,
+    required String slug,
+    required String description,
+  }) async {
+    try {
+      if (kDebugMode) {
+        print('📝 [PROJECTS] Updating project $projectId (language: $_language)...');
+        print('  - Name: $name');
+        print('  - Slug: $slug');
+        print('  - Description: $description');
+      }
+
+      final result = await _graphqlService.query(
+        _updateProjectMutation,
+        variables: {
+          'input': {
+            'projectId': projectId,
+            'name': name,
+            'slug': slug,
+            'description': description,
+          },
+        },
+      );
+
+      if (result.hasException) {
+        final exception = result.exception;
+        if (kDebugMode) {
+          print('❌ [PROJECTS] GraphQL exception: ${exception.toString()}');
+        }
+
+        if (exception?.graphqlErrors.isNotEmpty ?? false) {
+          final error = exception!.graphqlErrors.first;
+          if (kDebugMode) {
+            print('❌ [PROJECTS] GraphQL error: ${error.message}');
+          }
+          throw Exception('Failed to update project: ${error.message}');
+        }
+
+        throw Exception('Failed to update project: ${exception.toString()}');
+      }
+
+      if (kDebugMode) {
+        print('✅ [PROJECTS] Update mutation successful, refreshing project data...');
+      }
+
+      // Mutation returns just a success indicator, need to refetch the project
+      final updatedProject = await getProjectDetail(projectId);
+
+      if (kDebugMode) {
+        print('✅ [PROJECTS] Project updated successfully: ${updatedProject.name}');
+      }
+
+      return updatedProject;
+    } catch (e) {
+      if (kDebugMode) print('❌ [PROJECTS] Error updating project: ${e.toString()}');
+      rethrow;
+    }
   }
 }
