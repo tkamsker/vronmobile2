@@ -134,10 +134,13 @@ class _HomeScreenState extends State<HomeScreen> {
         break;
       case 1: // Projects - already here
         break;
-      case 2: // LiDAR
+      case 2: // Products
+        Navigator.pushNamed(context, AppRoutes.products);
+        break;
+      case 3: // LiDAR
         Navigator.pushNamed(context, AppRoutes.lidar);
         break;
-      case 3: // Profile
+      case 4: // Profile
         Navigator.pushNamed(context, AppRoutes.profile);
         break;
     }

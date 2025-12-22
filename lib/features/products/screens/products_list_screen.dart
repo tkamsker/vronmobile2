@@ -1,27 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:vronmobile2/core/navigation/routes.dart';
-import 'package:vronmobile2/features/home/models/project.dart';
 import 'package:vronmobile2/features/products/models/product.dart';
 import 'package:vronmobile2/features/products/services/product_service.dart';
 import 'package:vronmobile2/features/products/widgets/product_card.dart';
 
-/// Products tab widget
-/// Displays list of products associated with the project
-class ProjectProductsTab extends StatefulWidget {
-  final Project project;
-  final VoidCallback? onNavigateToProducts;
-
-  const ProjectProductsTab({
-    super.key,
-    required this.project,
-    this.onNavigateToProducts,
-  });
+/// Products list screen displaying all products
+class ProductsListScreen extends StatefulWidget {
+  const ProductsListScreen({super.key});
 
   @override
-  State<ProjectProductsTab> createState() => _ProjectProductsTabState();
+  State<ProductsListScreen> createState() => _ProductsListScreenState();
 }
 
-class _ProjectProductsTabState extends State<ProjectProductsTab> {
+class _ProductsListScreenState extends State<ProductsListScreen> {
   final ProductService _productService = ProductService();
   List<Product> _products = [];
   bool _isLoading = false;
@@ -55,6 +46,25 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Products'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Create product coming soon')),
+              );
+            },
+          ),
+        ],
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
     if (_isLoading) {
       return _buildLoading();
     }
@@ -125,7 +135,7 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
 
   Widget _buildEmptyState() {
     return Semantics(
-      label: 'No products yet for ${widget.project.name}',
+      label: 'No products yet',
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
@@ -143,7 +153,7 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    Icons.apps,
+                    Icons.inventory_2_outlined,
                     size: 60,
                     color: Colors.grey[400],
                   ),
@@ -175,7 +185,6 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
                 hint: 'Double tap to create your first product',
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // TODO: Navigate to product creation (UC13)
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Product creation coming soon'),
@@ -192,14 +201,6 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Set up materials, lighting, and interactions –\neverything in one place.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[500],
-                    ),
-                textAlign: TextAlign.center,
-              ),
             ],
           ),
         ),
@@ -212,7 +213,7 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
     final draftCount = _products.where((p) => p.status == 'DRAFT').length;
 
     return Semantics(
-      label: '${_products.length} products for ${widget.project.name}',
+      label: '${_products.length} products',
       child: RefreshIndicator(
         onRefresh: _loadProducts,
         child: Column(
@@ -259,61 +260,6 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
               ),
             ),
 
-            // Create Product Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Semantics(
-                      button: true,
-                      label: 'Create a product',
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // TODO: Navigate to product creation
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Product creation coming soon'),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          'Create a product',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Semantics(
-                    button: true,
-                    label: 'More options',
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: IconButton(
-                        onPressed: () {
-                          // TODO: More options
-                        },
-                        icon: const Icon(Icons.add),
-                        iconSize: 28,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
             // Search Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -357,10 +303,10 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
                       );
                     },
                     onEdit: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Edit product: ${product.title}'),
-                        ),
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.productDetail,
+                        arguments: product.id,
                       );
                     },
                     onDelete: () {
