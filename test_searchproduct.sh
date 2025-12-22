@@ -18,34 +18,57 @@ DEFAULT_EMAIL="tkamsker@gmail.com"
 DEFAULT_PASSWORD="Test123!"
 X_VRON_PLATFORM_HEADER="merchants"
 LANGUAGE="EN"
+CURL_TIMEOUT=10
 
-# Get product ID from command line or use empty for listing all
-PRODUCT_ID="$1"
+# Parse command line arguments
+EMAIL="${1:-$DEFAULT_EMAIL}"
+PASSWORD="${2:-$DEFAULT_PASSWORD}"
+
+# If first arg looks like a product ID (hex string), use it as product ID
+if [[ "$1" =~ ^[0-9a-f]{24}$ ]]; then
+  PRODUCT_ID="$1"
+  EMAIL="$DEFAULT_EMAIL"
+  PASSWORD="$DEFAULT_PASSWORD"
+elif [ -n "$3" ]; then
+  # If 3 args provided: email password product_id
+  PRODUCT_ID="$3"
+else
+  PRODUCT_ID=""
+fi
 
 echo "=== VRon Product Query Test ==="
 echo ""
 
 # Step 1: Login to get access token
-echo "Step 1: Logging in..."
+echo "Step 1: Logging in as $EMAIL..."
 LOGIN_PAYLOAD=$(cat <<EOF
 {
   "query": "mutation SignIn(\\$input: SignInInput!) { signIn(input: \\$input) { accessToken } }",
   "variables": {
     "input": {
-      "email": "$DEFAULT_EMAIL",
-      "password": "$DEFAULT_PASSWORD"
+      "email": "$EMAIL",
+      "password": "$PASSWORD"
     }
   }
 }
 EOF
 )
 
+echo "  Sending request to $GRAPHQL_ENDPOINT..."
 LOGIN_RESPONSE=$(curl -s \
+  --max-time $CURL_TIMEOUT \
   -X POST \
   -H "Content-Type: application/json" \
   -H "X-VRon-Platform: $X_VRON_PLATFORM_HEADER" \
   --data "$LOGIN_PAYLOAD" \
-  "$GRAPHQL_ENDPOINT")
+  "$GRAPHQL_ENDPOINT" 2>&1)
+
+CURL_EXIT_CODE=$?
+if [ $CURL_EXIT_CODE -ne 0 ]; then
+  echo "❌ Error: curl command failed with code $CURL_EXIT_CODE"
+  echo "This might indicate a network issue or timeout."
+  exit 1
+fi
 
 ACCESS_TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.data.signIn.accessToken // empty')
 
@@ -71,7 +94,14 @@ AUTH_CODE_JSON=$(cat <<EOF
 EOF
 )
 
-AUTH_CODE_B64=$(echo -n "$AUTH_CODE_JSON" | base64)
+# Base64 encode (handle macOS vs Linux differences)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  # macOS
+  AUTH_CODE_B64=$(echo -n "$AUTH_CODE_JSON" | base64)
+else
+  # Linux
+  AUTH_CODE_B64=$(echo -n "$AUTH_CODE_JSON" | base64 -w 0)
+fi
 
 # Step 3: Query products
 if [ -z "$PRODUCT_ID" ]; then
@@ -94,7 +124,9 @@ if [ -z "$PRODUCT_ID" ]; then
 EOF
 )
 
+  echo "  Fetching products..."
   PRODUCTS_RESPONSE=$(curl -s \
+    --max-time $CURL_TIMEOUT \
     -X POST \
     -H "Content-Type: application/json" \
     -H "X-VRon-Platform: $X_VRON_PLATFORM_HEADER" \
@@ -135,7 +167,9 @@ else
 EOF
 )
 
+  echo "  Fetching product details..."
   PRODUCT_RESPONSE=$(curl -s \
+    --max-time $CURL_TIMEOUT \
     -X POST \
     -H "Content-Type: application/json" \
     -H "X-VRon-Platform: $X_VRON_PLATFORM_HEADER" \
