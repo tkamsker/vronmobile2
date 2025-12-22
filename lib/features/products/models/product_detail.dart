@@ -40,7 +40,8 @@ class ProductDetail {
       description: _extractText(json['description']),
       thumbnail: json['thumbnail'] as String?,
       status: json['status'] as String,
-      category: json['category'] != null ? _extractText(json['category']) : null,
+      category: json['categoryId'] as String? ??
+                (json['category'] != null ? _extractText(json['category']) : null),
       tags: (json['tags'] as List?)?.cast<String>() ?? [],
       tracksInventory: json['tracksInventory'] as bool? ?? false,
       mediaFiles: (json['mediaFiles'] as List?)

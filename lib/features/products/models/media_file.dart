@@ -21,7 +21,7 @@ class MediaFile {
       id: json['id'] as String,
       url: json['url'] as String,
       filename: json['filename'] as String,
-      mimeType: json['mimeType'] as String?,
+      mimeType: (json['mime'] ?? json['mimeType']) as String?,
       size: json['size'] as int?,
     );
   }
