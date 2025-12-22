@@ -1,3 +1,32 @@
+/// Product status enum for type-safe status filtering
+enum ProductStatus {
+  ACTIVE,
+  DRAFT,
+}
+
+/// Extension to convert ProductStatus enum to/from String
+extension ProductStatusExtension on ProductStatus {
+  String get value {
+    switch (this) {
+      case ProductStatus.ACTIVE:
+        return 'ACTIVE';
+      case ProductStatus.DRAFT:
+        return 'DRAFT';
+    }
+  }
+
+  static ProductStatus fromString(String status) {
+    switch (status) {
+      case 'ACTIVE':
+        return ProductStatus.ACTIVE;
+      case 'DRAFT':
+        return ProductStatus.DRAFT;
+      default:
+        throw ArgumentError('Unknown product status: $status');
+    }
+  }
+}
+
 /// Product model representing a virtual product in the VRon system
 /// Based on VRonGetProducts GraphQL query response
 class Product {
