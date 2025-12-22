@@ -112,6 +112,7 @@ void main() {
     test('statusLabel returns correct values', () {
       // Live + Active
       final liveActive = Project(
+        description: "",
         id: '1',
         slug: 'test',
         name: 'Test',
@@ -123,6 +124,7 @@ void main() {
 
       // Live + Trial
       final liveTrial = Project(
+        description: "",
         id: '2',
         slug: 'test',
         name: 'Test',
@@ -134,6 +136,7 @@ void main() {
 
       // Live + Inactive
       final liveInactive = Project(
+        description: "",
         id: '3',
         slug: 'test',
         name: 'Test',
@@ -145,6 +148,7 @@ void main() {
 
       // Not Live
       final notLive = Project(
+        description: "",
         id: '4',
         slug: 'test',
         name: 'Test',
@@ -158,6 +162,7 @@ void main() {
     test('statusColorHex returns correct colors', () {
       // Green for Live + Active
       final liveActive = Project(
+        description: "",
         id: '1',
         slug: 'test',
         name: 'Test',
@@ -169,6 +174,7 @@ void main() {
 
       // Orange for Live + Trial
       final liveTrial = Project(
+        description: "",
         id: '2',
         slug: 'test',
         name: 'Test',
@@ -180,6 +186,7 @@ void main() {
 
       // Gray for Not Live
       final notLive = Project(
+        description: "",
         id: '3',
         slug: 'test',
         name: 'Test',
@@ -191,6 +198,7 @@ void main() {
 
       // Red for Live + Inactive
       final liveInactive = Project(
+        description: "",
         id: '4',
         slug: 'test',
         name: 'Test',
@@ -203,6 +211,7 @@ void main() {
 
     test('shortDescription returns correct descriptions', () {
       final liveActive = Project(
+        description: "",
         id: '1',
         slug: 'test',
         name: 'Test',
@@ -213,6 +222,7 @@ void main() {
       expect(liveActive.shortDescription, 'Live • Active subscription');
 
       final notLiveTrial = Project(
+        description: "",
         id: '2',
         slug: 'test',
         name: 'Test',
@@ -225,6 +235,7 @@ void main() {
 
     test('teamInfo derives from subscription', () {
       final monthly = Project(
+        description: "",
         id: '1',
         slug: 'test',
         name: 'Test',
@@ -235,6 +246,7 @@ void main() {
       expect(monthly.teamInfo, 'Monthly plan');
 
       final yearly = Project(
+        description: "",
         id: '2',
         slug: 'test',
         name: 'Test',
@@ -247,6 +259,7 @@ void main() {
 
     test('updatedAt uses liveDate or subscription dates', () {
       final withLiveDate = Project(
+        description: "",
         id: '1',
         slug: 'test',
         name: 'Test',
@@ -258,6 +271,7 @@ void main() {
       expect(withLiveDate.updatedAt, testDate);
 
       final withoutLiveDate = Project(
+        description: "",
         id: '2',
         slug: 'test',
         name: 'Test',
@@ -270,6 +284,7 @@ void main() {
 
     test('copyWith creates new instance with updated fields', () {
       final original = Project(
+        description: "",
         id: 'proj_001',
         slug: 'original-slug',
         name: 'Original Title',
@@ -291,6 +306,7 @@ void main() {
 
     test('equality works correctly', () {
       final project1 = Project(
+        description: "",
         id: 'proj_001',
         slug: 'test-project',
         name: 'Test Project',
@@ -301,6 +317,7 @@ void main() {
       );
 
       final project2 = Project(
+        description: "",
         id: 'proj_001',
         slug: 'test-project',
         name: 'Test Project',
@@ -311,6 +328,7 @@ void main() {
       );
 
       final project3 = Project(
+        description: "",
         id: 'proj_002',
         slug: 'different-project',
         name: 'Different Project',
@@ -326,6 +344,7 @@ void main() {
 
     test('toString returns readable format', () {
       final project = Project(
+        description: "",
         id: 'proj_123',
         slug: 'test-project',
         name: 'Test Project',
@@ -340,6 +359,82 @@ void main() {
       expect(result, contains('Test Project'));
       expect(result, contains('test-project'));
       expect(result, contains('true')); // isLive
+    });
+
+    // T005-T008: Tests for description field (TDD - these should FAIL initially)
+    group('Project with description field', () {
+      test('T005: fromJson should parse description from I18NField', () {
+        final json = {
+          'id': 'test-id',
+          'slug': 'test-slug',
+          'name': {'text': 'Test Project'},
+          'description': {'text': 'Test description'},
+          'imageUrl': 'https://example.com/image.jpg',
+          'isLive': true,
+          'subscription': {},
+        };
+
+        final project = Project.fromJson(json);
+
+        expect(project.description, 'Test description');
+      });
+
+      test('T006: fromJson should handle missing description', () {
+        final json = {
+          'id': 'test-id',
+          'slug': 'test-slug',
+          'name': {'text': 'Test Project'},
+          // description field omitted
+          'imageUrl': 'https://example.com/image.jpg',
+          'isLive': true,
+          'subscription': {},
+        };
+
+        final project = Project.fromJson(json);
+
+        expect(project.description, ''); // Should default to empty string
+      });
+
+      test('T007: copyWith should update description', () {
+        final original = Project(
+          id: '1',
+          slug: 'test',
+          name: 'Test',
+          description: 'Original description',
+          imageUrl: 'url',
+          isLive: false,
+          subscription: createTestSubscription(),
+        );
+
+        final updated = original.copyWith(description: 'Updated description');
+
+        expect(updated.description, 'Updated description');
+        expect(updated.name, 'Test'); // Other fields unchanged
+      });
+
+      test('T008: equality operator should include description', () {
+        final project1 = Project(
+          id: '1',
+          slug: 'test',
+          name: 'Test',
+          description: 'Desc A',
+          imageUrl: 'url',
+          isLive: true,
+          subscription: createTestSubscription(),
+        );
+
+        final project2 = Project(
+          id: '1',
+          slug: 'test',
+          name: 'Test',
+          description: 'Desc B',
+          imageUrl: 'url',
+          isLive: true,
+          subscription: createTestSubscription(),
+        );
+
+        expect(project1 == project2, false);
+      });
     });
   });
 }
