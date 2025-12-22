@@ -78,12 +78,11 @@ class ProjectService {
     }
   ''';
 
-  /// GraphQL mutation to update project (actually a Product in backend)
-  /// Per ProjectMutation.md: Projects are implemented as Products in the backend
-  /// Uses VRonUpdateProduct mutation with title field (not name)
+  /// GraphQL mutation to update project details
+  /// Uses UpdateProject mutation with UpdateProjectDetailsInput
   static const String _updateProjectMutation = '''
-    mutation UpdateProduct(\$input: VRonUpdateProductInput!) {
-      VRonUpdateProduct(input: \$input)
+    mutation UpdateProject(\$input: UpdateProjectDetailsInput!) {
+      updateProjectDetails(input: \$input)
     }
   ''';
 
@@ -239,33 +238,30 @@ class ProjectService {
     }
   }
 
-  /// Update project master data via VRonUpdateProduct mutation
-  /// Per ProjectMutation.md: Projects are Products in backend, name→title mapping
+  /// Update project master data via UpdateProject mutation
+  /// Uses updateProjectDetails with projectId, name, slug, and description
   /// Returns updated Project object or throws an exception on error
   Future<Project> updateProject({
     required String projectId,
     required String name,
+    required String slug,
     required String description,
   }) async {
     try {
       if (kDebugMode) {
-        print('📝 [PROJECTS] Updating project/product $projectId (language: $_language)...');
-        print('  - Title (name): $name');
+        print('📝 [PROJECTS] Updating project $projectId (language: $_language)...');
+        print('  - Name: $name');
+        print('  - Slug: $slug');
         print('  - Description: $description');
-      }
-
-      // Try mutation with minimal fields first
-      // Backend may support partial updates (only id, title, description)
-      if (kDebugMode) {
-        print('📦 [PROJECTS] Attempting update with minimal fields...');
       }
 
       final result = await _graphqlService.query(
         _updateProjectMutation,
         variables: {
           'input': {
-            'id': projectId,
-            'title': name, // name field maps to title in backend
+            'projectId': projectId,
+            'name': name,
+            'slug': slug,
             'description': description,
           },
         },
