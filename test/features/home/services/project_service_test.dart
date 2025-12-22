@@ -7,6 +7,8 @@ import 'package:vronmobile2/features/home/services/project_service.dart';
 class MockGraphQLService extends GraphQLService {
   QueryResult? mockResult;
   Exception? mockException;
+  List<QueryResult>? mockResults; // Support multiple sequential responses
+  int _callCount = 0;
 
   @override
   Future<QueryResult> query(
@@ -16,7 +18,24 @@ class MockGraphQLService extends GraphQLService {
     if (mockException != null) {
       throw mockException!;
     }
+
+    // If mockResults is set, return responses in sequence
+    if (mockResults != null && mockResults!.isNotEmpty) {
+      if (_callCount < mockResults!.length) {
+        return mockResults![_callCount++];
+      }
+      // Return last result if we've exhausted the list
+      return mockResults!.last;
+    }
+
     return mockResult!;
+  }
+
+  void reset() {
+    mockResult = null;
+    mockException = null;
+    mockResults = null;
+    _callCount = 0;
   }
 }
 
@@ -40,6 +59,7 @@ void main() {
 
     setUp(() {
       mockGraphQLService = MockGraphQLService();
+      mockGraphQLService.reset();
       projectService = ProjectService(graphqlService: mockGraphQLService);
     });
 
@@ -412,26 +432,18 @@ void main() {
       test('T014: returns project details on successful API call', () async {
         // Arrange
         final mockData = {
-          'project': {
+          'getVRProject': {
             'id': 'proj_123',
             'slug': 'marketing-analytics',
             'name': {'text': 'Marketing Analytics'},
             'description': {'text': 'Comprehensive analytics dashboard for marketing campaigns'},
-            'imageUrl': 'https://cdn.vron.one/projects/proj_123/thumbnail.jpg',
-            'isLive': true,
             'liveDate': '2025-12-20T10:30:00Z',
+            'isOwner': true,
             'subscription': {
-              'isActive': true,
               'isTrial': false,
               'status': 'ACTIVE',
               'canChoosePlan': false,
-              'hasExpired': false,
-              'currency': 'EUR',
-              'price': 29.99,
               'renewalInterval': 'MONTHLY',
-              'startedAt': '2025-12-20T10:30:00Z',
-              'expiresAt': '2026-01-20T10:30:00Z',
-              'renewsAt': '2026-01-20T10:30:00Z',
               'prices': {'currency': 'EUR', 'monthly': 29.99, 'yearly': 299.99},
             },
           },
@@ -451,9 +463,7 @@ void main() {
         expect(project.slug, 'marketing-analytics');
         expect(project.name, 'Marketing Analytics');
         expect(project.description, 'Comprehensive analytics dashboard for marketing campaigns');
-        expect(project.imageUrl, 'https://cdn.vron.one/projects/proj_123/thumbnail.jpg');
-        expect(project.isLive, true);
-        expect(project.subscription.isActive, true);
+        expect(project.isLive, true); // Inferred from liveDate
         expect(project.subscription.status, 'ACTIVE');
       });
 
@@ -489,42 +499,49 @@ void main() {
         const updatedName = 'Updated Project Name';
         const updatedDescription = 'Updated description';
 
-        final mockData = {
-          'updateProject': {
+        // First call: mutation response (updateProjectDetails returns true)
+        final mutationResponse = {
+          'updateProjectDetails': true,
+        };
+
+        // Second call: getProjectDetail refresh response
+        final refreshResponse = {
+          'getVRProject': {
             'id': projectId,
             'slug': 'marketing-analytics',
             'name': {'text': updatedName},
             'description': {'text': updatedDescription},
-            'imageUrl': 'https://cdn.vron.one/projects/proj_123/thumbnail.jpg',
-            'isLive': true,
             'liveDate': '2025-12-20T10:30:00Z',
+            'isOwner': true,
             'subscription': {
-              'isActive': true,
               'isTrial': false,
               'status': 'ACTIVE',
               'canChoosePlan': false,
-              'hasExpired': false,
-              'currency': 'EUR',
-              'price': 29.99,
               'renewalInterval': 'MONTHLY',
-              'startedAt': '2025-12-20T10:30:00Z',
-              'expiresAt': '2026-01-20T10:30:00Z',
-              'renewsAt': '2026-01-20T10:30:00Z',
               'prices': {'currency': 'EUR', 'monthly': 29.99, 'yearly': 299.99},
             },
           },
         };
 
-        mockGraphQLService.mockResult = QueryResult(
-          data: mockData,
-          source: QueryResultSource.network,
-          options: QueryOptions(document: mockDocument),
-        );
+        // Mock sequential responses: mutation then refresh
+        mockGraphQLService.mockResults = [
+          QueryResult(
+            data: mutationResponse,
+            source: QueryResultSource.network,
+            options: QueryOptions(document: mockDocument),
+          ),
+          QueryResult(
+            data: refreshResponse,
+            source: QueryResultSource.network,
+            options: QueryOptions(document: mockDocument),
+          ),
+        ];
 
         // Act
         final updatedProject = await projectService.updateProject(
           projectId: projectId,
           name: updatedName,
+          slug: 'test-project',
           description: updatedDescription,
         );
 
@@ -555,6 +572,7 @@ void main() {
           () => projectService.updateProject(
             projectId: 'proj_123',
             name: '',
+            slug: 'test-slug',
             description: 'Test',
           ),
           throwsA(isA<Exception>()),
@@ -570,6 +588,7 @@ void main() {
           () => projectService.updateProject(
             projectId: 'proj_123',
             name: 'Test',
+            slug: 'test-slug',
             description: 'Test description',
           ),
           throwsA(isA<Exception>()),
