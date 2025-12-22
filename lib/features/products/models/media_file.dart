@@ -18,9 +18,9 @@ class MediaFile {
   /// Create MediaFile from GraphQL JSON response
   factory MediaFile.fromJson(Map<String, dynamic> json) {
     return MediaFile(
-      id: json['id'] as String,
-      url: json['url'] as String,
-      filename: json['filename'] as String,
+      id: json['id'] as String? ?? '',
+      url: json['url'] as String? ?? '',
+      filename: json['filename'] as String? ?? '',
       mimeType: (json['mime'] ?? json['mimeType']) as String?,
       size: json['size'] as int?,
     );

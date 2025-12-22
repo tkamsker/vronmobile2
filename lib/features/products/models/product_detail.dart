@@ -35,14 +35,14 @@ class ProductDetail {
   /// Create ProductDetail from GraphQL JSON response
   factory ProductDetail.fromJson(Map<String, dynamic> json) {
     return ProductDetail(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? '',
       title: _extractText(json['title']),
       description: _extractText(json['description']),
       thumbnail: json['thumbnail'] as String?,
-      status: json['status'] as String,
+      status: json['status'] as String? ?? 'DRAFT',
       category: json['categoryId'] as String? ??
                 (json['category'] != null ? _extractText(json['category']) : null),
-      tags: (json['tags'] as List?)?.cast<String>() ?? [],
+      tags: _parseTags(json['tags']),
       tracksInventory: json['tracksInventory'] as bool? ?? false,
       mediaFiles: (json['mediaFiles'] as List?)
               ?.map((m) => MediaFile.fromJson(m as Map<String, dynamic>))
@@ -69,6 +69,17 @@ class ProductDetail {
       return field['text'] as String;
     }
     return '';
+  }
+
+  /// Parse tags from API - can be either List or comma-separated String
+  static List<String> _parseTags(dynamic tags) {
+    if (tags == null) return [];
+    if (tags is List) return tags.cast<String>();
+    if (tags is String) {
+      if (tags.isEmpty) return [];
+      return tags.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
+    }
+    return [];
   }
 
   /// Check if product is active

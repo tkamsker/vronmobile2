@@ -24,9 +24,9 @@ class ProductVariant {
   /// Create ProductVariant from GraphQL JSON response
   factory ProductVariant.fromJson(Map<String, dynamic> json) {
     return ProductVariant(
-      id: json['id'] as String,
-      sku: json['sku'] as String,
-      price: (json['price'] as num).toDouble(),
+      id: json['id'] as String? ?? '',
+      sku: json['sku'] as String? ?? '',
+      price: json['price'] != null ? (json['price'] as num).toDouble() : 0.0,
       compareAtPrice: json['compareAtPrice'] != null
           ? (json['compareAtPrice'] as num).toDouble()
           : null,

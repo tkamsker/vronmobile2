@@ -15,38 +15,23 @@ class ProductDetailService {
   static const String _getProductQuery = '''
     query GetProduct(\$input: VRonGetProductInput!, \$lang: Language!) {
       VRonGetProduct(input: \$input) {
-        product {
+        title {
+          text(lang: \$lang)
+        }
+        description {
+          text(lang: \$lang)
+        }
+        status
+        tags
+        mediaFiles {
           id
-          title {
-            text(lang: \$lang)
-          }
-          description {
-            text(lang: \$lang)
-          }
-          thumbnail
-          status
-          categoryId
-          tags
-          tracksInventory
-          mediaFiles {
-            id
-            url
-            filename
-            mime
-            size
-          }
-          variants {
-            id
-            sku
-            price
-            compareAtPrice
-            inventoryPolicy
-            inventoryQuantity
-            weight
-            weightUnit
-          }
-          createdAt
-          updatedAt
+          url
+          filename
+        }
+        variants {
+          id
+          sku
+          price
         }
       }
     }
@@ -90,8 +75,7 @@ class ProductDetailService {
         throw Exception('Product not found: $productId');
       }
 
-      final responseData = result.data!['VRonGetProduct'] as Map<String, dynamic>;
-      final productData = responseData['product'] as Map<String, dynamic>;
+      final productData = result.data!['VRonGetProduct'] as Map<String, dynamic>;
       final product = ProductDetail.fromJson(productData);
 
       if (kDebugMode) {
