@@ -19,6 +19,7 @@ class AppRoutes {
   static const String createProject = '/create-project';
 
   // Product routes
+  static const String products = '/products';
   static const String productDetail = '/product-detail';
 
   // Main app routes
