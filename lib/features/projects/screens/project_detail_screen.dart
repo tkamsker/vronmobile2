@@ -67,6 +67,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       await _projectService.updateProject(
         projectId: _project!.id,
         name: name,
+        slug: _project!.slug,
         description: description,
       );
 
