@@ -207,47 +207,137 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
   }
 
   Widget _buildProductsList() {
+    final activeCount = _products.where((p) => p.status == 'ACTIVE').length;
+    final draftCount = _products.where((p) => p.status == 'DRAFT').length;
+
     return Semantics(
       label: '${_products.length} products for ${widget.project.name}',
       child: RefreshIndicator(
         onRefresh: _loadProducts,
         child: Column(
           children: [
-            // Header
+            // Stats Header Section
             Container(
-              padding: const EdgeInsets.all(16),
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Semantics(
+                    header: true,
+                    child: Text(
+                      'Your products',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Manage all ${_products.length} products in one place',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Stats chips
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: [
+                      _buildStatChip('Active', activeCount, Colors.blue),
+                      _buildStatChip('Drafts', draftCount, Colors.orange),
+                      _buildStatChip('Last updated', 'Just now', Colors.grey),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Create Product Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
                   Expanded(
                     child: Semantics(
-                      header: true,
-                      child: Text(
-                        '${_products.length} Product${_products.length != 1 ? 's' : ''}',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
+                      button: true,
+                      label: 'Create a product',
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // TODO: Navigate to product creation
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Product creation coming soon'),
                             ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Create a product',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
                       ),
                     ),
                   ),
+                  const SizedBox(width: 12),
                   Semantics(
                     button: true,
-                    label: 'Create new product',
-                    child: IconButton(
-                      onPressed: () {
-                        // TODO: Navigate to product creation
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Product creation coming soon'),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.add_circle_outline),
-                      tooltip: 'Create product',
+                    label: 'More options',
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        onPressed: () {
+                          // TODO: More options
+                        },
+                        icon: const Icon(Icons.add),
+                        iconSize: 28,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
+
+            const SizedBox(height: 16),
+
+            // Search Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search products...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                ),
+                onChanged: (value) {
+                  // TODO: Implement search
+                },
+              ),
+            ),
+
+            const SizedBox(height: 16),
 
             // Products list
             Expanded(
@@ -259,10 +349,24 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
                   return ProductCard(
                     product: product,
                     onTap: () {
-                      // TODO: Navigate to product detail (UC14)
+                      // TODO: Navigate to product detail (Phase 2)
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('View product: ${product.title}'),
+                        ),
+                      );
+                    },
+                    onEdit: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Edit product: ${product.title}'),
+                        ),
+                      );
+                    },
+                    onDelete: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Delete product: ${product.title}'),
                         ),
                       );
                     },
@@ -272,6 +376,37 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatChip(String label, dynamic value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$label · ',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[600],
+            ),
+          ),
+          Text(
+            '$value',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }

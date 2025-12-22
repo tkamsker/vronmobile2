@@ -5,11 +5,15 @@ import 'package:vronmobile2/features/products/models/product.dart';
 class ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback? onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   const ProductCard({
     super.key,
     required this.product,
     this.onTap,
+    this.onEdit,
+    this.onDelete,
   });
 
   @override
@@ -83,6 +87,99 @@ class ProductCard extends StatelessWidget {
                             ),
                         ],
                       ),
+                      const SizedBox(height: 12),
+
+                      // Created date and action buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Created\n${_formatDate(DateTime.now())}',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Colors.grey[600],
+                                    height: 1.3,
+                                  ),
+                            ),
+                          ),
+                          // Edit button
+                          if (onEdit != null)
+                            Semantics(
+                              button: true,
+                              label: 'Edit ${product.title}',
+                              child: Material(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                child: InkWell(
+                                  onTap: onEdit,
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.edit, size: 16, color: Colors.blue),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Edit',
+                                          style: TextStyle(
+                                            color: Colors.blue,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          const SizedBox(width: 8),
+                          // Delete button
+                          if (onDelete != null)
+                            Semantics(
+                              button: true,
+                              label: 'Delete ${product.title}',
+                              child: Material(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                child: InkWell(
+                                  onTap: onDelete,
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Delete',
+                                          style: TextStyle(
+                                            color: Colors.red,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -92,6 +189,14 @@ class ProductCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime date) {
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
   Widget _buildThumbnail(BuildContext context) {
