@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:vronmobile2/core/navigation/routes.dart';
 import 'package:vronmobile2/features/products/models/product.dart';
+import 'package:vronmobile2/features/products/models/product_filter.dart';
+import 'package:vronmobile2/features/products/models/product_search_result.dart';
 import 'package:vronmobile2/features/products/services/product_service.dart';
 import 'package:vronmobile2/features/products/widgets/product_card.dart';
 
@@ -18,10 +21,24 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
+  // Search and filter state (T015)
+  ProductFilter _currentFilter = const ProductFilter();
+  ProductSearchResult _searchResult = ProductSearchResult.initial();
+
+  // Debouncing timer (T016)
+  Timer? _debounceTimer;
+
   @override
   void initState() {
     super.initState();
     _loadProducts();
+  }
+
+  @override
+  void dispose() {
+    // T017: Cancel debounce timer
+    _debounceTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadProducts() async {
@@ -42,6 +59,225 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  // T019: Implement _onSearchChanged method with 400ms debouncing
+  void _onSearchChanged(String query) {
+    // Cancel previous timer
+    _debounceTimer?.cancel();
+
+    // Update filter with new search query
+    final newFilter = _currentFilter.copyWith(searchQuery: query);
+
+    // Set loading state immediately
+    setState(() {
+      _currentFilter = newFilter;
+      _searchResult = ProductSearchResult.loading(newFilter);
+    });
+
+    // Debounce: wait 400ms before executing search
+    _debounceTimer = Timer(const Duration(milliseconds: 400), () {
+      _executeSearch(newFilter);
+    });
+  }
+
+  // T020: Implement _clearSearch method
+  void _clearSearch() {
+    setState(() {
+      _currentFilter = _currentFilter.copyWith(searchQuery: '');
+      _executeSearch(_currentFilter);
+    });
+  }
+
+  // T033: Implement _updateFilter method for filter changes
+  void _updateFilter(ProductFilter newFilter) {
+    setState(() {
+      _currentFilter = newFilter;
+      _searchResult = ProductSearchResult.loading(_currentFilter);
+    });
+
+    // Execute search immediately (no debouncing for filter changes)
+    _executeSearch(_currentFilter);
+  }
+
+  // T043: Extract unique categories from product list
+  List<String> _getUniqueCategories() {
+    final categories = <String>{};
+    for (final product in _products) {
+      if (product.category != null && product.category!.isNotEmpty) {
+        categories.add(product.category!);
+      }
+    }
+    return categories.toList()..sort();
+  }
+
+  // T021: Implement _executeSearch method
+  Future<void> _executeSearch(ProductFilter filter) async {
+    try {
+      final products = await _productService.fetchProducts(
+        search: filter.searchQuery?.isNotEmpty == true
+            ? filter.searchQuery
+            : null,
+        status: filter.selectedStatus != null
+            ? [filter.selectedStatus!.value]
+            : null,
+        categoryIds: filter.selectedCategoryId != null
+            ? [filter.selectedCategoryId!]
+            : null,
+      );
+
+      if (mounted) {
+        setState(() {
+          _searchResult = ProductSearchResult.success(
+            products: products,
+            totalCount: products.length,
+            appliedFilter: filter,
+          );
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _searchResult = ProductSearchResult.error(
+            filter,
+            'Failed to load products: ${e.toString()}',
+          );
+        });
+      }
+    }
+  }
+
+  // T022-T024: Build products content with state handling
+  Widget _buildProductsContent() {
+    // T023: Show loading state
+    if (_searchResult.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    // T024: Show error state with retry button
+    if (_searchResult.hasError) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(_searchResult.errorMessage!),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => _executeSearch(_currentFilter),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // T025: Show empty state when no results
+    if (_searchResult.hasNoResults) {
+      return _buildNoResultsState();
+    }
+
+    // Show initial empty state (no search performed, no products)
+    if (_searchResult.isInitialState && _products.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    // T022: Show products from _searchResult
+    final displayProducts = _currentFilter.isActive
+        ? _searchResult.products
+        : _products;
+
+    return ListView.builder(
+      itemCount: displayProducts.length,
+      padding: const EdgeInsets.only(bottom: 16),
+      itemBuilder: (context, index) {
+        final product = displayProducts[index];
+        return ProductCard(
+          product: product,
+          onTap: () {
+            Navigator.pushNamed(
+              context,
+              AppRoutes.productDetail,
+              arguments: product.id,
+            );
+          },
+          onEdit: () {
+            Navigator.pushNamed(
+              context,
+              AppRoutes.productDetail,
+              arguments: product.id,
+            );
+          },
+          onDelete: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Delete product: ${product.title}'),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // T025, T037: Implement _buildNoResultsState method with active filter info
+  Widget _buildNoResultsState() {
+    // Build message showing which filters are active
+    String message = 'No products found';
+    final List<String> activeFilters = [];
+
+    if (_currentFilter.searchQuery?.isNotEmpty == true) {
+      activeFilters.add('search: "${_currentFilter.searchQuery}"');
+    }
+    if (_currentFilter.selectedStatus != null) {
+      final statusName = _currentFilter.selectedStatus == ProductStatus.DRAFT
+          ? 'Draft'
+          : 'Active';
+      activeFilters.add('status: $statusName');
+    }
+    if (_currentFilter.selectedCategoryId != null) {
+      activeFilters.add('category filter');
+    }
+
+    if (activeFilters.isNotEmpty) {
+      message = 'No products found with ${activeFilters.join(", ")}';
+    }
+
+    return Semantics(
+      label: 'No products found',
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.search_off, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Try adjusting your search or filters',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey,
+                  ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _currentFilter = _currentFilter.clear();
+                  _executeSearch(_currentFilter);
+                });
+              },
+              child: const Text('Clear all filters'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -260,65 +496,145 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
               ),
             ),
 
-            // Search Bar
+            // Search Bar (T018: Updated with working implementation)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search products...',
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+              child: Semantics(
+                label: 'Search products by title',
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search products...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _currentFilter.searchQuery?.isNotEmpty == true
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: _clearSearch,
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
+                  onChanged: _onSearchChanged,
                 ),
-                onChanged: (value) {
-                  // TODO: Implement search
-                },
               ),
             ),
 
             const SizedBox(height: 16),
 
-            // Products list
-            Expanded(
-              child: ListView.builder(
-                itemCount: _products.length,
-                padding: const EdgeInsets.only(bottom: 16),
-                itemBuilder: (context, index) {
-                  final product = _products[index];
-                  return ProductCard(
-                    product: product,
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.productDetail,
-                        arguments: product.id,
-                      );
-                    },
-                    onEdit: () {
-                      Navigator.pushNamed(
-                        context,
-                        AppRoutes.productDetail,
-                        arguments: product.id,
-                      );
-                    },
-                    onDelete: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Delete product: ${product.title}'),
-                        ),
-                      );
-                    },
-                  );
-                },
+            // T032: Status Filter UI
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Semantics(
+                label: 'Filter by status',
+                child: Row(
+                  children: [
+                    const Text(
+                      'Status:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // T035: Visual indication via selected property
+                    ChoiceChip(
+                      label: const Text('All'),
+                      selected: _currentFilter.selectedStatus == null,
+                      onSelected: (selected) {
+                        if (selected) {
+                          _updateFilter(_currentFilter.copyWith(selectedStatus: null));
+                        }
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: const Text('Draft'),
+                      selected: _currentFilter.selectedStatus == ProductStatus.DRAFT,
+                      onSelected: (selected) {
+                        if (selected) {
+                          _updateFilter(
+                            _currentFilter.copyWith(selectedStatus: ProductStatus.DRAFT),
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    ChoiceChip(
+                      label: const Text('Active'),
+                      selected: _currentFilter.selectedStatus == ProductStatus.ACTIVE,
+                      onSelected: (selected) {
+                        if (selected) {
+                          _updateFilter(
+                            _currentFilter.copyWith(selectedStatus: ProductStatus.ACTIVE),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // T044: Category Filter UI
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Semantics(
+                label: 'Filter by category',
+                child: Row(
+                  children: [
+                    const Text(
+                      'Category:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value: _currentFilter.selectedCategoryId,
+                        hint: const Text('All Categories'),
+                        items: [
+                          const DropdownMenuItem<String>(
+                            value: null,
+                            child: Text('All Categories'),
+                          ),
+                          ..._getUniqueCategories().map((category) {
+                            return DropdownMenuItem<String>(
+                              value: category,
+                              child: Text(category),
+                            );
+                          }),
+                        ],
+                        onChanged: (String? value) {
+                          // T045: Wire onChange to _updateFilter
+                          _updateFilter(
+                            _currentFilter.copyWith(selectedCategoryId: value),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Products list (T022-T024: Updated to use _searchResult with state handling)
+            Expanded(
+              child: _buildProductsContent(),
             ),
           ],
         ),

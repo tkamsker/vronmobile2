@@ -4,6 +4,7 @@ Auto-generated from all feature plans. Last updated: 2025-12-20
 
 ## Active Technologies
 - Backend GraphQL API (PostgreSQL), local caching via shared_preferences (003-projectdetail)
+- Session-only state management using StatefulWidget or Provider (no persistence across app restarts) (005-product-search)
 
 - Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0) (001-main-screen-login)
 
@@ -59,13 +60,10 @@ Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0): Follow s
 - Share common code via `lib/core/`
 
 ## Recent Changes
+- 005-product-search: Added Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0)
 - 003-projectdetail: Added comprehensive Semantics labels for accessibility
 - 003-projectdetail: Migrated to PopScope from deprecated WillPopScope
-- 003-projectdetail: Updated color opacity API to withValues()
-- 003-projectdetail: Implemented project detail viewing and editing (Phase 1-5, 7 complete)
-- 003-projectdetail: Added Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0)
 
-- 001-main-screen-login: Added Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
