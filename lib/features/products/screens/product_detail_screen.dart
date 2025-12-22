@@ -100,6 +100,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         productId: widget.productId,
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
+        status: _product?.status ?? 'DRAFT',
+        tracksInventory: _product?.tracksInventory ?? false,
+        tags: _product?.tags ?? [],
       );
 
       setState(() {

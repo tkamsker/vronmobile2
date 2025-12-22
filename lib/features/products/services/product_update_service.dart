@@ -22,6 +22,7 @@ class ProductUpdateService {
     String? title,
     String? description,
     String? status,
+    bool? tracksInventory,
     List<String>? tags,
     String? categoryId,
   }) async {
@@ -36,8 +37,20 @@ class ProductUpdateService {
       if (title != null) input['title'] = title;
       if (description != null) input['description'] = description;
       if (status != null) input['status'] = status;
-      if (tags != null) input['tags'] = tags;
+      if (tracksInventory != null) input['tracksInventory'] = tracksInventory;
+      // Tags must be a comma-separated string, not an array
+      if (tags != null) input['tags'] = tags.join(',');
       if (categoryId != null) input['categoryId'] = categoryId;
+
+      if (kDebugMode) {
+        print('📝 [PRODUCT UPDATE] Sending mutation with input:');
+        print('   id: $productId');
+        print('   title: $title');
+        print('   description: ${description?.substring(0, 50)}...');
+        print('   status: $status');
+        print('   tracksInventory: $tracksInventory');
+        print('   tags: ${tags?.join(',')}');
+      }
 
       final result = await _graphqlService.mutate(
         _updateProductMutation,
@@ -64,6 +77,18 @@ class ProductUpdateService {
       if (result.data == null) {
         if (kDebugMode) print('⚠️ [PRODUCT UPDATE] No data in response');
         throw Exception('Failed to update product: No data returned');
+      }
+
+      final updateResult = result.data!['VRonUpdateProduct'];
+      if (kDebugMode) {
+        print('📝 [PRODUCT UPDATE] Mutation returned: $updateResult');
+      }
+
+      if (updateResult == null || updateResult == false) {
+        if (kDebugMode) {
+          print('⚠️ [PRODUCT UPDATE] Mutation returned null or false');
+        }
+        throw Exception('Failed to update product: API returned $updateResult');
       }
 
       if (kDebugMode) {
