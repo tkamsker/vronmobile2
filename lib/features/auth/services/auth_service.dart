@@ -332,9 +332,23 @@ class AuthService {
         );
       }
 
-      if (kDebugMode) print('✅ [AUTH] Google idToken obtained');
+      if (kDebugMode) {
+        print('✅ [AUTH] Google idToken obtained');
+        final tokenPreview = googleAuth.idToken!.length > 50
+            ? '${googleAuth.idToken!.substring(0, 50)}...'
+            : googleAuth.idToken!;
+        print('   idToken preview: $tokenPreview');
+        print('   idToken length: ${googleAuth.idToken!.length} characters');
+      }
 
       // Exchange Google token for backend JWT (T019-T021)
+      if (kDebugMode) {
+        print('🔐 [AUTH] Exchanging Google token with backend...');
+        print('   GraphQL endpoint: ${_graphqlService.toString()}');
+        print('   Mutation: signInWithGoogle');
+        print('   Input: { idToken: <GOOGLE_TOKEN> }');
+      }
+
       final result = await _graphqlService.mutate(
         _signInWithGoogleMutation,
         variables: {
@@ -342,7 +356,14 @@ class AuthService {
         },
       );
 
-      if (kDebugMode) print('🔐 [AUTH] GraphQL mutation completed');
+      if (kDebugMode) {
+        print('🔐 [AUTH] Backend response received');
+        print('   Has exception: ${result.hasException}');
+        print('   Has data: ${result.data != null}');
+        if (result.data != null) {
+          print('   Response keys: ${result.data!.keys.toList()}');
+        }
+      }
 
       // Handle GraphQL errors (T037 - enhanced)
       if (result.hasException) {
