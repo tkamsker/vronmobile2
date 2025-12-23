@@ -24,8 +24,9 @@ class AppTheme {
   static const Color buttonDisabled = Color(0xFFD1D1D6);
   static const Color buttonText = Color(0xFFFFFFFF);
 
-  // OAuth button colors
-  static const Color googleRed = Color(0xFF4285F4);
+  // OAuth button colors (T054 - Google branding compliance)
+  // Google Blue: Official Google brand color per branding guidelines
+  static const Color googleBlue = Color(0xFF4285F4);
   static const Color facebookBlue = Color(0xFF1877F2);
 
   /// Light theme configuration
