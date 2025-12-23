@@ -133,18 +133,57 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  void _handleGoogleSignIn() {
+  Future<void> _handleGoogleSignIn() async {
+    if (kDebugMode) print('🔘 [UI] Google Sign In button pressed');
+
     setState(() {
       _isGoogleLoading = true;
     });
-    // TODO: Implement Google OAuth (UC3)
-    Future.delayed(const Duration(seconds: 1), () {
+
+    try {
+      if (kDebugMode) print('📡 [UI] Calling Google OAuth service...');
+
+      // Call Google OAuth service
+      final result = await _authService.signInWithGoogle();
+
+      if (kDebugMode) {
+        print(
+          '📡 [UI] Google OAuth service returned: ${result.isSuccess ? "SUCCESS" : "FAILURE"}',
+        );
+      }
+
+      if (!mounted) return;
+
+      if (result.isSuccess) {
+        if (kDebugMode) {
+          print('✅ [UI] Google sign-in successful - navigating to home screen');
+        }
+
+        final userEmail = result.data?['email'] as String?;
+
+        // Navigate to home screen and remove login screen from stack
+        Navigator.of(
+          context,
+        ).pushReplacementNamed(AppRoutes.home, arguments: userEmail);
+
+        if (kDebugMode) print('✅ [UI] Navigated to home screen');
+      } else {
+        if (kDebugMode) print('❌ [UI] Google sign-in failed: ${result.error}');
+        // Sign-in failed - show error message
+        _showError(result.error ?? 'Google sign-in failed');
+      }
+    } catch (e) {
+      if (kDebugMode) print('❌ [UI] Unexpected error: ${e.toString()}');
+      if (mounted) {
+        _showError('Unexpected error: ${e.toString()}');
+      }
+    } finally {
       if (mounted) {
         setState(() {
           _isGoogleLoading = false;
         });
       }
-    });
+    }
   }
 
   void _handleFacebookSignIn() {
