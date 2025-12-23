@@ -369,12 +369,20 @@ class AuthService {
       if (result.hasException) {
         final exception = result.exception;
         if (kDebugMode) {
-          print('❌ [AUTH] GraphQL exception: ${exception.toString()}');
+          print('❌ [AUTH] Backend error detected');
+          print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          print('📋 BACKEND ERROR DETAILS:');
+          print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         }
 
         // Check for network errors
         if (exception?.linkException != null) {
-          if (kDebugMode) print('❌ [AUTH] Network/link error detected');
+          if (kDebugMode) {
+            print('🔌 Error Type: NETWORK/LINK ERROR');
+            print('   Exception: ${exception!.linkException.toString()}');
+            print('   Original Exception: ${exception.linkException?.originalException}');
+            print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          }
           return AuthResult.failure(
             OAuthErrorMapper.getUserMessage(OAuthErrorCode.networkError),
           );
@@ -382,9 +390,21 @@ class AuthService {
 
         // Check for GraphQL errors (backend validation, auth failures, etc.)
         if (exception?.graphqlErrors.isNotEmpty ?? false) {
-          final error = exception!.graphqlErrors.first;
-          if (kDebugMode) print('❌ [AUTH] GraphQL error: ${error.message}');
+          if (kDebugMode) {
+            print('⚠️  Error Type: GRAPHQL ERROR');
+            print('   Number of errors: ${exception!.graphqlErrors.length}');
+            for (var i = 0; i < exception.graphqlErrors.length; i++) {
+              final error = exception.graphqlErrors[i];
+              print('   Error #${i + 1}:');
+              print('      Message: ${error.message}');
+              print('      Locations: ${error.locations}');
+              print('      Path: ${error.path}');
+              print('      Extensions: ${error.extensions}');
+            }
+            print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+          }
 
+          final error = exception!.graphqlErrors.first;
           // Return user-friendly backend error message
           return AuthResult.failure(
             OAuthErrorMapper.getUserMessage(OAuthErrorCode.backendError),
@@ -392,6 +412,11 @@ class AuthService {
         }
 
         // Fallback for unknown GraphQL exceptions
+        if (kDebugMode) {
+          print('❓ Error Type: UNKNOWN EXCEPTION');
+          print('   Exception: ${exception.toString()}');
+          print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        }
         return AuthResult.failure(
           OAuthErrorMapper.getUserMessage(OAuthErrorCode.backendError),
         );
@@ -399,21 +424,45 @@ class AuthService {
 
       // Extract response data
       if (result.data == null || result.data!['signInWithGoogle'] == null) {
-        if (kDebugMode) print('❌ [AUTH] Invalid response structure');
+        if (kDebugMode) {
+          print('❌ [AUTH] Invalid response structure from backend');
+          print('   result.data is null: ${result.data == null}');
+          if (result.data != null) {
+            print('   Available keys: ${result.data!.keys.toList()}');
+            print('   signInWithGoogle field: ${result.data!['signInWithGoogle']}');
+          }
+        }
         return AuthResult.failure('Invalid response from server');
       }
 
       final loginData = result.data!['signInWithGoogle'] as Map<String, dynamic>;
+
+      if (kDebugMode) {
+        print('✅ [AUTH] Backend response structure valid');
+        print('   Response keys: ${loginData.keys.toList()}');
+      }
+
       final accessToken = loginData['accessToken'] as String?;
 
       if (accessToken == null || accessToken.isEmpty) {
-        if (kDebugMode) print('❌ [AUTH] Missing access token in backend response');
+        if (kDebugMode) {
+          print('❌ [AUTH] Missing access token in backend response');
+          print('   accessToken field: $accessToken');
+          print('   Full response: $loginData');
+        }
         return AuthResult.failure(
           OAuthErrorMapper.getUserMessage(OAuthErrorCode.backendError),
         );
       }
 
-      if (kDebugMode) print('✅ [AUTH] Received backend access token');
+      if (kDebugMode) {
+        print('✅ [AUTH] Backend access token received');
+        final tokenPreview = accessToken.length > 40
+            ? '${accessToken.substring(0, 40)}...'
+            : accessToken;
+        print('   Token preview: $tokenPreview');
+        print('   Token length: ${accessToken.length} characters');
+      }
 
       // T020: Create AUTH_CODE (same pattern as email/password login)
       final authCode = _createAuthCode(accessToken);
@@ -433,14 +482,26 @@ class AuthService {
       // - If new email: creates new account with Google provider
       // The authProviders field shows which methods are linked
       final user = loginData['user'] as Map<String, dynamic>;
+
       if (kDebugMode) {
-        print('✅ [AUTH] Google sign-in successful for: ${user['email']}');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('✅ GOOGLE OAUTH SUCCESS!');
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        print('👤 User Information:');
+        print('   ID: ${user['id']}');
+        print('   Email: ${user['email']}');
+        print('   Name: ${user['name']}');
+        print('   Picture: ${user['picture']}');
+
         if (user['authProviders'] != null) {
-          final providers = (user['authProviders'] as List)
-              .map((p) => p['provider'])
-              .join(', ');
-          print('✅ [AUTH] Linked providers: $providers');
+          final providers = (user['authProviders'] as List);
+          print('🔗 Linked Authentication Providers:');
+          for (var provider in providers) {
+            print('   - ${provider['provider']}: ${provider['enabled'] ? "✅ Enabled" : "❌ Disabled"}');
+          }
         }
+
+        print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       }
 
       return AuthResult.success({
