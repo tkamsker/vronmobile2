@@ -10,11 +10,13 @@ import 'package:vronmobile2/features/products/widgets/product_card.dart';
 class ProjectProductsTab extends StatefulWidget {
   final Project project;
   final VoidCallback? onNavigateToProducts;
+  final void Function(String projectId)? onCreateProduct;
 
   const ProjectProductsTab({
     super.key,
     required this.project,
     this.onNavigateToProducts,
+    this.onCreateProduct,
   });
 
   @override
@@ -23,14 +25,23 @@ class ProjectProductsTab extends StatefulWidget {
 
 class _ProjectProductsTabState extends State<ProjectProductsTab> {
   final ProductService _productService = ProductService();
+  final TextEditingController _searchController = TextEditingController();
   List<Product> _products = [];
   bool _isLoading = false;
   String? _errorMessage;
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _loadProducts();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadProducts() async {
@@ -53,29 +64,98 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
     }
   }
 
+  /// Handle search query changes
+  /// T045: Filter products list based on search query
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text.toLowerCase();
+    });
+  }
+
+  /// Clear search query
+  void _clearSearch() {
+    _searchController.clear();
+    setState(() {
+      _searchQuery = '';
+    });
+  }
+
+  /// Get filtered products based on search query
+  /// T046: Filter by product title
+  List<Product> get _filteredProducts {
+    if (_searchQuery.isEmpty) {
+      return _products;
+    }
+    return _products.where((product) {
+      return product.title.toLowerCase().contains(_searchQuery);
+    }).toList();
+  }
+
+  /// Navigate to product creation screen with project context
+  /// T037: Pass projectId and projectName as navigation arguments
+  Future<void> _navigateToCreateProduct() async {
+    // Call the callback if provided (for testing and custom navigation)
+    if (widget.onCreateProduct != null) {
+      widget.onCreateProduct!(widget.project.id);
+      return;
+    }
+
+    // TODO: Replace with actual navigation when CreateProductScreen is implemented
+    // For now, navigate to products list as placeholder
+    final result = await Navigator.pushNamed(
+      context,
+      AppRoutes.products,
+      arguments: {
+        'projectId': widget.project.id,
+        'projectName': widget.project.name,
+      },
+    );
+
+    // T039: Refresh product list if creation succeeded
+    if (result == true && mounted) {
+      await _loadProducts();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    Widget content;
+
     if (_isLoading) {
-      return _buildLoading();
+      content = _buildLoading();
+    } else if (_errorMessage != null) {
+      content = _buildError();
+    } else if (_products.isEmpty) {
+      content = _buildEmptyState();
+    } else {
+      content = _buildProductsList();
     }
 
-    if (_errorMessage != null) {
-      return _buildError();
-    }
-
-    if (_products.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return _buildProductsList();
+    // Wrap content with Stack to add FAB
+    return Stack(
+      children: [
+        content,
+        // FAB for creating products
+        Positioned(
+          right: 16,
+          bottom: 16,
+          child: Semantics(
+            button: true,
+            label: 'Create product for ${widget.project.name}',
+            child: FloatingActionButton(
+              onPressed: _navigateToCreateProduct,
+              child: const Icon(Icons.add),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildLoading() {
     return Semantics(
       label: 'Loading products',
-      child: const Center(
-        child: CircularProgressIndicator(),
-      ),
+      child: const Center(child: CircularProgressIndicator()),
     );
   }
 
@@ -88,11 +168,7 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red[300],
-              ),
+              Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
               const SizedBox(height: 16),
               Text(
                 'Failed to load products',
@@ -101,9 +177,9 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
               const SizedBox(height: 8),
               Text(
                 _errorMessage ?? 'Unknown error',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -142,11 +218,7 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
                     color: Colors.grey[100],
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.apps,
-                    size: 60,
-                    color: Colors.grey[400],
-                  ),
+                  child: Icon(Icons.apps, size: 60, color: Colors.grey[400]),
                 ),
               ),
               const SizedBox(height: 24),
@@ -155,17 +227,17 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
                 child: Text(
                   'You have no products yet!',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 'Create your first virtual product to start\npopulating your worlds and projects.',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
@@ -174,14 +246,7 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
                 label: 'Create a product button',
                 hint: 'Double tap to create your first product',
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    // TODO: Navigate to product creation (UC13)
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Product creation coming soon'),
-                      ),
-                    );
-                  },
+                  onPressed: _navigateToCreateProduct,
                   icon: const Icon(Icons.add),
                   label: const Text('Create a product'),
                   style: ElevatedButton.styleFrom(
@@ -195,9 +260,9 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
               const SizedBox(height: 16),
               Text(
                 'Set up materials, lighting, and interactions –\neverything in one place.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[500],
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[500]),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -208,57 +273,14 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
   }
 
   Widget _buildProductsList() {
-    final activeCount = _products.where((p) => p.status == 'ACTIVE').length;
-    final draftCount = _products.where((p) => p.status == 'DRAFT').length;
-
     return Semantics(
-      label: '${_products.length} products for ${widget.project.name}',
+      label: _searchQuery.isNotEmpty
+          ? '${_filteredProducts.length} of ${_products.length} products for ${widget.project.name}'
+          : '${_products.length} products for ${widget.project.name}',
       child: RefreshIndicator(
         onRefresh: _loadProducts,
         child: Column(
           children: [
-            // Stats Header Section
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Semantics(
-                    header: true,
-                    child: Text(
-                      'Your products',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Manage all ${_products.length} products in one place',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Stats chips
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 8,
-                    children: [
-                      _buildStatChip('Active', activeCount, Colors.blue),
-                      _buildStatChip('Drafts', draftCount, Colors.orange),
-                      _buildStatChip('Last updated', 'Just now', Colors.grey),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
             // Create Product Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -269,14 +291,7 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
                       button: true,
                       label: 'Create a product',
                       child: ElevatedButton(
-                        onPressed: () {
-                          // TODO: Navigate to product creation
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Product creation coming soon'),
-                            ),
-                          );
-                        },
+                        onPressed: _navigateToCreateProduct,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
@@ -285,7 +300,10 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
                         ),
                         child: const Text(
                           'Create a product',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -296,7 +314,9 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
                     label: 'More options',
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                        color: Theme.of(
+                          context,
+                        ).primaryColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: IconButton(
@@ -314,39 +334,62 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
 
             const SizedBox(height: 16),
 
-            // Search Bar
+            // Search Bar (T044: Updated with working implementation)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search products...',
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
+              child: Semantics(
+                label: 'Search products by title',
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search products...',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: _clearSearch,
+                            tooltip: 'Clear search',
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                   ),
                 ),
-                onChanged: (value) {
-                  // TODO: Implement search
-                },
               ),
             ),
 
             const SizedBox(height: 16),
 
-            // Products list
+            // T047: Search results count
+            if (_searchQuery.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  '${_filteredProducts.length} ${_filteredProducts.length == 1 ? "product" : "products"} found',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+
+            if (_searchQuery.isNotEmpty) const SizedBox(height: 8),
+
+            // Products list (T046: Using filtered products)
             Expanded(
               child: ListView.builder(
-                itemCount: _products.length,
+                itemCount: _filteredProducts.length,
                 padding: const EdgeInsets.only(bottom: 16),
                 itemBuilder: (context, index) {
-                  final product = _products[index];
+                  final product = _filteredProducts[index];
                   return ProductCard(
                     product: product,
                     onTap: () {
@@ -376,37 +419,6 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatChip(String label, dynamic value, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '$label · ',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[600],
-            ),
-          ),
-          Text(
-            '$value',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ],
       ),
     );
   }
