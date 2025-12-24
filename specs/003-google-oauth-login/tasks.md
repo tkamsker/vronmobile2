@@ -31,13 +31,13 @@ Flutter mobile app with feature-based architecture:
 
 - [X] T001 Add `google_sign_in: ^7.0.0` dependency to pubspec.yaml
 - [X] T002 Run `flutter pub get` to install google_sign_in package
-- [ ] T003 [P] Configure Android OAuth client in Google Cloud Console (SHA-1 fingerprints)
-- [ ] T004 [P] Configure iOS OAuth client in Google Cloud Console (bundle ID)
-- [ ] T005 [P] Download and place google-services.json in android/app/
-- [ ] T006 [P] Download and place GoogleService-Info.plist in ios/Runner/
-- [ ] T007 Update ios/Runner/Info.plist with GIDClientID and CFBundleURLTypes
-- [ ] T008 Update ios/Podfile with protobuf configuration if needed
-- [ ] T009 Run `cd ios && pod install` to update iOS dependencies
+- [X] T003 [P] Configure Android OAuth client in Google Cloud Console (SHA-1 fingerprints)
+- [X] T004 [P] Configure iOS OAuth client in Google Cloud Console (bundle ID)
+- [X] T005 [P] Download and place google-services.json in android/app/
+- [X] T006 [P] Download and place GoogleService-Info.plist in ios/Runner/
+- [X] T007 Update ios/Runner/Info.plist with GIDClientID and CFBundleURLTypes
+- [X] T008 Update ios/Podfile with protobuf configuration if needed
+- [X] T009 Run `cd ios && pod install` to update iOS dependencies
 
 **Checkpoint**: Platform configuration complete - OAuth credentials ready for use
 
