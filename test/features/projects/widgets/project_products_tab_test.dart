@@ -214,6 +214,8 @@ void main() {
         (WidgetTester tester) async {
       // Arrange
       final project = createTestProject();
+      final mockService = MockProductService()
+        ..mockProducts = createTestProducts();
       String? navigationProjectId;
 
       // Act
@@ -222,15 +224,17 @@ void main() {
           home: Scaffold(
             body: ProjectProductsTab(
               project: project,
+              productService: mockService,
               onCreateProduct: (projectId) => navigationProjectId = projectId,
             ),
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       final fabFinder = find.byType(FloatingActionButton);
       await tester.tap(fabFinder);
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       // Assert
       expect(navigationProjectId, equals(project.id),
@@ -244,6 +248,8 @@ void main() {
         id: 'proj_specific123',
         name: 'Specific Project',
       );
+      final mockService = MockProductService()
+        ..mockProducts = createTestProducts();
       String? capturedProjectId;
 
       // Act
@@ -252,14 +258,16 @@ void main() {
           home: Scaffold(
             body: ProjectProductsTab(
               project: project,
+              productService: mockService,
               onCreateProduct: (projectId) => capturedProjectId = projectId,
             ),
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       await tester.tap(find.byType(FloatingActionButton));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
       // Assert - Should pass the specific project ID
       expect(capturedProjectId, equals('proj_specific123'),
