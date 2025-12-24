@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:vronmobile2/core/config/env_config.dart';
 import 'package:vronmobile2/core/services/token_storage.dart';
+import 'package:vronmobile2/main.dart';
 
 /// GraphQL client service
 /// Provides configured GraphQL client with authentication support
@@ -53,10 +55,27 @@ class GraphQLService {
   }
 
   /// Executes a GraphQL query
+  /// Blocks all backend calls in guest mode (FR-005, SC-003)
   Future<QueryResult> query(
     String query, {
     Map<String, dynamic>? variables,
   }) async {
+    // Guest mode check - block all backend calls
+    if (guestSessionManager.isGuestMode) {
+      if (kDebugMode) {
+        print('❌ [GUEST] Backend query blocked: $query');
+        throw StateError('Backend operation not allowed in guest mode: $query');
+      } else {
+        print('⚠️ [GUEST] Backend query blocked silently');
+      }
+      return QueryResult(
+        data: {},
+        exception: null,
+        source: QueryResultSource.cache,
+        options: QueryOptions(document: gql(query), variables: variables ?? {}),
+      );
+    }
+
     final client = await getClient();
     return await client.query(
       QueryOptions(document: gql(query), variables: variables ?? {}),
@@ -64,10 +83,27 @@ class GraphQLService {
   }
 
   /// Executes a GraphQL mutation
+  /// Blocks all backend calls in guest mode (FR-005, SC-003)
   Future<QueryResult> mutate(
     String mutation, {
     Map<String, dynamic>? variables,
   }) async {
+    // Guest mode check - block all backend calls
+    if (guestSessionManager.isGuestMode) {
+      if (kDebugMode) {
+        print('❌ [GUEST] Backend mutation blocked: $mutation');
+        throw StateError('Backend operation not allowed in guest mode: $mutation');
+      } else {
+        print('⚠️ [GUEST] Backend mutation blocked silently');
+      }
+      return QueryResult(
+        data: {},
+        exception: null,
+        source: QueryResultSource.cache,
+        options: MutationOptions(document: gql(mutation), variables: variables ?? {}),
+      );
+    }
+
     final client = await getClient();
     return await client.mutate(
       MutationOptions(document: gql(mutation), variables: variables ?? {}),

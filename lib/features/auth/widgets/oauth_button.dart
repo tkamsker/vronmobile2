@@ -39,7 +39,7 @@ class OAuthButton extends StatelessWidget {
   Color get _backgroundColor {
     switch (provider) {
       case OAuthProvider.google:
-        return AppTheme.googleRed;
+        return AppTheme.googleBlue;
       case OAuthProvider.facebook:
         return AppTheme.facebookBlue;
     }

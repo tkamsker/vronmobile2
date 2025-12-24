@@ -41,6 +41,7 @@ dependencies:
   cached_network_image: ^3.3.0
   intl: ^0.18.1
   shared_preferences: ^2.2.2
+  google_sign_in: ^7.0.0
 
 dev_dependencies:
   flutter_test:
