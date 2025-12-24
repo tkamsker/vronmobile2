@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:vronmobile2/core/constants/app_strings.dart';
 
 /// Account creation prompt dialog
 /// Shown when guest user taps "Sign Up" in the guest mode banner
@@ -7,10 +6,7 @@ import 'package:vronmobile2/core/constants/app_strings.dart';
 class AccountCreationDialog extends StatelessWidget {
   final VoidCallback? onSignUp;
 
-  const AccountCreationDialog({
-    super.key,
-    this.onSignUp,
-  });
+  const AccountCreationDialog({super.key, this.onSignUp});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +24,10 @@ class AccountCreationDialog extends StatelessWidget {
               Navigator.of(context).pop();
             },
             style: TextButton.styleFrom(
-              minimumSize: const Size(44, 44), // Accessibility: minimum touch target
+              minimumSize: const Size(
+                44,
+                44,
+              ), // Accessibility: minimum touch target
             ),
             child: const Text('Continue as Guest'),
           ),
@@ -42,7 +41,10 @@ class AccountCreationDialog extends StatelessWidget {
               onSignUp?.call();
             },
             style: ElevatedButton.styleFrom(
-              minimumSize: const Size(44, 44), // Accessibility: minimum touch target
+              minimumSize: const Size(
+                44,
+                44,
+              ), // Accessibility: minimum touch target
             ),
             child: const Text('Sign Up'),
           ),

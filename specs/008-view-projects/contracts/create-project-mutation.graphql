@@ -1,0 +1,157 @@
+# GraphQL Mutation: createProject
+#
+# Purpose: Create a new project with name, slug, and optional description
+# Feature: 008-view-projects
+# Date: 2025-12-24
+#
+# This mutation follows the same pattern as updateProject mutation
+# from specs/010-projectdetail/contracts/update-project-mutation.graphql
+
+mutation createProject($data: CreateProjectInput!) {
+  createProject(data: $data) {
+    # Core identifiers
+    id
+    slug
+
+    # Multilingual fields (using text helper)
+    name {
+      text(lang: EN)
+    }
+    description {
+      text(lang: EN)
+    }
+
+    # Optional image
+    imageUrl
+
+    # Status (computed from subscription)
+    status
+
+    # Subscription details
+    subscription {
+      live
+      active
+      trial
+      expiresAt
+      monthlyPrice
+    }
+
+    # Timestamps
+    updatedAt
+    createdAt
+  }
+}
+
+# Input Type Definition
+#
+# input CreateProjectInput {
+#   name: String!           # Required: 3-100 characters
+#   slug: String!           # Required: lowercase alphanumeric with hyphens
+#   description: String     # Optional
+# }
+
+# Example Usage in Dart:
+#
+# const createProjectMutation = r'''
+#   mutation createProject($data: CreateProjectInput!) {
+#     createProject(data: $data) {
+#       id
+#       slug
+#       name { text(lang: EN) }
+#       description { text(lang: EN) }
+#       imageUrl
+#       status
+#       subscription {
+#         live
+#         active
+#         trial
+#         expiresAt
+#         monthlyPrice
+#       }
+#       updatedAt
+#       createdAt
+#     }
+#   }
+# ''';
+#
+# final result = await graphQLService.mutate(
+#   createProjectMutation,
+#   variables: {
+#     'data': {
+#       'name': 'My New Project',
+#       'slug': 'my-new-project',
+#       'description': 'Project description',
+#     },
+#   },
+# );
+
+# Expected Response (Success):
+#
+# {
+#   "data": {
+#     "createProject": {
+#       "id": "550e8400-e29b-41d4-a716-446655440000",
+#       "slug": "my-new-project",
+#       "name": {
+#         "text": "My New Project"
+#       },
+#       "description": {
+#         "text": "Project description"
+#       },
+#       "imageUrl": null,
+#       "status": "Not Live",
+#       "subscription": {
+#         "live": false,
+#         "active": false,
+#         "trial": false,
+#         "expiresAt": null,
+#         "monthlyPrice": 0
+#       },
+#       "updatedAt": "2025-12-24T10:30:00.000Z",
+#       "createdAt": "2025-12-24T10:30:00.000Z"
+#     }
+#   }
+# }
+
+# Expected Response (Error - Duplicate Slug):
+#
+# {
+#   "errors": [
+#     {
+#       "message": "Project with slug 'my-new-project' already exists",
+#       "extensions": {
+#         "code": "DUPLICATE_SLUG",
+#         "field": "slug"
+#       }
+#     }
+#   ]
+# }
+
+# Expected Response (Error - Validation Failure):
+#
+# {
+#   "errors": [
+#     {
+#       "message": "Name must be 3-100 characters",
+#       "extensions": {
+#         "code": "VALIDATION_ERROR",
+#         "field": "name"
+#       }
+#     }
+#   ]
+# }
+
+# Backend Behavior:
+#
+# - Validates input (name length, slug format)
+# - Checks slug uniqueness (database constraint)
+# - Creates project with default values:
+#   - imageUrl: null
+#   - status: "Not Live"
+#   - subscription.live: false
+#   - subscription.active: false
+#   - subscription.trial: false
+#   - subscription.expiresAt: null
+#   - subscription.monthlyPrice: 0
+# - Sets timestamps (createdAt, updatedAt)
+# - Returns complete Project object or GraphQL error

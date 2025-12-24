@@ -62,4 +62,46 @@ class AppStrings {
   static const String guestModeBannerHint = 'You are using the app without an account. Scans are saved on this device only.';
   static const String guestSignUpButtonSemantics = 'Sign Up';
   static const String guestSignUpButtonHint = 'Create an account to save scans to the cloud';
+
+  // Project management strings
+  static const String createProjectTitle = 'Create Project';
+  static const String projectNameLabel = 'Name';
+  static const String projectNameHint = 'My Room';
+  static const String projectSlugLabel = 'Slug';
+  static const String projectSlugHint = 'my-room';
+  static const String projectSlugHelper = 'Auto-generated from name (editable)';
+  static const String projectDescriptionLabel = 'Description';
+  static const String projectDescriptionHint = 'Optional description';
+  static const String createProjectButton = 'Create Project';
+  static const String saveProjectButton = 'Save';
+  static const String cancelButton = 'Cancel';
+
+  // Project validation messages
+  static const String projectNameRequired = 'Name is required';
+  static const String projectNameTooShort = 'Name must be at least 3 characters';
+  static const String projectNameTooLong = 'Name must be 100 characters or less';
+  static const String projectSlugRequired = 'Slug is required';
+  static const String projectSlugInvalid = 'Slug must contain only lowercase letters, numbers, and hyphens';
+  static const String projectSlugDuplicate = 'A project with this slug already exists';
+
+  // Project success messages
+  static const String projectCreatedSuccess = 'Project created successfully';
+  static const String projectUpdatedSuccess = 'Project updated successfully';
+
+  // Project error messages
+  static const String projectCreateError = 'Error creating project';
+  static const String projectNetworkError = 'Network error. Please try again.';
+
+  // Unsaved changes dialog
+  static const String unsavedChangesTitle = 'Unsaved Changes';
+  static const String unsavedChangesMessage = 'You have unsaved changes. Discard them?';
+  static const String keepEditingButton = 'Keep Editing';
+  static const String discardButton = 'Discard';
+
+  // Project semantics
+  static const String projectNameSemantics = 'Project name input field';
+  static const String projectSlugSemantics = 'Project slug input field';
+  static const String projectDescriptionSemantics = 'Project description input field';
+  static const String createProjectButtonSemantics = 'Create project button';
+  static const String saveProjectButtonSemantics = 'Save project button';
 }

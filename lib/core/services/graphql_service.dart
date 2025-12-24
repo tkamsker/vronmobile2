@@ -84,15 +84,24 @@ class GraphQLService {
 
   /// Executes a GraphQL mutation
   /// Blocks all backend calls in guest mode (FR-005, SC-003)
+  /// EXCEPT authentication mutations (signIn, signInWithGoogle) which allow users to exit guest mode
   Future<QueryResult> mutate(
     String mutation, {
     Map<String, dynamic>? variables,
   }) async {
-    // Guest mode check - block all backend calls
-    if (guestSessionManager.isGuestMode) {
+    // Check if this is an authentication mutation
+    final isAuthMutation =
+        mutation.contains('signIn') ||
+        mutation.contains('signInWithGoogle') ||
+        mutation.contains('SignIn');
+
+    // Guest mode check - block all backend calls EXCEPT authentication
+    if (guestSessionManager.isGuestMode && !isAuthMutation) {
       if (kDebugMode) {
         print('❌ [GUEST] Backend mutation blocked: $mutation');
-        throw StateError('Backend operation not allowed in guest mode: $mutation');
+        throw StateError(
+          'Backend operation not allowed in guest mode: $mutation',
+        );
       } else {
         print('⚠️ [GUEST] Backend mutation blocked silently');
       }
@@ -100,8 +109,15 @@ class GraphQLService {
         data: {},
         exception: null,
         source: QueryResultSource.cache,
-        options: MutationOptions(document: gql(mutation), variables: variables ?? {}),
+        options: MutationOptions(
+          document: gql(mutation),
+          variables: variables ?? {},
+        ),
       );
+    }
+
+    if (kDebugMode && guestSessionManager.isGuestMode && isAuthMutation) {
+      print('✅ [GUEST] Allowing authentication mutation in guest mode');
     }
 
     final client = await getClient();

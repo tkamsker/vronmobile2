@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:vronmobile2/core/services/graphql_service.dart';
 import 'package:vronmobile2/features/home/models/project.dart';
+import 'package:vronmobile2/features/home/models/project_sort_option.dart';
 
 /// Service for managing project data via GraphQL API
 /// Based on the VRon API specification
@@ -86,9 +87,49 @@ class ProjectService {
     }
   ''';
 
+  /// GraphQL mutation to create a new project
+  /// Uses createProject mutation with CreateProjectInput
+  static const String _createProjectMutation = '''
+    mutation CreateProject(\$data: CreateProjectInput!) {
+      createProject(data: \$data) {
+        id
+        slug
+        name {
+          text(lang: EN)
+        }
+        description {
+          text(lang: EN)
+        }
+        imageUrl
+        isLive
+        liveDate
+        subscription {
+          isActive
+          isTrial
+          status
+          canChoosePlan
+          hasExpired
+          currency
+          price
+          renewalInterval
+          startedAt
+          expiresAt
+          renewsAt
+          prices {
+            currency
+            monthly
+            yearly
+          }
+        }
+      }
+    }
+  ''';
+
   /// Fetch all projects for the authenticated user
   /// Returns a list of Project objects or throws an exception on error
-  Future<List<Project>> fetchProjects() async {
+  ///
+  /// [sortBy] - Optional sort option to order the results
+  Future<List<Project>> fetchProjects({ProjectSortOption? sortBy}) async {
     try {
       if (kDebugMode) {
         print('📦 [PROJECTS] Fetching projects (language: $_language)...');
@@ -130,6 +171,14 @@ class ProjectService {
         print('✅ [PROJECTS] Fetched ${projects.length} projects');
         for (final project in projects) {
           print('  - ${project.name} (${project.id}) - ${project.statusLabel}');
+        }
+      }
+
+      // Apply sorting if requested
+      if (sortBy != null) {
+        _sortProjects(projects, sortBy);
+        if (kDebugMode) {
+          print('📊 [PROJECTS] Applied sort: ${sortBy.name}');
         }
       }
 
@@ -300,5 +349,162 @@ class ProjectService {
       if (kDebugMode) print('❌ [PROJECTS] Error updating project: ${e.toString()}');
       rethrow;
     }
+  }
+
+  /// Create a new project
+  ///
+  /// [name] - Project name (required, 3-100 characters)
+  /// [slug] - URL-friendly slug (required, unique)
+  /// [description] - Optional project description
+  ///
+  /// Returns the created Project object or throws an exception on error
+  ///
+  /// Throws:
+  /// - Exception with "already exists" if slug is duplicate (DUPLICATE_SLUG error)
+  /// - Exception with validation message if input validation fails (VALIDATION_ERROR)
+  /// - Exception with network/server error message for other failures
+  Future<Project> createProject({
+    required String name,
+    required String slug,
+    String? description,
+  }) async {
+    try {
+      if (kDebugMode) {
+        print('🆕 [PROJECTS] Creating project...');
+        print('  - Name: $name');
+        print('  - Slug: $slug');
+        print('  - Description: ${description ?? "(none)"}');
+      }
+
+      final result = await _graphqlService.mutate(
+        _createProjectMutation,
+        variables: {
+          'data': {
+            'name': name,
+            'slug': slug,
+            if (description != null && description.isNotEmpty)
+              'description': description,
+          },
+        },
+      );
+
+      if (result.hasException) {
+        final exception = result.exception;
+        if (kDebugMode) {
+          print('❌ [PROJECTS] GraphQL exception: ${exception.toString()}');
+        }
+
+        // Handle duplicate slug error
+        if (exception?.graphqlErrors.any((e) =>
+                e.extensions?['code'] == 'DUPLICATE_SLUG') ??
+            false) {
+          if (kDebugMode) {
+            print('❌ [PROJECTS] Duplicate slug error');
+          }
+          throw Exception('A project with this slug already exists');
+        }
+
+        // Handle validation errors
+        if (exception?.graphqlErrors.any((e) =>
+                e.extensions?['code'] == 'VALIDATION_ERROR') ??
+            false) {
+          final errorMessage = exception!.graphqlErrors.first.message;
+          if (kDebugMode) {
+            print('❌ [PROJECTS] Validation error: $errorMessage');
+          }
+          throw Exception(errorMessage);
+        }
+
+        // Generic error
+        if (exception?.graphqlErrors.isNotEmpty ?? false) {
+          final error = exception!.graphqlErrors.first;
+          if (kDebugMode) {
+            print('❌ [PROJECTS] GraphQL error: ${error.message}');
+          }
+          throw Exception('Failed to create project: ${error.message}');
+        }
+
+        throw Exception('Failed to create project: ${exception.toString()}');
+      }
+
+      if (result.data == null || result.data!['createProject'] == null) {
+        if (kDebugMode) print('⚠️ [PROJECTS] No createProject data in response');
+        throw Exception('Failed to create project: No data returned');
+      }
+
+      final projectData = result.data!['createProject'] as Map<String, dynamic>;
+      final project = Project.fromJson(projectData);
+
+      if (kDebugMode) {
+        print('✅ [PROJECTS] Project created successfully: ${project.name} (${project.id})');
+      }
+
+      return project;
+    } catch (e) {
+      if (kDebugMode) print('❌ [PROJECTS] Error creating project: ${e.toString()}');
+      rethrow;
+    }
+  }
+
+  /// Sort projects list in-place according to the specified sort option
+  void _sortProjects(List<Project> projects, ProjectSortOption sortBy) {
+    switch (sortBy) {
+      case ProjectSortOption.nameAscending:
+        projects.sort((a, b) =>
+            a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        break;
+      case ProjectSortOption.nameDescending:
+        projects.sort((a, b) =>
+            b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+        break;
+      case ProjectSortOption.dateNewest:
+        // Sort by liveDate (most recent first), treating null as oldest
+        projects.sort((a, b) {
+          if (a.liveDate == null && b.liveDate == null) return 0;
+          if (a.liveDate == null) return 1; // null dates go last
+          if (b.liveDate == null) return -1; // null dates go last
+          return b.liveDate!.compareTo(a.liveDate!); // Descending
+        });
+        break;
+      case ProjectSortOption.dateOldest:
+        // Sort by liveDate (oldest first), treating null as newest
+        projects.sort((a, b) {
+          if (a.liveDate == null && b.liveDate == null) return 0;
+          if (a.liveDate == null) return 1; // null dates go last
+          if (b.liveDate == null) return -1; // null dates go last
+          return a.liveDate!.compareTo(b.liveDate!); // Ascending
+        });
+        break;
+      case ProjectSortOption.status:
+        projects.sort(_compareByStatus);
+        break;
+    }
+  }
+
+  /// Compare projects by status priority with secondary sort by name
+  ///
+  /// Status priority order:
+  /// 1. Live (with active subscription)
+  /// 2. Live (Trial)
+  /// 3. Live (Inactive)
+  /// 4. Not Live
+  ///
+  /// Projects with same status are sorted alphabetically by name
+  int _compareByStatus(Project a, Project b) {
+    const statusPriority = {
+      'Live': 0,
+      'Live (Trial)': 1,
+      'Live (Inactive)': 2,
+      'Not Live': 3,
+    };
+
+    final aPriority = statusPriority[a.statusLabel] ?? 999;
+    final bPriority = statusPriority[b.statusLabel] ?? 999;
+
+    final priorityCompare = aPriority.compareTo(bPriority);
+    if (priorityCompare != 0) return priorityCompare;
+
+    // Secondary sort by name (case-insensitive)
+    return a.name.toLowerCase().compareTo(b.name.toLowerCase());
   }
 }

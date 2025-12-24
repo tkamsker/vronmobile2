@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:vronmobile2/core/config/env_config.dart';
 import 'package:vronmobile2/core/i18n/i18n_service.dart';
 import 'package:vronmobile2/core/navigation/routes.dart';
 import 'package:vronmobile2/features/home/models/project.dart';
@@ -146,10 +148,44 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _handleCreateProject() {
+  Future<void> _handleCreateProject() async {
     HapticFeedback.mediumImpact();
     if (kDebugMode) print('🏠 [HOME] Create project tapped');
-    Navigator.pushNamed(context, AppRoutes.createProject);
+
+    // Open VRON web app projects page in external browser
+    final url = Uri.parse(EnvConfig.projectsPageUrl);
+
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+        if (kDebugMode)
+          print('🏠 [HOME] Opened projects page in browser: $url');
+
+        // Refresh project list when user returns to app
+        // (in case they created a project in the web app)
+        await _loadProjects();
+      } else {
+        if (kDebugMode) print('❌ [HOME] Could not launch URL: $url');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Could not open projects page'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) print('❌ [HOME] Error launching URL: ${e.toString()}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error opening projects page: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _handleProfileTap() {
@@ -436,7 +472,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               Text(
-                'home.totalCount'.tr(params: {'count': _filteredProjects.length}),
+                'home.totalCount'.tr(
+                  params: {'count': _filteredProjects.length},
+                ),
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
