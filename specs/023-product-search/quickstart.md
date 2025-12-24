@@ -24,7 +24,7 @@ This guide provides step-by-step instructions for integrating product search and
 
 ```dart
 import 'package:flutter/foundation.dart';
-import 'product.dart';
+import '../005-product-search/product.dart';
 
 class ProductFilter {
   final String? searchQuery;
@@ -93,8 +93,8 @@ class ProductFilter {
 **File**: `lib/features/products/models/product_search_result.dart`
 
 ```dart
-import 'product.dart';
-import 'product_filter.dart';
+import '../005-product-search/product.dart';
+import '../005-product-search/product_filter.dart';
 
 class ProductSearchResult {
   final List<Product> products;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vronmobile2/core/theme/app_theme.dart';
 import 'package:vronmobile2/core/navigation/routes.dart';
 import 'package:vronmobile2/core/config/env_config.dart';
@@ -10,6 +11,11 @@ import 'package:vronmobile2/features/profile/screens/profile_screen.dart';
 import 'package:vronmobile2/features/products/screens/product_detail_screen.dart';
 import 'package:vronmobile2/features/products/screens/products_list_screen.dart';
 import 'package:vronmobile2/features/projects/screens/project_detail_screen.dart';
+import 'package:vronmobile2/features/guest/services/guest_session_manager.dart';
+import 'package:vronmobile2/features/lidar/screens/scanning_screen.dart';
+
+/// Global guest session manager instance
+late GuestSessionManager guestSessionManager;
 
 void main() async {
   // Ensure Flutter is initialized before loading environment
@@ -20,6 +26,11 @@ void main() async {
 
   // Load environment configuration from .env file
   await EnvConfig.initialize();
+
+  // Initialize guest session manager
+  final prefs = await SharedPreferences.getInstance();
+  guestSessionManager = GuestSessionManager(prefs: prefs);
+  await guestSessionManager.initialize();
 
   runApp(const VronApp());
 }
@@ -46,7 +57,7 @@ class VronApp extends StatelessWidget {
         AppRoutes.createAccount: (context) =>
             const PlaceholderScreen(title: 'Create Account'),
         AppRoutes.guestMode: (context) =>
-            const PlaceholderScreen(title: 'Guest Mode'),
+            ScanningScreen(guestSessionManager: guestSessionManager),
         AppRoutes.projectDetail: (context) {
           final projectId = ModalRoute.of(context)?.settings.arguments as String?;
           if (projectId == null) {
