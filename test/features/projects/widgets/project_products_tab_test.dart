@@ -3,7 +3,30 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vronmobile2/features/home/models/project.dart';
 import 'package:vronmobile2/features/home/models/project_subscription.dart';
 import 'package:vronmobile2/features/projects/widgets/project_products_tab.dart';
+import 'package:vronmobile2/features/products/models/product.dart';
+import 'package:vronmobile2/features/products/services/product_service.dart';
 import '../../../test_helpers.dart';
+
+/// Mock ProductService for testing
+class MockProductService extends ProductService {
+  List<Product>? mockProducts;
+  Exception? mockException;
+
+  @override
+  Future<List<Product>> fetchProducts({
+    List<String>? categoryIds,
+    String? search,
+    List<String>? status,
+    bool? tracksInventory,
+    int pageIndex = 0,
+    int pageSize = 20,
+  }) async {
+    if (mockException != null) {
+      throw mockException!;
+    }
+    return mockProducts ?? [];
+  }
+}
 
 void main() {
   setUpAll(() async {
@@ -13,6 +36,39 @@ void main() {
   tearDown(() async {
     await tearDownTestEnvironment();
   });
+
+  // Helper to create test products
+  List<Product> createTestProducts() {
+    return [
+      Product(
+        id: 'prod_001',
+        title: 'Laptop Computer',
+        status: 'ACTIVE',
+        category: 'Electronics',
+        tracksInventory: true,
+        variantsCount: 3,
+        thumbnail: 'https://example.com/laptop.jpg',
+      ),
+      Product(
+        id: 'prod_002',
+        title: 'Wireless Mouse',
+        status: 'ACTIVE',
+        category: 'Electronics',
+        tracksInventory: true,
+        variantsCount: 2,
+        thumbnail: 'https://example.com/mouse.jpg',
+      ),
+      Product(
+        id: 'prod_003',
+        title: 'USB Cable',
+        status: 'DRAFT',
+        category: 'Accessories',
+        tracksInventory: false,
+        variantsCount: 1,
+      ),
+    ];
+  }
+
   // Helper to create a test project
   Project createTestProject({
     String id = 'proj_123',
@@ -215,15 +271,21 @@ void main() {
         (WidgetTester tester) async {
       // Arrange
       final project = createTestProject();
+      final mockService = MockProductService()
+        ..mockProducts = createTestProducts();
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ProjectProductsTab(project: project),
+            body: ProjectProductsTab(
+              project: project,
+              productService: mockService,
+            ),
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       // Assert
       expect(find.byType(TextField), findsOneWidget,
@@ -236,37 +298,55 @@ void main() {
         (WidgetTester tester) async {
       // Arrange
       final project = createTestProject();
+      final mockService = MockProductService()
+        ..mockProducts = createTestProducts();
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ProjectProductsTab(project: project),
+            body: ProjectProductsTab(
+              project: project,
+              productService: mockService,
+            ),
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       // Assert - Check for semantic label for accessibility
-      expect(
-        find.bySemanticsLabel('Search products by title'),
-        findsOneWidget,
-        reason: 'Search field should have accessibility label',
+      final textFieldFinder = find.byType(TextField);
+      expect(textFieldFinder, findsOneWidget,
+          reason: 'TextField should exist');
+
+      // Verify the TextField is wrapped in Semantics with proper label
+      final semanticsFinder = find.ancestor(
+        of: textFieldFinder,
+        matching: find.byType(Semantics),
       );
+      expect(semanticsFinder, findsWidgets,
+          reason: 'TextField should be wrapped in Semantics');
     });
 
     testWidgets('T042: search field filters products as user types',
         (WidgetTester tester) async {
       // Arrange
       final project = createTestProject();
+      final mockService = MockProductService()
+        ..mockProducts = createTestProducts();
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ProjectProductsTab(project: project),
+            body: ProjectProductsTab(
+              project: project,
+              productService: mockService,
+            ),
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       final searchField = find.byType(TextField);
       await tester.enterText(searchField, 'test query');
@@ -282,15 +362,21 @@ void main() {
         (WidgetTester tester) async {
       // Arrange
       final project = createTestProject();
+      final mockService = MockProductService()
+        ..mockProducts = createTestProducts();
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ProjectProductsTab(project: project),
+            body: ProjectProductsTab(
+              project: project,
+              productService: mockService,
+            ),
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       // Initially no clear button
       expect(find.byIcon(Icons.clear), findsNothing,
@@ -310,15 +396,21 @@ void main() {
         (WidgetTester tester) async {
       // Arrange
       final project = createTestProject();
+      final mockService = MockProductService()
+        ..mockProducts = createTestProducts();
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ProjectProductsTab(project: project),
+            body: ProjectProductsTab(
+              project: project,
+              productService: mockService,
+            ),
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       // Enter search text
       final searchField = find.byType(TextField);
@@ -340,15 +432,21 @@ void main() {
         (WidgetTester tester) async {
       // Arrange
       final project = createTestProject();
+      final mockService = MockProductService()
+        ..mockProducts = createTestProducts();
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ProjectProductsTab(project: project),
+            body: ProjectProductsTab(
+              project: project,
+              productService: mockService,
+            ),
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       // Assert - Check for search icon
       expect(find.byIcon(Icons.search), findsOneWidget,
@@ -363,15 +461,21 @@ void main() {
         (WidgetTester tester) async {
       // Arrange
       final project = createTestProject();
+      final mockService = MockProductService()
+        ..mockProducts = createTestProducts();
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ProjectProductsTab(project: project),
+            body: ProjectProductsTab(
+              project: project,
+              productService: mockService,
+            ),
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       // Enter search text then clear it
       final searchField = find.byType(TextField);

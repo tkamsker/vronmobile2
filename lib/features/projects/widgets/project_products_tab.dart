@@ -11,12 +11,14 @@ class ProjectProductsTab extends StatefulWidget {
   final Project project;
   final VoidCallback? onNavigateToProducts;
   final void Function(String projectId)? onCreateProduct;
+  final ProductService? productService;
 
   const ProjectProductsTab({
     super.key,
     required this.project,
     this.onNavigateToProducts,
     this.onCreateProduct,
+    this.productService,
   });
 
   @override
@@ -24,7 +26,7 @@ class ProjectProductsTab extends StatefulWidget {
 }
 
 class _ProjectProductsTabState extends State<ProjectProductsTab> {
-  final ProductService _productService = ProductService();
+  late final ProductService _productService;
   final TextEditingController _searchController = TextEditingController();
   List<Product> _products = [];
   bool _isLoading = false;
@@ -34,6 +36,7 @@ class _ProjectProductsTabState extends State<ProjectProductsTab> {
   @override
   void initState() {
     super.initState();
+    _productService = widget.productService ?? ProductService();
     _loadProducts();
     _searchController.addListener(_onSearchChanged);
   }

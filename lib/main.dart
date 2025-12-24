@@ -11,6 +11,7 @@ import 'package:vronmobile2/features/profile/screens/profile_screen.dart';
 import 'package:vronmobile2/features/products/screens/product_detail_screen.dart';
 import 'package:vronmobile2/features/products/screens/products_list_screen.dart';
 import 'package:vronmobile2/features/projects/screens/project_detail_screen.dart';
+import 'package:vronmobile2/features/projects/screens/create_project_screen.dart';
 import 'package:vronmobile2/features/guest/services/guest_session_manager.dart';
 import 'package:vronmobile2/features/lidar/screens/scanning_screen.dart';
 
@@ -66,7 +67,7 @@ class VronApp extends StatelessWidget {
           return ProjectDetailScreen(projectId: projectId);
         },
         AppRoutes.createProject: (context) =>
-            const PlaceholderScreen(title: 'Create Project'),
+            const CreateProjectScreen(),
         AppRoutes.products: (context) => const ProductsListScreen(),
         AppRoutes.productDetail: (context) {
           final productId = ModalRoute.of(context)?.settings.arguments as String?;

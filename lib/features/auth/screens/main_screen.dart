@@ -107,6 +107,12 @@ class _MainScreenState extends State<MainScreen> {
 
           final userEmail = result.data?['email'] as String?;
 
+          // Disable guest mode if user was in guest mode
+          if (guestSessionManager.isGuestMode) {
+            await guestSessionManager.disableGuestMode();
+            if (kDebugMode) print('✅ [UI] Guest mode disabled after login');
+          }
+
           // Navigate to home screen and remove login screen from stack
           Navigator.of(
             context,
@@ -162,6 +168,13 @@ class _MainScreenState extends State<MainScreen> {
         }
 
         final userEmail = result.data?['email'] as String?;
+
+        // Disable guest mode if user was in guest mode
+        if (guestSessionManager.isGuestMode) {
+          await guestSessionManager.disableGuestMode();
+          if (kDebugMode)
+            print('✅ [UI] Guest mode disabled after Google sign-in');
+        }
 
         // Navigate to home screen and remove login screen from stack
         Navigator.of(

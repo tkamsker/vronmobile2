@@ -37,6 +37,12 @@ class EnvConfig {
         'https://app.vron.stage.motorenflug.at';
   }
 
+  /// VRon Projects page URL
+  /// Full URL to the projects management page in the web app
+  static String get projectsPageUrl {
+    return '$vronMerchantsUrl/en/app/projects';
+  }
+
   /// Cookie domain for web-based authentication
   /// Example: .motorenflug.at
   static String get appCookieDomain {
