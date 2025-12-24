@@ -3,8 +3,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vronmobile2/features/home/models/project.dart';
 import 'package:vronmobile2/features/home/models/project_subscription.dart';
 import 'package:vronmobile2/features/projects/widgets/project_products_tab.dart';
+import '../../../test_helpers.dart';
 
 void main() {
+  setUpAll(() async {
+    await setupTestEnvironment();
+  });
+
+  tearDown(() async {
+    await tearDownTestEnvironment();
+  });
   // Helper to create a test project
   Project createTestProject({
     String id = 'proj_123',
