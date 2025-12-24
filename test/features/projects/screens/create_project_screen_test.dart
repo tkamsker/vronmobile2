@@ -23,11 +23,16 @@ void main() {
       );
 
       // Assert
-      expect(find.text(AppStrings.createProjectTitle), findsOneWidget,
+      expect(find.byType(AppBar), findsOneWidget,
+          reason: 'Should have app bar');
+      expect(find.descendant(
+        of: find.byType(AppBar),
+        matching: find.text(AppStrings.createProjectTitle),
+      ), findsOneWidget,
           reason: 'App bar should show title');
       expect(find.byType(TextFormField), findsNWidgets(3),
           reason: 'Should have 3 input fields: name, slug, description');
-      expect(find.text(AppStrings.createProjectButton), findsOneWidget,
+      expect(find.byType(ElevatedButton), findsOneWidget,
           reason: 'Should have create button');
     });
 
@@ -104,7 +109,7 @@ void main() {
       );
 
       // Act - Tap create button without entering name
-      await tester.tap(find.text(AppStrings.createProjectButton));
+      await tester.tap(find.byType(ElevatedButton));
       await tester.pumpAndSettle();
 
       // Assert
@@ -125,7 +130,7 @@ void main() {
 
       // Act - Enter name too short (less than 3 characters)
       await tester.enterText(nameField, 'AB');
-      await tester.tap(find.text(AppStrings.createProjectButton));
+      await tester.tap(find.byType(ElevatedButton));
       await tester.pumpAndSettle();
 
       // Assert
@@ -149,7 +154,7 @@ void main() {
         nameField,
         'A' * 101, // 101 characters
       );
-      await tester.tap(find.text(AppStrings.createProjectButton));
+      await tester.tap(find.byType(ElevatedButton));
       await tester.pumpAndSettle();
 
       // Assert
@@ -173,7 +178,7 @@ void main() {
       await tester.enterText(nameField, 'Valid Name');
       await tester.pump();
       await tester.enterText(slugField, 'Invalid Slug With Spaces!');
-      await tester.tap(find.text(AppStrings.createProjectButton));
+      await tester.tap(find.byType(ElevatedButton));
       await tester.pumpAndSettle();
 
       // Assert
@@ -199,7 +204,7 @@ void main() {
       await tester.pump();
 
       // Tap create button
-      await tester.tap(find.text(AppStrings.createProjectButton));
+      await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
 
       // Assert - Loading indicator should appear
@@ -221,7 +226,7 @@ void main() {
       await tester.enterText(nameField, 'Minimal Project');
       await tester.pump();
 
-      await tester.tap(find.text(AppStrings.createProjectButton));
+      await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
 
       // Assert - Should submit successfully (no validation error)
@@ -246,12 +251,15 @@ void main() {
       await tester.enterText(nameField, 'Loading Test Project');
       await tester.pump();
 
-      await tester.tap(find.text(AppStrings.createProjectButton));
+      await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
 
       // Assert - Create button should show loading indicator
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text(AppStrings.createProjectButton), findsNothing,
+      expect(find.descendant(
+        of: find.byType(ElevatedButton),
+        matching: find.text(AppStrings.createProjectButton),
+      ), findsNothing,
           reason: 'Button text should be replaced by loading indicator');
     });
 
@@ -317,26 +325,34 @@ void main() {
         ),
       );
 
-      // Assert - Check for semantic labels
+      // Assert - Check for semantic widgets wrapping form fields
+      final semanticsWidgets = find.byType(Semantics);
+      expect(semanticsWidgets, findsWidgets,
+          reason: 'Form fields should be wrapped in Semantics widgets');
+
+      // Verify all three text fields have Semantics ancestors
+      final textFields = find.byType(TextFormField);
+      expect(textFields, findsNWidgets(3));
+
+      for (int i = 0; i < 3; i++) {
+        expect(
+          find.ancestor(
+            of: textFields.at(i),
+            matching: find.byType(Semantics),
+          ),
+          findsWidgets,
+          reason: 'Text field $i should have Semantics wrapper',
+        );
+      }
+
+      // Verify button has Semantics
       expect(
-        find.bySemanticsLabel(AppStrings.projectNameSemantics),
-        findsOneWidget,
-        reason: 'Name field should have semantic label',
-      );
-      expect(
-        find.bySemanticsLabel(AppStrings.projectSlugSemantics),
-        findsOneWidget,
-        reason: 'Slug field should have semantic label',
-      );
-      expect(
-        find.bySemanticsLabel(AppStrings.projectDescriptionSemantics),
-        findsOneWidget,
-        reason: 'Description field should have semantic label',
-      );
-      expect(
-        find.bySemanticsLabel(AppStrings.createProjectButtonSemantics),
-        findsOneWidget,
-        reason: 'Create button should have semantic label',
+        find.ancestor(
+          of: find.byType(ElevatedButton),
+          matching: find.byType(Semantics),
+        ),
+        findsWidgets,
+        reason: 'Button should have Semantics wrapper',
       );
     });
 

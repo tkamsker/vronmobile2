@@ -59,7 +59,7 @@ void main() {
           reason: 'Slug should be auto-generated');
 
       // Act 3 - Submit the form
-      await tester.tap(find.text(AppStrings.createProjectButton));
+      await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
 
       // Assert 3 - Loading indicator should appear
@@ -92,7 +92,7 @@ void main() {
       await tester.enterText(nameField, 'Duplicate Project Test');
       await tester.pump();
 
-      await tester.tap(find.text(AppStrings.createProjectButton));
+      await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
 
       // Wait for response
@@ -112,7 +112,7 @@ void main() {
       );
 
       // Act - Try to submit without filling required fields
-      await tester.tap(find.text(AppStrings.createProjectButton));
+      await tester.tap(find.byType(ElevatedButton));
       await tester.pumpAndSettle();
 
       // Assert - Validation errors should appear
