@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:vronmobile2/core/services/graphql_service.dart';
 import 'package:vronmobile2/features/home/services/project_service.dart';
+import '../../../test_helpers.dart';
 
 // Mock GraphQL service for testing
 class MockGraphQLService extends GraphQLService {
@@ -31,6 +32,26 @@ class MockGraphQLService extends GraphQLService {
     return mockResult!;
   }
 
+  @override
+  Future<QueryResult> mutate(
+    String mutation, {
+    Map<String, dynamic>? variables,
+  }) async {
+    if (mockException != null) {
+      throw mockException!;
+    }
+
+    // If mockResults is set, return responses in sequence
+    if (mockResults != null && mockResults!.isNotEmpty) {
+      if (_callCount < mockResults!.length) {
+        return mockResults![_callCount++];
+      }
+      return mockResults!.last;
+    }
+
+    return mockResult!;
+  }
+
   void reset() {
     mockResult = null;
     mockException = null;
@@ -40,7 +61,13 @@ class MockGraphQLService extends GraphQLService {
 }
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    await setupTestEnvironment();
+  });
+
+  tearDown(() async {
+    await tearDownTestEnvironment();
+  });
 
   group('ProjectService', () {
     late MockGraphQLService mockGraphQLService;
@@ -487,6 +514,214 @@ void main() {
         expect(
           () => projectService.getProjectDetail('invalid_id'),
           throwsA(isA<Exception>()),
+        );
+      });
+    });
+
+    // T010: Tests for createProject mutation
+    group('createProject', () {
+      test('T010: creates project successfully with valid data', () async {
+        // Arrange
+        const name = 'Test Project';
+        const slug = 'test-project';
+        const description = 'A test project description';
+
+        final mockData = {
+          'createProject': {
+            'id': 'proj_new123',
+            'slug': slug,
+            'name': {'text': name},
+            'description': {'text': description},
+            'imageUrl': '',
+            'isLive': false,
+            'liveDate': null,
+            'subscription': {
+              'isActive': false,
+              'isTrial': false,
+              'status': 'NOT_STARTED',
+              'canChoosePlan': true,
+              'hasExpired': false,
+              'prices': {'currency': 'EUR', 'monthly': 29.99, 'yearly': 299.99},
+            },
+          },
+        };
+
+        mockGraphQLService.mockResult = QueryResult(
+          data: mockData,
+          source: QueryResultSource.network,
+          options: QueryOptions(document: mockDocument),
+        );
+
+        // Act
+        final project = await projectService.createProject(
+          name: name,
+          slug: slug,
+          description: description,
+        );
+
+        // Assert
+        expect(project.id, 'proj_new123');
+        expect(project.name, name);
+        expect(project.slug, slug);
+        expect(project.description, description);
+        expect(project.isLive, false);
+        expect(project.subscription.status, 'NOT_STARTED');
+      });
+
+      test('T010: creates project without description', () async {
+        // Arrange
+        const name = 'Minimal Project';
+        const slug = 'minimal-project';
+
+        final mockData = {
+          'createProject': {
+            'id': 'proj_min123',
+            'slug': slug,
+            'name': {'text': name},
+            'description': {'text': ''},
+            'imageUrl': '',
+            'isLive': false,
+            'subscription': {
+              'isActive': false,
+              'status': 'NOT_STARTED',
+              'prices': {},
+            },
+          },
+        };
+
+        mockGraphQLService.mockResult = QueryResult(
+          data: mockData,
+          source: QueryResultSource.network,
+          options: QueryOptions(document: mockDocument),
+        );
+
+        // Act
+        final project = await projectService.createProject(
+          name: name,
+          slug: slug,
+        );
+
+        // Assert
+        expect(project.id, 'proj_min123');
+        expect(project.name, name);
+        expect(project.slug, slug);
+      });
+
+      test('T010: throws exception on duplicate slug error', () async {
+        // Arrange
+        mockGraphQLService.mockResult = QueryResult(
+          data: null,
+          source: QueryResultSource.network,
+          options: QueryOptions(document: mockDocument),
+          exception: OperationException(
+            graphqlErrors: [
+              GraphQLError(
+                message: 'Slug already exists',
+                extensions: {'code': 'DUPLICATE_SLUG'},
+              ),
+            ],
+          ),
+        );
+
+        // Act & Assert
+        expect(
+          () => projectService.createProject(
+            name: 'Test Project',
+            slug: 'duplicate-slug',
+          ),
+          throwsA(predicate((e) =>
+              e is Exception &&
+              e.toString().contains('already exists'))),
+        );
+      });
+
+      test('T010: throws exception on validation error', () async {
+        // Arrange
+        mockGraphQLService.mockResult = QueryResult(
+          data: null,
+          source: QueryResultSource.network,
+          options: QueryOptions(document: mockDocument),
+          exception: OperationException(
+            graphqlErrors: [
+              GraphQLError(
+                message: 'Name must be between 3 and 100 characters',
+                extensions: {'code': 'VALIDATION_ERROR'},
+              ),
+            ],
+          ),
+        );
+
+        // Act & Assert
+        expect(
+          () => projectService.createProject(
+            name: 'AB', // Too short
+            slug: 'valid-slug',
+          ),
+          throwsA(predicate((e) =>
+              e is Exception &&
+              e.toString().contains('must be between'))),
+        );
+      });
+
+      test('T010: throws exception on invalid slug format', () async {
+        // Arrange
+        mockGraphQLService.mockResult = QueryResult(
+          data: null,
+          source: QueryResultSource.network,
+          options: QueryOptions(document: mockDocument),
+          exception: OperationException(
+            graphqlErrors: [
+              GraphQLError(
+                message: 'Slug must contain only lowercase letters, numbers, and hyphens',
+                extensions: {'code': 'VALIDATION_ERROR'},
+              ),
+            ],
+          ),
+        );
+
+        // Act & Assert
+        expect(
+          () => projectService.createProject(
+            name: 'Valid Name',
+            slug: 'Invalid Slug!',
+          ),
+          throwsA(predicate((e) =>
+              e is Exception &&
+              e.toString().contains('lowercase'))),
+        );
+      });
+
+      test('T010: throws exception on network error', () async {
+        // Arrange
+        mockGraphQLService.mockException = Exception('Network connection failed');
+
+        // Act & Assert
+        expect(
+          () => projectService.createProject(
+            name: 'Test Project',
+            slug: 'test-project',
+          ),
+          throwsA(isA<Exception>()),
+        );
+      });
+
+      test('T010: throws exception when no data returned', () async {
+        // Arrange
+        mockGraphQLService.mockResult = QueryResult(
+          data: {'createProject': null},
+          source: QueryResultSource.network,
+          options: QueryOptions(document: mockDocument),
+        );
+
+        // Act & Assert
+        expect(
+          () => projectService.createProject(
+            name: 'Test Project',
+            slug: 'test-project',
+          ),
+          throwsA(predicate((e) =>
+              e is Exception &&
+              e.toString().contains('No data returned'))),
         );
       });
     });

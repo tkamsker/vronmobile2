@@ -3,8 +3,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vronmobile2/features/home/screens/home_screen.dart';
 import 'package:vronmobile2/features/home/widgets/bottom_nav_bar.dart';
 import 'package:vronmobile2/features/home/widgets/custom_fab.dart';
+import '../../../test_helpers.dart';
 
 void main() {
+  setUpAll(() async {
+    await setupTestEnvironment();
+  });
+
+  tearDown(() async {
+    await tearDownTestEnvironment();
+  });
+
   group('HomeScreen Widget', () {
     testWidgets('displays "Your projects" heading', (tester) async {
       await tester.pumpWidget(const MaterialApp(home: HomeScreen()));

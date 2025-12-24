@@ -3,12 +3,19 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:vronmobile2/features/home/screens/home_screen.dart';
 import 'package:vronmobile2/features/home/widgets/project_card.dart';
 import 'package:vronmobile2/core/config/env_config.dart';
+import '../test_helpers.dart';
 
 void main() {
   group('Home Screen Integration Tests', () {
     setUpAll(() async {
+      // Initialize test environment (including guestSessionManager)
+      await setupTestEnvironment();
       // Initialize environment configuration for tests
       await EnvConfig.initialize();
+    });
+
+    tearDown(() async {
+      await tearDownTestEnvironment();
     });
 
     testWidgets('T116: loads and displays projects from API', (tester) async {
