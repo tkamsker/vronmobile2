@@ -39,4 +39,27 @@ class AppStrings {
   static const String guestButtonSemantics = 'Continue as guest button';
   static const String forgotPasswordSemantics = 'Forgot password link';
   static const String createAccountSemantics = 'Create account link';
+
+  // Guest mode strings
+  static const String guestModeTitle = 'Guest Mode';
+  static const String guestModeBanner = 'Guest Mode - Scans saved locally only';
+  static const String guestModeButton = 'Continue as Guest';
+  static const String guestModeHint = 'Scan rooms without creating an account';
+  static const String guestSignUpButton = 'Sign Up';
+  static const String guestContinueButton = 'Continue as Guest';
+
+  // Account creation dialog
+  static const String createAccountTitle = 'Create Account';
+  static const String createAccountMessage = 'Sign up to unlock:';
+  static const String createAccountBenefit1 = 'Save scans to the cloud';
+  static const String createAccountBenefit2 = 'Access from any device';
+  static const String createAccountBenefit3 = 'Share with team members';
+  static const String createAccountBenefit4 = 'Unlimited scan storage';
+  static const String createAccountNote = 'Note: Guest scans cannot be migrated to your account.';
+
+  // Guest mode semantics
+  static const String guestModeBannerSemantics = 'Guest Mode Active';
+  static const String guestModeBannerHint = 'You are using the app without an account. Scans are saved on this device only.';
+  static const String guestSignUpButtonSemantics = 'Sign Up';
+  static const String guestSignUpButtonHint = 'Create an account to save scans to the cloud';
 }

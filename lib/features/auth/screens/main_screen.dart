@@ -10,6 +10,7 @@ import 'package:vronmobile2/features/auth/widgets/sign_in_button.dart';
 import 'package:vronmobile2/features/auth/widgets/oauth_button.dart';
 import 'package:vronmobile2/features/auth/widgets/text_link.dart';
 import 'package:vronmobile2/features/auth/services/auth_service.dart';
+import 'package:vronmobile2/main.dart';
 
 /// Main authentication screen for non-logged-in users
 class MainScreen extends StatefulWidget {
@@ -31,6 +32,7 @@ class _MainScreenState extends State<MainScreen> {
   bool _isSignInLoading = false;
   bool _isGoogleLoading = false;
   bool _isFacebookLoading = false;
+  bool _isGuestLoading = false;
 
   @override
   void initState() {
@@ -230,12 +232,45 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  void _handleContinueAsGuest() {
-    // T037: Navigate to guest mode (UC7/UC14)
+  Future<void> _handleContinueAsGuest() async {
+    // T019-T022: Enable guest mode and navigate to scanning screen
+    if (kDebugMode) print('🔘 [UI] Guest Mode button pressed');
+
+    setState(() {
+      _isGuestLoading = true;
+    });
+
     try {
-      Navigator.pushNamed(context, AppRoutes.guestMode);
+      if (kDebugMode) print('🔐 [GUEST] Enabling guest mode...');
+
+      // Enable guest mode
+      await guestSessionManager.enableGuestMode();
+
+      if (kDebugMode) print('✅ [GUEST] Guest mode enabled');
+
+      if (!mounted) return;
+
+      // Navigate to scanning screen (placeholder for now)
+      if (kDebugMode) print('🔐 [GUEST] Navigating to scanning screen...');
+
+      // For MVP, navigate to guest mode placeholder
+      // This will be replaced with actual scanning screen in US2
+      Navigator.pushReplacementNamed(context, AppRoutes.guestMode);
+
+      if (kDebugMode) print('✅ [GUEST] Navigation complete');
     } catch (e) {
-      _showError('Navigation error: ${e.toString()}');
+      if (kDebugMode) {
+        print('❌ [GUEST] Guest mode activation failed: ${e.toString()}');
+      }
+      if (mounted) {
+        _showError('Failed to enter guest mode: ${e.toString()}');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGuestLoading = false;
+        });
+      }
     }
   }
 
@@ -344,13 +379,27 @@ class _MainScreenState extends State<MainScreen> {
 
                 const SizedBox(height: 24),
 
-                // Continue as Guest button
+                // Continue as Guest button (T020)
                 Semantics(
-                  label: AppStrings.guestButtonSemantics,
+                  label: 'Continue as Guest',
+                  hint: AppStrings.guestModeHint,
                   button: true,
                   child: OutlinedButton(
-                    onPressed: _handleContinueAsGuest,
-                    child: const Text(AppStrings.continueAsGuest),
+                    onPressed: _isGuestLoading ? null : _handleContinueAsGuest,
+                    child: _isGuestLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.person_outline),
+                              SizedBox(width: 8),
+                              Text(AppStrings.continueAsGuest),
+                            ],
+                          ),
                   ),
                 ),
 

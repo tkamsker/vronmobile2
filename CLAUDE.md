@@ -60,9 +60,9 @@ Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0): Follow s
 - Share common code via `lib/core/`
 
 ## Recent Changes
+- 007-guest-mode: Added Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0)
 - 003-google-oauth-login: Added Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0)
 - 005-product-search: Added Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0)
-- 003-projectdetail: Added comprehensive Semantics labels for accessibility
 
 
 <!-- MANUAL ADDITIONS START -->

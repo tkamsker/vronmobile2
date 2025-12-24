@@ -4,6 +4,7 @@ class AppRoutes {
   static const String main = '/';
   static const String home = '/home';
   static const String createAccount = '/create-account';
+  static const String signup = '/signup';
   static const String guestMode = '/guest-mode';
 
   // OAuth routes (placeholders for future implementation)
