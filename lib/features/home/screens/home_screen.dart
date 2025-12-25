@@ -274,22 +274,25 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFilterTabs() {
     return Padding(
       padding: const EdgeInsets.all(24.0),
-      child: Row(
-        children: [
-          _buildFilterChip('All'),
-          const SizedBox(width: 8),
-          _buildFilterChip('Active'),
-          const SizedBox(width: 8),
-          _buildFilterChip('Archived'),
-          const Spacer(),
-          TextButton.icon(
-            onPressed: () {
-              // TODO: Implement sort
-            },
-            icon: const Icon(Icons.sort),
-            label: Text('home.sort'.tr()),
-          ),
-        ],
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildFilterChip('All'),
+            const SizedBox(width: 8),
+            _buildFilterChip('Active'),
+            const SizedBox(width: 8),
+            _buildFilterChip('Archived'),
+            const SizedBox(width: 16),
+            TextButton.icon(
+              onPressed: () {
+                // TODO: Implement sort
+              },
+              icon: const Icon(Icons.sort),
+              label: Text('home.sort'.tr()),
+            ),
+          ],
+        ),
       ),
     );
   }
