@@ -2,6 +2,9 @@
 
 AnewFlutterproject.
 
+check features 
+ls -1 specs/ | grep -E "^[0-9]" | sort -V
+
 ##GettingStarted
 
 All22FeatureSpecificationsCreated!
