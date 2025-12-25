@@ -9,14 +9,16 @@ import 'package:vronmobile2/features/products/widgets/product_card.dart';
 
 /// Products list screen displaying all products
 class ProductsListScreen extends StatefulWidget {
-  const ProductsListScreen({super.key});
+  final ProductService? productService;
+
+  const ProductsListScreen({super.key, this.productService});
 
   @override
   State<ProductsListScreen> createState() => _ProductsListScreenState();
 }
 
 class _ProductsListScreenState extends State<ProductsListScreen> {
-  final ProductService _productService = ProductService();
+  late final ProductService _productService;
   List<Product> _products = [];
   bool _isLoading = false;
   String? _errorMessage;
@@ -28,9 +30,13 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   // Debouncing timer (T016)
   Timer? _debounceTimer;
 
+  // TextEditingController for search field (for testability)
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
+    _productService = widget.productService ?? ProductService();
     _loadProducts();
   }
 
@@ -38,6 +44,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   void dispose() {
     // T017: Cancel debounce timer
     _debounceTimer?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -83,6 +90,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
 
   // T020: Implement _clearSearch method
   void _clearSearch() {
+    _searchController.clear();
     setState(() {
       _currentFilter = _currentFilter.copyWith(searchQuery: '');
       _executeSearch(_currentFilter);
@@ -111,7 +119,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     return categories.toList()..sort();
   }
 
-  // T021: Implement _executeSearch method
+  // T021, T058: Implement _executeSearch method with enhanced error handling
   Future<void> _executeSearch(ProductFilter filter) async {
     try {
       final products = await _productService.fetchProducts(
@@ -137,10 +145,30 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
       }
     } catch (e) {
       if (mounted) {
+        // T058: Enhanced error handling with specific messages
+        String errorMessage = 'Failed to load products';
+
+        final errorString = e.toString().toLowerCase();
+        if (errorString.contains('socket') ||
+            errorString.contains('network') ||
+            errorString.contains('connection')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (errorString.contains('timeout')) {
+          errorMessage = 'Request timed out. Please try again.';
+        } else if (errorString.contains('unauthorized') || errorString.contains('401')) {
+          errorMessage = 'Authentication error. Please sign in again.';
+        } else if (errorString.contains('forbidden') || errorString.contains('403')) {
+          errorMessage = 'Access denied. You don\'t have permission to view these products.';
+        } else if (errorString.contains('not found') || errorString.contains('404')) {
+          errorMessage = 'Products not found. Please try again later.';
+        } else if (errorString.contains('500') || errorString.contains('server')) {
+          errorMessage = 'Server error. Please try again later.';
+        }
+
         setState(() {
           _searchResult = ProductSearchResult.error(
             filter,
-            'Failed to load products: ${e.toString()}',
+            errorMessage,
           );
         });
       }
@@ -151,22 +179,55 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   Widget _buildProductsContent() {
     // T023: Show loading state
     if (_searchResult.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
     }
 
-    // T024: Show error state with retry button
+    // T024, T058: Show error state with enhanced error message and retry button
     if (_searchResult.hasError) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(_searchResult.errorMessage!),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => _executeSearch(_currentFilter),
-              child: const Text('Retry'),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _searchResult.errorMessage!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => _executeSearch(_currentFilter),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() {
+                    _currentFilter = _currentFilter.clear();
+                    _loadProducts();
+                  });
+                },
+                child: const Text('Clear filters and reload'),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -209,7 +270,9 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
           },
           onDelete: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Delete product: ${product.title}')),
+              SnackBar(
+                content: Text('Delete product: ${product.title}'),
+              ),
             );
           },
         );
@@ -243,34 +306,42 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     return Semantics(
       label: 'No products found',
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.search_off, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              style: Theme.of(context).textTheme.titleMedium,
-              textAlign: TextAlign.center,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.search_off, size: 48, color: Colors.grey),
+                const SizedBox(height: 12),
+                Text(
+                  message,
+                  style: Theme.of(context).textTheme.titleMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Try adjusting your search or filters',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _currentFilter = _currentFilter.clear();
+                      _executeSearch(_currentFilter);
+                    });
+                  },
+                  child: const Text('Clear all filters'),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Try adjusting your search or filters',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _currentFilter = _currentFilter.clear();
-                  _executeSearch(_currentFilter);
-                });
-              },
-              child: const Text('Clear all filters'),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -315,7 +386,9 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   Widget _buildLoading() {
     return Semantics(
       label: 'Loading products',
-      child: const Center(child: CircularProgressIndicator()),
+      child: const Center(
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 
@@ -328,7 +401,11 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red[300],
+              ),
               const SizedBox(height: 16),
               Text(
                 'Failed to load products',
@@ -337,9 +414,9 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
               const SizedBox(height: 8),
               Text(
                 _errorMessage ?? 'Unknown error',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[600],
+                    ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -391,17 +468,17 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                 child: Text(
                   'You have no products yet!',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                        fontWeight: FontWeight.bold,
+                      ),
                   textAlign: TextAlign.center,
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 'Create your first virtual product to start\npopulating your worlds and projects.',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Colors.grey[600],
+                    ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
@@ -435,18 +512,64 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   }
 
   Widget _buildProductsList() {
+    final activeCount = _products.where((p) => p.status == 'ACTIVE').length;
+    final draftCount = _products.where((p) => p.status == 'DRAFT').length;
+
     return Semantics(
       label: '${_products.length} products',
       child: RefreshIndicator(
         onRefresh: _loadProducts,
         child: Column(
           children: [
+            // Stats Header Section
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Semantics(
+                    header: true,
+                    child: Text(
+                      'Your products',
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Manage all ${_products.length} products in one place',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Stats chips
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: [
+                      _buildStatChip('Active', activeCount, Colors.blue),
+                      _buildStatChip('Drafts', draftCount, Colors.orange),
+                      _buildStatChip('Last updated', 'Just now', Colors.grey),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
             // Search Bar (T018: Updated with working implementation)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Semantics(
                 label: 'Search products by title',
                 child: TextField(
+                  controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'Search products...',
                     prefixIcon: const Icon(Icons.search),
@@ -495,23 +618,18 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                       selected: _currentFilter.selectedStatus == null,
                       onSelected: (selected) {
                         if (selected) {
-                          _updateFilter(
-                            _currentFilter.copyWith(selectedStatus: null),
-                          );
+                          _updateFilter(_currentFilter.copyWith(selectedStatus: null));
                         }
                       },
                     ),
                     const SizedBox(width: 8),
                     ChoiceChip(
                       label: const Text('Draft'),
-                      selected:
-                          _currentFilter.selectedStatus == ProductStatus.DRAFT,
+                      selected: _currentFilter.selectedStatus == ProductStatus.DRAFT,
                       onSelected: (selected) {
                         if (selected) {
                           _updateFilter(
-                            _currentFilter.copyWith(
-                              selectedStatus: ProductStatus.DRAFT,
-                            ),
+                            _currentFilter.copyWith(selectedStatus: ProductStatus.DRAFT),
                           );
                         }
                       },
@@ -519,14 +637,11 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
                     const SizedBox(width: 8),
                     ChoiceChip(
                       label: const Text('Active'),
-                      selected:
-                          _currentFilter.selectedStatus == ProductStatus.ACTIVE,
+                      selected: _currentFilter.selectedStatus == ProductStatus.ACTIVE,
                       onSelected: (selected) {
                         if (selected) {
                           _updateFilter(
-                            _currentFilter.copyWith(
-                              selectedStatus: ProductStatus.ACTIVE,
-                            ),
+                            _currentFilter.copyWith(selectedStatus: ProductStatus.ACTIVE),
                           );
                         }
                       },
@@ -583,12 +698,89 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
               ),
             ),
 
-            const SizedBox(height: 16),
+            // T056: Clear all filters button with badge count
+            if (_currentFilter.isActive)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    TextButton.icon(
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() {
+                          _currentFilter = _currentFilter.clear();
+                          _executeSearch(_currentFilter);
+                        });
+                      },
+                      icon: const Icon(Icons.clear_all, size: 18),
+                      label: Text('Clear all filters (${_currentFilter.activeFilterCount})'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.orange,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            const SizedBox(height: 8),
+
+            // T057: Result count display
+            if (!_searchResult.isInitialState && !_searchResult.isLoading)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Semantics(
+                  liveRegion: true,
+                  label: 'Showing ${_searchResult.products.length} products',
+                  child: Text(
+                    'Showing ${_searchResult.products.length} product${_searchResult.products.length == 1 ? '' : 's'}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 8),
 
             // Products list (T022-T024: Updated to use _searchResult with state handling)
-            Expanded(child: _buildProductsContent()),
+            Expanded(
+              child: _buildProductsContent(),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatChip(String label, dynamic value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$label · ',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[600],
+            ),
+          ),
+          Text(
+            '$value',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
