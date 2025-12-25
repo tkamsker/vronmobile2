@@ -1,0 +1,170 @@
+Local, fully on-device USDZ→GLB conversion is not really “solved” by an off‑the‑shelf mobile library today; most production pipelines still convert via desktop (Blender, Xcode, USD SDK) or cloud services. On iOS/Android you would normally embed or wrap USD and glTF tooling yourself and expose it behind a small native service callable from Flutter/React Native, etc.[1][2][3]
+
+## What exists today
+
+- **No simple “drop‑in” mobile USDZ→GLB library**  
+  - There is no widely used, mobile‑friendly SDK that just takes USDZ bytes and returns GLB on-device the way, say, ImageMagick works for images.[3]
+  - Most examples either:
+    - Use **Pixar’s USD SDK** (C++) plus a custom glTF writer.[3]
+    - Or render USDZ directly (e.g., TinyUSDZ + Vulkan) without exporting to GLB.[1]
+
+- **Desktop / online solutions**  
+  - Xcode’s Scene Editor or Reality Composer can open USDZ and export to other formats, but that is for Mac, not runtime on-device.[2]
+  - Various online converters (Aspose, Meshy, etc.) convert USDZ→GLTF/GLB, but they are server-based, not suitable for fully local conversion.[4][5][6]
+
+Given that, a realistic mobile solution is: embed a C++ core (USD SDK + glTF writer) and expose it via platform channels. The PRD below assumes that route.
+
+## High‑level solution concept
+
+- **Goal**: Local USDZ→GLB converter that runs on iOS and Android, no network calls, callable from Flutter/RoomPlan app.
+- **Core**: C++ static library wrapping:
+  - Pixar **USD** SDK to read USDZ / USD, traverse scene graph, extract meshes/materials.[3]
+  - A **glTF/GLB writer** (e.g., based on cgltf or a custom minimal writer) to produce GLB from that scene data.[3]
+- **Mobile bindings**:
+  - iOS: Swift wrapper framework, exported as `UsdToGlbConverter` with async APIs.
+  - Android: JNI wrapper, packaged as AAR, exposing the same API surface.
+- **App-level API**:
+  - `convertUsdzToGlb(inputPath, outputPath, options)` → result object with success flag, stats, and error details.
+
+## Detailed PRD (example)
+
+### 1. Problem & goals
+
+- Users scan rooms with RoomPlan on iOS and receive **USDZ** models.[7]
+- The app needs **GLB** locally for:
+  - Web preview (Three.js, Babylon.js, WebXR).
+  - Android or other non-USD viewers.
+- Constraints:
+  - No upload to servers (privacy, offline use).
+  - Acceptable conversion time on mid‑range devices (<5–10s for typical interiors).
+  - Output GLB compatible with standard glTF 2.0 pipelines.
+
+### 2. Scope
+
+**In scope**
+
+- Read USDZ/USDC/USD from local filesystem.
+- Support:
+  - Static meshes (triangles).
+  - PBR materials (baseColor, metallicRoughness, normal, AO) where feasible.
+  - Single scene, single root, multiple nodes.
+- Export binary GLB 2.0:
+  - Geometry, node transforms, materials, textures embedded.
+- iOS and Android builds, accessed via Flutter/RoomPlan plugin.
+
+**Out of scope (v1)**
+
+- Animations, skeletal rigs.
+- Advanced material graphs, volume rendering, USD variants/layers.
+- Progressive or streaming conversion.
+
+### 3. User stories
+
+- *As a* mobile user, *I want* to scan a room and instantly view it in a web viewer inside the same app *so that* I can validate the scan without exporting to desktop.
+- *As a* developer, *I want* a single function that takes a RoomPlan USDZ path and gives me a GLB path *so that* I can embed it in my existing workflow.
+
+### 4. Functional requirements
+
+#### 4.1 API surface (Flutter side)
+
+- Dart interface:
+  - `Future<GlbConversionResult> convertUsdzToGlb(String usdzPath, {String? outPath, GlbConversionOptions? options});`
+- `GlbConversionResult`:
+  - `bool success`
+  - `String? glbPath`
+  - `String? errorCode`
+  - `String? errorMessage`
+  - `ConversionStats? stats` (triangle count, mesh count, duration).
+
+#### 4.2 Native iOS interface
+
+- Swift:
+  - `func convert(usdzUrl: URL, glbUrl: URL, options: ConversionOptions) async throws -> ConversionStats`
+- Must:
+  - Validate input (file exists, readable).
+  - Use USD APIs to:
+    - Open stage (USDZ bundle).
+    - Traverse prims, identify `UsdGeomMesh`.
+    - Resolve transforms / instancing.
+    - Extract vertex positions, normals, indices, UVs.
+    - Resolve textures from `UsdShadeMaterial`.
+  - Map USD data to glTF schema; pack into binary GLB.
+
+#### 4.3 Native Android interface
+
+- JNI/C++:
+  - `int convertUsdzToGlb(const char* inPath, const char* outPath, const ConversionOptions& options, ConversionStats* stats);`
+- Java/Kotlin wrapper:
+  - `Result<ConversionStats> convert(File usdz, File out, Options options)`
+
+### 5. Non‑functional requirements
+
+- **Performance**  
+  - Typical room (<= 200k triangles): <10 seconds on mid‑range iOS and Android devices.
+- **Memory**  
+  - Peak memory under 512 MB for typical models.
+- **Reliability**  
+  - Deterministic output; same input → same GLB bytes (given same options).
+  - Clear error codes (e.g., `UNSUPPORTED_PRIM`, `MISSING_TEXTURE`, `READ_ERROR`).
+
+### 6. Conversion rules
+
+- **Geometry**  
+  - Triangulate any non‑triangle faces during export.
+  - Merge meshes by material if this significantly reduces draw calls (optional optimization flag).
+- **Materials**  
+  - USD PBR → glTF PBR where fields map directly; fallback to simple baseColor if properties unsupported.
+- **Textures**  
+  - Copy or re-encode textures to PNG/JPEG inside GLB.
+  - If texture is unsupported/huge, log warning and use flat color.
+- **Coordinate system**  
+  - Document any axis flips (e.g., USD’s right‑handed Z‑up vs glTF’s right‑handed Y‑up), and bake corrections into node transforms.
+
+### 7. Options
+
+- `optimizeMeshes` (bool): enable vertex dedup / mesh merging.
+- `maxTextureSize` (int): downscale textures larger than threshold.
+- `bakeTransforms` (bool): bake node transforms into vertices.
+
+### 8. Architecture & tech stack
+
+- Core C++ lib:
+  - **USD SDK** for parsing USDZ/USDC.[3]
+  - glTF/GLB writer (custom or based on libraries such as cgltf for schema/ref, but writing GLB by hand is feasible).
+- Build system:
+  - CMake + platform toolchains to produce:
+    - iOS static library (arm64 + simulator).
+    - Android static/shared library for ARMv8 (optionally x86_64).
+
+### 9. Testing
+
+- **Unit tests**  
+  - Mesh conversion, material mapping, texture embedding.
+- **Fixture tests**  
+  - A set of representative USDZ rooms (small bedroom, large living room, L‑shaped corridor).
+  - Assert:
+    - GLB loads in reference viewers (Three.js, Babylon.js, glTF Validator).
+    - Triangle count and material count within expected ranges.
+
+### 10. Developer experience
+
+- Provide:
+  - Example iOS Swift app: pick USDZ, convert, preview GLB in SceneKit or WebView.
+  - Example Android app: pick USDZ from storage, convert, preview GLB via WebView + Three.js.
+  - Flutter example that chains: RoomPlan scan → USDZ path → convert → GLB path → preview.
+
+---
+
+In practice, the hardest part is integrating and trimming the USD SDK for mobile; the PRD above gives you a concrete blueprint if you decide to build an in‑house converter instead of relying on desktop or cloud conversion.
+
+[1](https://github.com/syoyo/Vulkan-glTF-USDZ-PBR)
+[2](https://www.reddit.com/r/augmentedreality/comments/lwr4pc/help_convert_usdz_to_glbgltf/)
+[3](https://stackoverflow.com/questions/75171138/convert-usdz-to-gltf-programmatically-command-line-or-sdk-ideally-not-involvin)
+[4](https://www.meshy.ai/3d-tools/file-converter/usdz/to/glb)
+[5](https://products.aspose.app/3d/conversion/usdz-to-glb)
+[6](https://imagetostl.com/convert/file/usdz/to/glb)
+[7](https://developer.apple.com/videos/play/wwdc2022/10127/)
+[8](https://github.com/ox/gltf-to-usdz)
+[9](https://products.groupdocs.app/conversion/usdz-to-gltf)
+[10](https://converter.pausarstudio.de)
+[11](https://support.fab.com/s/article/glTF-GLB-and-USDZ)
