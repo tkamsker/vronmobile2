@@ -9,14 +9,16 @@ import 'package:vronmobile2/features/products/widgets/product_card.dart';
 
 /// Products list screen displaying all products
 class ProductsListScreen extends StatefulWidget {
-  const ProductsListScreen({super.key});
+  final ProductService? productService;
+
+  const ProductsListScreen({super.key, this.productService});
 
   @override
   State<ProductsListScreen> createState() => _ProductsListScreenState();
 }
 
 class _ProductsListScreenState extends State<ProductsListScreen> {
-  final ProductService _productService = ProductService();
+  late final ProductService _productService;
   List<Product> _products = [];
   bool _isLoading = false;
   String? _errorMessage;
@@ -28,9 +30,13 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   // Debouncing timer (T016)
   Timer? _debounceTimer;
 
+  // TextEditingController for search field (for testability)
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
+    _productService = widget.productService ?? ProductService();
     _loadProducts();
   }
 
@@ -38,6 +44,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   void dispose() {
     // T017: Cancel debounce timer
     _debounceTimer?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -83,6 +90,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
 
   // T020: Implement _clearSearch method
   void _clearSearch() {
+    _searchController.clear();
     setState(() {
       _currentFilter = _currentFilter.copyWith(searchQuery: '');
       _executeSearch(_currentFilter);
@@ -111,7 +119,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     return categories.toList()..sort();
   }
 
-  // T021: Implement _executeSearch method
+  // T021, T058: Implement _executeSearch method with enhanced error handling
   Future<void> _executeSearch(ProductFilter filter) async {
     try {
       final products = await _productService.fetchProducts(
@@ -137,10 +145,30 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
       }
     } catch (e) {
       if (mounted) {
+        // T058: Enhanced error handling with specific messages
+        String errorMessage = 'Failed to load products';
+
+        final errorString = e.toString().toLowerCase();
+        if (errorString.contains('socket') ||
+            errorString.contains('network') ||
+            errorString.contains('connection')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (errorString.contains('timeout')) {
+          errorMessage = 'Request timed out. Please try again.';
+        } else if (errorString.contains('unauthorized') || errorString.contains('401')) {
+          errorMessage = 'Authentication error. Please sign in again.';
+        } else if (errorString.contains('forbidden') || errorString.contains('403')) {
+          errorMessage = 'Access denied. You don\'t have permission to view these products.';
+        } else if (errorString.contains('not found') || errorString.contains('404')) {
+          errorMessage = 'Products not found. Please try again later.';
+        } else if (errorString.contains('500') || errorString.contains('server')) {
+          errorMessage = 'Server error. Please try again later.';
+        }
+
         setState(() {
           _searchResult = ProductSearchResult.error(
             filter,
-            'Failed to load products: ${e.toString()}',
+            errorMessage,
           );
         });
       }
@@ -156,19 +184,50 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
       );
     }
 
-    // T024: Show error state with retry button
+    // T024, T058: Show error state with enhanced error message and retry button
     if (_searchResult.hasError) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(_searchResult.errorMessage!),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => _executeSearch(_currentFilter),
-              child: const Text('Retry'),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _searchResult.errorMessage!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: () => _executeSearch(_currentFilter),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() {
+                    _currentFilter = _currentFilter.clear();
+                    _loadProducts();
+                  });
+                },
+                child: const Text('Clear filters and reload'),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -247,34 +306,42 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
     return Semantics(
       label: 'No products found',
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.search_off, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              style: Theme.of(context).textTheme.titleMedium,
-              textAlign: TextAlign.center,
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.search_off, size: 48, color: Colors.grey),
+                const SizedBox(height: 12),
+                Text(
+                  message,
+                  style: Theme.of(context).textTheme.titleMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Try adjusting your search or filters',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _currentFilter = _currentFilter.clear();
+                      _executeSearch(_currentFilter);
+                    });
+                  },
+                  child: const Text('Clear all filters'),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Try adjusting your search or filters',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey,
-                  ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _currentFilter = _currentFilter.clear();
-                  _executeSearch(_currentFilter);
-                });
-              },
-              child: const Text('Clear all filters'),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -502,6 +569,7 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
               child: Semantics(
                 label: 'Search products by title',
                 child: TextField(
+                  controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'Search products...',
                     prefixIcon: const Icon(Icons.search),
@@ -630,7 +698,51 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
               ),
             ),
 
-            const SizedBox(height: 16),
+            // T056: Clear all filters button with badge count
+            if (_currentFilter.isActive)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    TextButton.icon(
+                      onPressed: () {
+                        _searchController.clear();
+                        setState(() {
+                          _currentFilter = _currentFilter.clear();
+                          _executeSearch(_currentFilter);
+                        });
+                      },
+                      icon: const Icon(Icons.clear_all, size: 18),
+                      label: Text('Clear all filters (${_currentFilter.activeFilterCount})'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.orange,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            const SizedBox(height: 8),
+
+            // T057: Result count display
+            if (!_searchResult.isInitialState && !_searchResult.isLoading)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Semantics(
+                  liveRegion: true,
+                  label: 'Showing ${_searchResult.products.length} products',
+                  child: Text(
+                    'Showing ${_searchResult.products.length} product${_searchResult.products.length == 1 ? '' : 's'}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+
+            const SizedBox(height: 8),
 
             // Products list (T022-T024: Updated to use _searchResult with state handling)
             Expanded(
