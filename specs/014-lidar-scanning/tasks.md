@@ -48,16 +48,16 @@ Flutter mobile app with feature-based architecture:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T009 [P] Create lib/features/scanning/models/ directory
-- [ ] T010 [P] Create lib/features/scanning/services/ directory
-- [ ] T011 [P] Create lib/features/scanning/screens/ directory
-- [ ] T012 [P] Create lib/features/scanning/widgets/ directory
-- [ ] T013 [P] Create lib/features/scanning/utils/ directory
-- [ ] T014 [P] Create test/features/scanning/models/ directory
-- [ ] T015 [P] Create test/features/scanning/services/ directory
-- [ ] T016 [P] Create test/features/scanning/widgets/ directory
-- [ ] T017 [P] Create test/integration/ directory (if doesn't exist)
-- [ ] T018 Add scanning error message strings to lib/core/constants/app_strings.dart
+- [X] T009 [P] Create lib/features/scanning/models/ directory
+- [X] T010 [P] Create lib/features/scanning/services/ directory
+- [X] T011 [P] Create lib/features/scanning/screens/ directory
+- [X] T012 [P] Create lib/features/scanning/widgets/ directory
+- [X] T013 [P] Create lib/features/scanning/utils/ directory
+- [X] T014 [P] Create test/features/scanning/models/ directory
+- [X] T015 [P] Create test/features/scanning/services/ directory
+- [X] T016 [P] Create test/features/scanning/widgets/ directory
+- [X] T017 [P] Create test/integration/ directory (if doesn't exist)
+- [X] T018 Add scanning error message strings to lib/core/constants/app_strings.dart
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -78,34 +78,34 @@ Flutter mobile app with feature-based architecture:
 
 > **CRITICAL (Constitution)**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T019 [P] [US1] Write unit test for LidarCapability.detect() on supported device in test/features/scanning/models/lidar_capability_test.dart
-- [ ] T020 [P] [US1] Write unit test for LidarCapability.detect() on unsupported device (Android) in test/features/scanning/models/lidar_capability_test.dart
-- [ ] T021 [P] [US1] Write unit test for ScanData JSON serialization/deserialization in test/features/scanning/models/scan_data_test.dart
-- [ ] T022 [P] [US1] Write unit test for ScanData file existence check in test/features/scanning/models/scan_data_test.dart
-- [ ] T023 [P] [US1] Write unit test for ScanningService.checkCapability() in test/features/scanning/services/scanning_service_test.dart
-- [ ] T024 [P] [US1] Write unit test for ScanningService.startScan() success case in test/features/scanning/services/scanning_service_test.dart
-- [ ] T025 [P] [US1] Write unit test for ScanningService._saveScanLocally() in test/features/scanning/services/scanning_service_test.dart
-- [ ] T026 [P] [US1] Write widget test for ScanButton disabled when LiDAR unsupported in test/features/scanning/widgets/scan_button_test.dart
-- [ ] T027 [P] [US1] Write widget test for ScanButton enabled when LiDAR supported in test/features/scanning/widgets/scan_button_test.dart
-- [ ] T028 [P] [US1] Write widget test for ScanProgress indicator during active scan in test/features/scanning/widgets/scan_progress_test.dart
-- [ ] T029 [P] [US1] Write integration test for complete scan workflow (start → capture → store) in test/integration/scanning_flow_test.dart
+- [X] T019 [P] [US1] Write unit test for LidarCapability.detect() on supported device in test/features/scanning/models/lidar_capability_test.dart
+- [X] T020 [P] [US1] Write unit test for LidarCapability.detect() on unsupported device (Android) in test/features/scanning/models/lidar_capability_test.dart
+- [X] T021 [P] [US1] Write unit test for ScanData JSON serialization/deserialization in test/features/scanning/models/scan_data_test.dart
+- [X] T022 [P] [US1] Write unit test for ScanData file existence check in test/features/scanning/models/scan_data_test.dart
+- [X] T023 [P] [US1] Write unit test for ScanningService.checkCapability() in test/features/scanning/services/scanning_service_test.dart
+- [X] T024 [P] [US1] Write unit test for ScanningService.startScan() success case in test/features/scanning/services/scanning_service_test.dart
+- [X] T025 [P] [US1] Write unit test for ScanningService._saveScanLocally() in test/features/scanning/services/scanning_service_test.dart
+- [X] T026 [P] [US1] Write widget test for ScanButton disabled when LiDAR unsupported in test/features/scanning/widgets/scan_button_test.dart
+- [X] T027 [P] [US1] Write widget test for ScanButton enabled when LiDAR supported in test/features/scanning/widgets/scan_button_test.dart
+- [X] T028 [P] [US1] Write widget test for ScanProgress indicator during active scan in test/features/scanning/widgets/scan_progress_test.dart
+- [X] T029 [P] [US1] Write integration test for complete scan workflow (start → capture → store) in test/integration/scanning_flow_test.dart
 
 **TDD Checkpoint**: ✅ All US1 tests written and FAILING - proceed to implementation
 
 ### Implementation for User Story 1
 
-- [ ] T030 [P] [US1] Create LidarCapability model in lib/features/scanning/models/lidar_capability.dart
-- [ ] T031 [P] [US1] Create ScanData model with JSON serialization in lib/features/scanning/models/scan_data.dart
-- [ ] T032 [US1] Implement ScanningService with flutter_roomplan integration in lib/features/scanning/services/scanning_service.dart
-- [ ] T033 [US1] Implement checkCapability() method using flutter_roomplan.isSupported() in lib/features/scanning/services/scanning_service.dart
-- [ ] T034 [US1] Implement startScan() method with progress callbacks in lib/features/scanning/services/scanning_service.dart
-- [ ] T035 [US1] Implement _saveScanLocally() method using path_provider in lib/features/scanning/services/scanning_service.dart
-- [ ] T036 [US1] Implement FileStorageService for USDZ file management in lib/features/scanning/services/file_storage_service.dart
-- [ ] T037 [US1] Create ScanButton widget with capability detection in lib/features/scanning/widgets/scan_button.dart
-- [ ] T038 [US1] Create ScanProgress widget with real-time updates in lib/features/scanning/widgets/scan_progress.dart
-- [ ] T039 [US1] Create ScanningScreen with scan lifecycle management in lib/features/scanning/screens/scanning_screen.dart
+- [X] T030 [P] [US1] Create LidarCapability model in lib/features/scanning/models/lidar_capability.dart
+- [X] T031 [P] [US1] Create ScanData model with JSON serialization in lib/features/scanning/models/scan_data.dart
+- [X] T032 [US1] Implement ScanningService with flutter_roomplan integration in lib/features/scanning/services/scanning_service.dart
+- [X] T033 [US1] Implement checkCapability() method using flutter_roomplan.isSupported() in lib/features/scanning/services/scanning_service.dart
+- [X] T034 [US1] Implement startScan() method with progress callbacks in lib/features/scanning/services/scanning_service.dart
+- [X] T035 [US1] Implement _saveScanLocally() method using path_provider in lib/features/scanning/services/scanning_service.dart
+- [X] T036 [US1] Implement FileStorageService for USDZ file management in lib/features/scanning/services/file_storage_service.dart
+- [X] T037 [US1] Create ScanButton widget with capability detection in lib/features/scanning/widgets/scan_button.dart
+- [X] T038 [US1] Create ScanProgress widget with real-time updates in lib/features/scanning/widgets/scan_progress.dart
+- [X] T039 [US1] Create ScanningScreen with scan lifecycle management in lib/features/scanning/screens/scanning_screen.dart
 - [ ] T040 [US1] Add navigation to ScanningScreen from project detail screen
-- [ ] T041 [US1] Implement interruption handlers (phone call, backgrounding) in lib/features/scanning/services/scanning_service.dart
+- [X] T041 [US1] Implement interruption handlers (phone call, backgrounding) in lib/features/scanning/services/scanning_service.dart
 - [ ] T042 [US1] Verify all US1 tests now PASS (Red → Green)
 
 **Refactor Checkpoint** (TDD): Refactor if needed while keeping tests green
