@@ -9,6 +9,7 @@ import '../widgets/scan_progress.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/config/env_config.dart';
 import '../../../main.dart' show guestSessionManager;
+import 'save_to_project_screen.dart';
 
 class ScanningScreen extends StatefulWidget {
   const ScanningScreen({super.key});
@@ -119,13 +120,26 @@ class _ScanningScreenState extends State<ScanningScreen> {
           print('🎉 [SCANNING] Guest mode: Showing success dialog');
           await _showGuestSuccessDialog(scanData);
         } else {
-          // Logged-in mode: Save to session and navigate back
-          print('🎉 [SCANNING] Logged-in mode: Saving scan and returning to list');
-          ScanSessionManager().addScan(scanData);
+          // Logged-in mode: Navigate to SaveToProjectScreen for upload
+          print('🎉 [SCANNING] Logged-in mode: Navigating to SaveToProjectScreen');
           if (mounted) {
-            print('🔙 [SCANNING] Navigating back to scan list');
-            Navigator.of(context).pop(scanData); // Return scan data to previous screen
-            print('✅ [SCANNING] Navigation completed successfully');
+            final uploadResult = await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => SaveToProjectScreen(scanData: scanData),
+              ),
+            );
+
+            // After upload completes (or user cancels), go back to scan list
+            if (mounted) {
+              print('🔙 [SCANNING] Returning to scan list');
+              // Save to session if upload was successful
+              if (uploadResult != null) {
+                print('✅ [SCANNING] Upload successful, saving to session');
+                ScanSessionManager().addScan(scanData);
+              }
+              Navigator.of(context).pop(scanData); // Return to scan list
+              print('✅ [SCANNING] Navigation completed successfully');
+            }
           }
         }
       }
