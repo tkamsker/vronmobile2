@@ -1,5 +1,6 @@
 # Uncomment this line to define a global platform for your project
-platform :ios, '13.0'
+# Updated to iOS 16.0 for RoomPlan framework support (Feature 014 - LiDAR Scanning)
+platform :ios, '16.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'

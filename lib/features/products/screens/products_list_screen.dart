@@ -512,56 +512,13 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
   }
 
   Widget _buildProductsList() {
-    final activeCount = _products.where((p) => p.status == 'ACTIVE').length;
-    final draftCount = _products.where((p) => p.status == 'DRAFT').length;
-
     return Semantics(
       label: '${_products.length} products',
       child: RefreshIndicator(
         onRefresh: _loadProducts,
         child: Column(
           children: [
-            // Stats Header Section
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Semantics(
-                    header: true,
-                    child: Text(
-                      'Your products',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Manage all ${_products.length} products in one place',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
-                  ),
-                  const SizedBox(height: 16),
-                  // Stats chips
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 8,
-                    children: [
-                      _buildStatChip('Active', activeCount, Colors.blue),
-                      _buildStatChip('Drafts', draftCount, Colors.orange),
-                      _buildStatChip('Last updated', 'Just now', Colors.grey),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+            const SizedBox(height: 16),
 
             // Search Bar (T018: Updated with working implementation)
             Padding(
@@ -750,37 +707,6 @@ class _ProductsListScreenState extends State<ProductsListScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatChip(String label, dynamic value, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            '$label · ',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[600],
-            ),
-          ),
-          Text(
-            '$value',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ],
       ),
     );
   }

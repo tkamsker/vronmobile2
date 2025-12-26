@@ -1,0 +1,42 @@
+{
+    "_id" : ObjectId("692c132d274ddfd3734f746d"),
+    "slug" : "d51b24acca57ea132f4bff6fe4434ced",
+    "userId" : ObjectId("691c73560e421ea9b59979b4"),
+    "worldId" : ObjectId("692c132d274ddfd3734f746c"),
+    "createdAt" : ISODate("2025-11-30T09:49:33.511+0000"),
+    "updatedAt" : ISODate("2025-12-26T14:02:23.503+0000"),
+    "name" : {
+        "values" : [
+            {
+                "lang" : "PT",
+                "text" : "Meu Lindo Xerus Projeto"
+            },
+            {
+                "lang" : "EN",
+                "text" : "bringyourown1"
+            }
+        ]
+    },
+    "subscription" : {
+        "expiresAt" : null,
+        "isTrial" : false,
+        "price" : null,
+        "currency" : null,
+        "renewalInterval" : null,
+        "renewsAt" : null,
+        "startedAt" : null,
+        "status" : "MANAGED_BY_BRING_YOUR_OWN_WORLDS_TIER"
+    },
+    "vron" : {
+        "isShopEnabled" : false
+    },
+    "description" : {
+        "values" : [
+            {
+                "lang" : "EN",
+                "text" : ""
+            }
+        ]
+    },
+    "liveDate" : null
+}
