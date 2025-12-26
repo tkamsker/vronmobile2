@@ -42,6 +42,12 @@ dependencies:
   intl: ^0.18.1
   shared_preferences: ^2.2.2
   google_sign_in: ^7.0.0
+  flutter_roomplan: ^1.0.7
+  file_picker: ^10.3.8
+  path_provider: ^2.1.5
+  http: ^1.1.0
+  native_ar_viewer: ^0.0.2
+  model_viewer_plus: ^1.10.0
 
 dev_dependencies:
   flutter_test:
@@ -53,6 +59,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  mocktail: ^1.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

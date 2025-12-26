@@ -63,5 +63,9 @@
 			</array>
 		</dict>
 	</array>
+	<!-- LiDAR Scanning Configuration (Feature 014) -->
+	<!-- Camera permission required for RoomPlan LiDAR scanning -->
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is required to scan rooms using LiDAR technology and create 3D models of your spaces.</string>
 </dict>
 </plist>
