@@ -17,13 +17,12 @@ class ScanningScreen extends StatefulWidget {
   State<ScanningScreen> createState() => _ScanningScreenState();
 }
 
-class _ScanningScreenState extends State<ScanningScreen> with WidgetsBindingObserver {
+class _ScanningScreenState extends State<ScanningScreen> {
   final ScanningService _scanningService = ScanningService();
 
   LidarCapability? _capability;
   bool _isLoading = false;
   bool _isScanning = false;
-  bool _isCompletingNavigation = false; // Flag to prevent interruption during navigation
   double? _scanProgress;
   DateTime? _scanStartTime;
   Duration? _elapsedTime;
@@ -33,32 +32,7 @@ class _ScanningScreenState extends State<ScanningScreen> with WidgetsBindingObse
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _checkCapability();
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-
-    // Handle app lifecycle changes (interruption handling)
-    // Only show interruption dialog if scan is in progress, hasn't completed, and not navigating
-    if (_isScanning && _completedScan == null && !_isCompletingNavigation) {
-      switch (state) {
-        case AppLifecycleState.inactive:
-        case AppLifecycleState.paused:
-          _handleInterruption(InterruptionReason.backgrounded);
-          break;
-        default:
-          break;
-      }
-    }
   }
 
   Future<void> _checkCapability() async {
@@ -78,9 +52,10 @@ class _ScanningScreenState extends State<ScanningScreen> with WidgetsBindingObse
         _isLoading = false;
       });
 
-      // Auto-launch native RoomPlan UI if LiDAR is supported
-      if (capability.isScanningSupportpported) {
-        print('🎯 [SCANNING] Auto-launching native RoomPlan UI...');
+      // For guest mode, auto-launch if supported
+      // For logged-in mode, user will press "Scan another room" button
+      if (capability.isScanningSupportpported && guestSessionManager.isGuestMode) {
+        print('🎯 [SCANNING] Guest mode: Auto-launching native RoomPlan UI...');
         // Small delay to ensure UI is ready
         await Future.delayed(const Duration(milliseconds: 300));
         if (mounted) {
@@ -134,23 +109,23 @@ class _ScanningScreenState extends State<ScanningScreen> with WidgetsBindingObse
         final isGuestMode = guestSessionManager.isGuestMode;
 
         setState(() {
+          _isScanning = false;
           _completedScan = scanData;
           _scanProgress = 1.0;
-          // Set navigation flag BEFORE clearing _isScanning to prevent lifecycle interference
-          if (!isGuestMode) {
-            _isCompletingNavigation = true;
-          }
-          _isScanning = false;
         });
 
         if (isGuestMode) {
           // Guest mode: Show success dialog with account creation prompt
+          print('🎉 [SCANNING] Guest mode: Showing success dialog');
           await _showGuestSuccessDialog(scanData);
         } else {
           // Logged-in mode: Save to session and navigate back
+          print('🎉 [SCANNING] Logged-in mode: Saving scan and returning to list');
           ScanSessionManager().addScan(scanData);
           if (mounted) {
+            print('🔙 [SCANNING] Navigating back to scan list');
             Navigator.of(context).pop(scanData); // Return scan data to previous screen
+            print('✅ [SCANNING] Navigation completed successfully');
           }
         }
       }
@@ -289,67 +264,6 @@ class _ScanningScreenState extends State<ScanningScreen> with WidgetsBindingObse
 
       return _isScanning;
     });
-  }
-
-  Future<void> _handleInterruption(InterruptionReason reason) async {
-    if (!_isScanning) return;
-
-    final action = await _showInterruptionDialog();
-
-    switch (action) {
-      case InterruptionAction.savePartial:
-        // Save current scan state as partial
-        await _stopScan();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Partial scan saved'),
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-        break;
-
-      case InterruptionAction.discard:
-        await _stopScan();
-        setState(() {
-          _scanProgress = null;
-          _completedScan = null;
-        });
-        break;
-
-      case InterruptionAction.continue_:
-        // Continue scanning (do nothing)
-        break;
-
-      case null:
-        // Dialog dismissed, treat as continue
-        break;
-    }
-  }
-
-  Future<InterruptionAction?> _showInterruptionDialog() async {
-    return showDialog<InterruptionAction>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(AppStrings.scanInterruptedTitle),
-        content: const Text(AppStrings.scanInterruptedMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, InterruptionAction.discard),
-            child: const Text(AppStrings.discardScanButton),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, InterruptionAction.savePartial),
-            child: const Text(AppStrings.savePartialButton),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, InterruptionAction.continue_),
-            child: const Text(AppStrings.continueScanButton),
-          ),
-        ],
-      ),
-    );
   }
 
   String _getErrorMessage(Object error) {

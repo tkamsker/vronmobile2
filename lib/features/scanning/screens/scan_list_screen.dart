@@ -70,11 +70,6 @@ class _ScanListScreenState extends State<ScanListScreen> {
                         '${scans.length} ${scans.length == 1 ? 'scan' : 'scans'}',
                         style: TextStyle(color: Colors.grey.shade600),
                       ),
-                      Text(' • ', style: TextStyle(color: Colors.grey.shade600)),
-                      Text(
-                        'Last updated ${_formatRelativeDate(lastUpdated)}',
-                        style: TextStyle(color: Colors.grey.shade600),
-                      ),
                       const Spacer(),
                       Container(
                         padding: const EdgeInsets.symmetric(
