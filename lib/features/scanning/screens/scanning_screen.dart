@@ -8,8 +8,9 @@ import '../widgets/scan_button.dart';
 import '../widgets/scan_progress.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/config/env_config.dart';
+import '../../../core/navigation/routes.dart';
 import '../../../main.dart' show guestSessionManager;
-import 'save_to_project_screen.dart';
+import '../../home/widgets/bottom_nav_bar.dart';
 
 class ScanningScreen extends StatefulWidget {
   const ScanningScreen({super.key});
@@ -115,31 +116,20 @@ class _ScanningScreenState extends State<ScanningScreen> {
           _scanProgress = 1.0;
         });
 
+        // Add scan to session manager immediately
+        print('💾 [SCANNING] Adding scan to session manager');
+        ScanSessionManager().addScan(scanData);
+
         if (isGuestMode) {
           // Guest mode: Show success dialog with account creation prompt
           print('🎉 [SCANNING] Guest mode: Showing success dialog');
           await _showGuestSuccessDialog(scanData);
         } else {
-          // Logged-in mode: Navigate to SaveToProjectScreen for upload
-          print('🎉 [SCANNING] Logged-in mode: Navigating to SaveToProjectScreen');
+          // Logged-in mode: Go directly back to scan list
+          print('🎉 [SCANNING] Logged-in mode: Returning to scan list');
           if (mounted) {
-            final uploadResult = await Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => SaveToProjectScreen(scanData: scanData),
-              ),
-            );
-
-            // After upload completes (or user cancels), go back to scan list
-            if (mounted) {
-              print('🔙 [SCANNING] Returning to scan list');
-              // Save to session if upload was successful
-              if (uploadResult != null) {
-                print('✅ [SCANNING] Upload successful, saving to session');
-                ScanSessionManager().addScan(scanData);
-              }
-              Navigator.of(context).pop(scanData); // Return to scan list
-              print('✅ [SCANNING] Navigation completed successfully');
-            }
+            Navigator.of(context).pop(scanData); // Return to scan list
+            print('✅ [SCANNING] Navigation completed successfully');
           }
         }
       }
@@ -228,22 +218,50 @@ class _ScanningScreenState extends State<ScanningScreen> {
             actions: [
               TextButton(
                 onPressed: () {
+                  print('🔘 [GUEST] Done button pressed');
+                  // Close dialog
                   Navigator.of(context).pop();
-                  Navigator.of(context).pop(); // Go back to main screen
+                  // Navigate to home screen and clear navigation stack
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    AppRoutes.home,
+                    (route) => false,
+                  );
                 },
                 child: const Text('Done'),
               ),
               ElevatedButton(
                 onPressed: () async {
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pop(); // Go back to main screen
+                  print('🔘 [GUEST] Create Account button pressed');
 
-                  // Launch merchant web app for account creation
-                  final url = Uri.parse(EnvConfig.vronMerchantsUrl);
-                  if (await canLaunchUrl(url)) {
-                    await launchUrl(url, mode: LaunchMode.externalApplication);
-                  } else {
-                    print('❌ Could not launch $url');
+                  // Close dialog
+                  Navigator.of(context).pop();
+
+                  if (mounted) {
+                    // Navigate to home screen first and clear stack
+                    print('🏠 [GUEST] Navigating to home screen...');
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      AppRoutes.home,
+                      (route) => false,
+                    );
+
+                    // Wait for home screen to fully render
+                    await Future.delayed(const Duration(milliseconds: 800));
+
+                    if (mounted) {
+                      // Launch merchant web app for account creation
+                      print('🌐 [GUEST] Launching merchant URL...');
+                      final url = Uri.parse(EnvConfig.vronMerchantsUrl);
+                      try {
+                        if (await canLaunchUrl(url)) {
+                          await launchUrl(url, mode: LaunchMode.externalApplication);
+                          print('✅ [GUEST] URL launched successfully');
+                        } else {
+                          print('❌ [GUEST] Cannot launch URL: $url');
+                        }
+                      } catch (e) {
+                        print('❌ [GUEST] Error launching URL: $e');
+                      }
+                    }
                   }
                 },
                 child: const Text('Create Account'),
@@ -351,7 +369,50 @@ class _ScanningScreenState extends State<ScanningScreen> {
                 ),
               ),
       ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: 3, // LiDAR tab is active
+        onTap: _handleBottomNavTap,
+      ),
     );
+  }
+
+  void _handleBottomNavTap(int index) {
+    print('🏠 [SCANNING] Bottom nav tapped: $index');
+
+    // Prevent navigation if actively scanning
+    if (_isScanning) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Please stop scanning before navigating away'),
+          duration: const Duration(seconds: 2),
+          backgroundColor: Colors.orange.shade700,
+        ),
+      );
+      return;
+    }
+
+    switch (index) {
+      case 0: // Home
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          AppRoutes.home,
+          (route) => false,
+        );
+        break;
+      case 1: // Projects
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          AppRoutes.home,
+          (route) => false,
+        );
+        break;
+      case 2: // Products
+        Navigator.of(context).pushReplacementNamed(AppRoutes.products);
+        break;
+      case 3: // LiDAR - already here
+        break;
+      case 4: // Profile
+        Navigator.of(context).pushReplacementNamed(AppRoutes.profile);
+        break;
+    }
   }
 
   Widget _buildErrorCard() {

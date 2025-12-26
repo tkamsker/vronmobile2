@@ -16,7 +16,8 @@ enum ScanStatus {
 class ScanData {
   final String id;              // Unique identifier (UUID)
   final ScanFormat format;      // USDZ or GLB
-  final String localPath;       // Local filesystem path
+  final String localPath;       // Local filesystem path (USDZ file)
+  final String? glbLocalPath;   // Local GLB file path (null if not converted yet)
   final int fileSizeBytes;      // File size in bytes
   final DateTime capturedAt;    // Timestamp of scan completion
   final ScanStatus status;      // Current status
@@ -28,6 +29,7 @@ class ScanData {
     required this.id,
     required this.format,
     required this.localPath,
+    this.glbLocalPath,
     required this.fileSizeBytes,
     required this.capturedAt,
     required this.status,
@@ -42,6 +44,7 @@ class ScanData {
       id: json['id'] as String,
       format: ScanFormat.values.byName(json['format'] as String),
       localPath: json['localPath'] as String,
+      glbLocalPath: json['glbLocalPath'] as String?,
       fileSizeBytes: json['fileSizeBytes'] as int,
       capturedAt: DateTime.parse(json['capturedAt'] as String),
       status: ScanStatus.values.byName(json['status'] as String),
@@ -56,6 +59,7 @@ class ScanData {
       'id': id,
       'format': format.name,
       'localPath': localPath,
+      'glbLocalPath': glbLocalPath,
       'fileSizeBytes': fileSizeBytes,
       'capturedAt': capturedAt.toIso8601String(),
       'status': status.name,
@@ -63,6 +67,33 @@ class ScanData {
       'remoteUrl': remoteUrl,
       'metadata': metadata,
     };
+  }
+
+  // Copy with method to update glbLocalPath after conversion
+  ScanData copyWith({
+    String? id,
+    ScanFormat? format,
+    String? localPath,
+    String? glbLocalPath,
+    int? fileSizeBytes,
+    DateTime? capturedAt,
+    ScanStatus? status,
+    String? projectId,
+    String? remoteUrl,
+    Map<String, dynamic>? metadata,
+  }) {
+    return ScanData(
+      id: id ?? this.id,
+      format: format ?? this.format,
+      localPath: localPath ?? this.localPath,
+      glbLocalPath: glbLocalPath ?? this.glbLocalPath,
+      fileSizeBytes: fileSizeBytes ?? this.fileSizeBytes,
+      capturedAt: capturedAt ?? this.capturedAt,
+      status: status ?? this.status,
+      projectId: projectId ?? this.projectId,
+      remoteUrl: remoteUrl ?? this.remoteUrl,
+      metadata: metadata ?? this.metadata,
+    );
   }
 
   // Helper: Check if file exists on device

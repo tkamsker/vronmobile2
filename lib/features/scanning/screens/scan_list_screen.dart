@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/scan_data.dart';
 import '../services/scan_session_manager.dart';
 import 'scanning_screen.dart';
+import 'usdz_preview_screen.dart';
 
 /// Screen showing list of scans for current session
 /// Matches design from Requirements/ScanList.jpg
@@ -383,27 +384,38 @@ class _ScanListScreenState extends State<ScanListScreen> {
     );
   }
 
-  void _viewScanDetails(ScanData scan) {
+  Future<void> _viewUsdzPreview(ScanData scan) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => UsdzPreviewScreen(scanData: scan),
+      ),
+    );
+
+    // Handle result if user chose to save from preview
+    if (result != null && result is Map && result['action'] == 'save') {
+      // User clicked "Ready to save" - could navigate to upload here
+      print('📤 [SCAN_LIST] User wants to save scan: ${scan.id}');
+    }
+  }
+
+  Future<void> _viewGlbPreview(ScanData scan) async {
+    // Phase 1: Show USDZ preview (same as USDZ button)
+    // GLB conversion will be implemented via server-side in Phase 2
+    print('📱 [SCAN_LIST] GLBView: Showing USDZ in QuickLook (Phase 1)');
+
+    await _viewUsdzPreview(scan);
+  }
+
+  void _confirmDeleteScan(ScanData scan) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Scan ${scan.id}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Format: ${scan.format.name.toUpperCase()}'),
-            Text('Size: ${_formatFileSize(scan.fileSizeBytes)}'),
-            Text('Captured: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(scan.capturedAt)}'),
-            Text('Status: ${scan.status.name}'),
-            if (scan.localPath.isNotEmpty)
-              Text('Path: ${scan.localPath}', style: const TextStyle(fontSize: 12)),
-          ],
-        ),
+        title: const Text('Delete Scan'),
+        content: Text('Are you sure you want to delete this scan?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
@@ -419,23 +431,59 @@ class _ScanListScreenState extends State<ScanListScreen> {
   }
 
   void _deleteScan(ScanData scan) {
-    setState(() {
-      _sessionManager.removeScan(scan.id);
-    });
+    // Remove scan immediately
+    _sessionManager.removeScan(scan.id);
+    setState(() {});
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Scan deleted'),
-        duration: const Duration(seconds: 20),
-        action: SnackBarAction(
-          label: 'Undo',
-          onPressed: () {
-            setState(() {
+    // Hide any existing snackbars
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+    // Show new snackbar with Undo and Close buttons
+    final snackBar = SnackBar(
+      content: Row(
+        children: [
+          const Expanded(
+            child: Text('Scan deleted'),
+          ),
+          TextButton(
+            onPressed: () {
+              // Restore scan
               _sessionManager.addScan(scan);
-            });
-          },
-        ),
+              setState(() {});
+              // Hide snackbar immediately after undo
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            },
+            child: Text(
+              'Undo',
+              style: TextStyle(
+                color: Colors.blue.shade300,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: const Icon(Icons.close, size: 20),
+            color: Colors.white,
+            onPressed: () {
+              // Close snackbar
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            },
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+          ),
+        ],
       ),
+      duration: const Duration(seconds: 5),
+      backgroundColor: Colors.grey.shade800,
+      behavior: SnackBarBehavior.floating,
     );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar).closed.then((reason) {
+      // Ensure snackbar is fully dismissed
+      if (mounted) {
+        print('🔔 [SCAN_LIST] Snackbar closed: $reason');
+      }
+    });
   }
 }
