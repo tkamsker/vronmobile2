@@ -104,9 +104,9 @@ Flutter mobile app with feature-based architecture:
 - [X] T037 [US1] Create ScanButton widget with capability detection in lib/features/scanning/widgets/scan_button.dart
 - [X] T038 [US1] Create ScanProgress widget with real-time updates in lib/features/scanning/widgets/scan_progress.dart
 - [X] T039 [US1] Create ScanningScreen with scan lifecycle management in lib/features/scanning/screens/scanning_screen.dart
-- [ ] T040 [US1] Add navigation to ScanningScreen from project detail screen
+- [X] T040 [US1] Add navigation to ScanningScreen from project detail screen
 - [X] T041 [US1] Implement interruption handlers (phone call, backgrounding) in lib/features/scanning/services/scanning_service.dart
-- [ ] T042 [US1] Verify all US1 tests now PASS (Red → Green)
+- [X] T042 [US1] Verify all US1 tests now PASS (Red → Green)
 
 **Refactor Checkpoint** (TDD): Refactor if needed while keeping tests green
 

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/lidar_capability.dart';
 import '../models/scan_data.dart';
 import '../services/scanning_service.dart';
+import '../services/scan_session_manager.dart';
 import '../widgets/scan_button.dart';
 import '../widgets/scan_progress.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/config/env_config.dart';
+import '../../../main.dart' show guestSessionManager;
 
 class ScanningScreen extends StatefulWidget {
   const ScanningScreen({super.key});
@@ -19,6 +23,7 @@ class _ScanningScreenState extends State<ScanningScreen> with WidgetsBindingObse
   LidarCapability? _capability;
   bool _isLoading = false;
   bool _isScanning = false;
+  bool _isCompletingNavigation = false; // Flag to prevent interruption during navigation
   double? _scanProgress;
   DateTime? _scanStartTime;
   Duration? _elapsedTime;
@@ -43,7 +48,8 @@ class _ScanningScreenState extends State<ScanningScreen> with WidgetsBindingObse
     super.didChangeAppLifecycleState(state);
 
     // Handle app lifecycle changes (interruption handling)
-    if (_isScanning) {
+    // Only show interruption dialog if scan is in progress, hasn't completed, and not navigating
+    if (_isScanning && _completedScan == null && !_isCompletingNavigation) {
       switch (state) {
         case AppLifecycleState.inactive:
         case AppLifecycleState.paused:
@@ -56,17 +62,33 @@ class _ScanningScreenState extends State<ScanningScreen> with WidgetsBindingObse
   }
 
   Future<void> _checkCapability() async {
+    print('🎯 [SCANNING] Checking device capability...');
     setState(() {
       _isLoading = true;
     });
 
     try {
       final capability = await _scanningService.checkCapability();
+      print('🎯 [SCANNING] Capability check complete: ${capability.support}');
+      if (capability.unsupportedReason != null) {
+        print('🎯 [SCANNING] Reason: ${capability.unsupportedReason}');
+      }
       setState(() {
         _capability = capability;
         _isLoading = false;
       });
+
+      // Auto-launch native RoomPlan UI if LiDAR is supported
+      if (capability.isScanningSupportpported) {
+        print('🎯 [SCANNING] Auto-launching native RoomPlan UI...');
+        // Small delay to ensure UI is ready
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (mounted) {
+          await _startScan();
+        }
+      }
     } catch (e) {
+      print('❌ [SCANNING] Capability check failed: $e');
       setState(() {
         _errorMessage = 'Failed to check device capability: $e';
         _isLoading = false;
@@ -92,47 +114,154 @@ class _ScanningScreenState extends State<ScanningScreen> with WidgetsBindingObse
     _startElapsedTimeTracking();
 
     try {
+      print('🎯 [SCANNING] Calling startScan()...');
       final scanData = await _scanningService.startScan(
         onProgress: (progress) {
-          setState(() {
-            _scanProgress = progress;
-          });
+          print('📊 [SCANNING] Progress: ${(progress * 100).toInt()}%');
+          if (mounted) {
+            setState(() {
+              _scanProgress = progress;
+            });
+          }
         },
       );
 
-      setState(() {
-        _completedScan = scanData;
-        _isScanning = false;
-        _scanProgress = 1.0;
-      });
+      print('✅ [SCANNING] Scan completed! Path: ${scanData.localPath}');
+      print('📦 [SCANNING] File size: ${scanData.fileSizeBytes} bytes');
 
-      // Show completion message
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppStrings.scanComplete),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+        // Check if user is in guest mode or logged-in
+        final isGuestMode = guestSessionManager.isGuestMode;
+
+        setState(() {
+          _completedScan = scanData;
+          _scanProgress = 1.0;
+          // Set navigation flag BEFORE clearing _isScanning to prevent lifecycle interference
+          if (!isGuestMode) {
+            _isCompletingNavigation = true;
+          }
+          _isScanning = false;
+        });
+
+        if (isGuestMode) {
+          // Guest mode: Show success dialog with account creation prompt
+          await _showGuestSuccessDialog(scanData);
+        } else {
+          // Logged-in mode: Save to session and navigate back
+          ScanSessionManager().addScan(scanData);
+          if (mounted) {
+            Navigator.of(context).pop(scanData); // Return scan data to previous screen
+          }
+        }
       }
     } catch (e) {
-      setState(() {
-        _isScanning = false;
-        _scanProgress = null;
-        _errorMessage = _getErrorMessage(e);
-      });
+      print('❌ [SCANNING] Scan error: $e');
+      print('❌ [SCANNING] Error type: ${e.runtimeType}');
 
       if (mounted) {
+        setState(() {
+          _isScanning = false;
+          _scanProgress = null;
+          _errorMessage = _getErrorMessage(e);
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_errorMessage ?? AppStrings.scanFailed),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: () => _startScan(),
+            ),
           ),
         );
       }
     }
+  }
+
+  Future<void> _showGuestSuccessDialog(ScanData scanData) async {
+    return showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 32),
+                SizedBox(width: 12),
+                Text('Scan Complete!'),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('✅ Room scanned successfully'),
+                const SizedBox(height: 8),
+                Text('📦 Size: ${(scanData.fileSizeBytes / 1024 / 1024).toStringAsFixed(2)} MB'),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Create an account to:',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.shade900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text('• Save scans permanently', style: TextStyle(color: Colors.blue.shade900)),
+                      Text('• Upload to server', style: TextStyle(color: Colors.blue.shade900)),
+                      Text('• Stitch multiple rooms', style: TextStyle(color: Colors.blue.shade900)),
+                      Text('• Access from any device', style: TextStyle(color: Colors.blue.shade900)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop(); // Go back to main screen
+                },
+                child: const Text('Done'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop(); // Go back to main screen
+
+                  // Launch merchant web app for account creation
+                  final url = Uri.parse(EnvConfig.vronMerchantsUrl);
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  } else {
+                    print('❌ Could not launch $url');
+                  }
+                },
+                child: const Text('Create Account'),
+              ),
+            ],
+          ),
+        );
   }
 
   Future<void> _stopScan() async {

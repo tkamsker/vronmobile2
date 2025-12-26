@@ -13,7 +13,8 @@ import 'package:vronmobile2/features/products/screens/products_list_screen.dart'
 import 'package:vronmobile2/features/projects/screens/project_detail_screen.dart';
 import 'package:vronmobile2/features/projects/screens/create_project_screen.dart';
 import 'package:vronmobile2/features/guest/services/guest_session_manager.dart';
-import 'package:vronmobile2/features/lidar/screens/scanning_screen.dart';
+import 'package:vronmobile2/features/scanning/screens/scanning_screen.dart';
+import 'package:vronmobile2/features/scanning/screens/lidar_router_screen.dart';
 
 /// Global guest session manager instance
 late GuestSessionManager guestSessionManager;
@@ -58,7 +59,7 @@ class VronApp extends StatelessWidget {
         AppRoutes.createAccount: (context) =>
             const PlaceholderScreen(title: 'Create Account'),
         AppRoutes.guestMode: (context) =>
-            ScanningScreen(guestSessionManager: guestSessionManager),
+            const ScanningScreen(),
         AppRoutes.projectDetail: (context) {
           final projectId = ModalRoute.of(context)?.settings.arguments as String?;
           if (projectId == null) {
@@ -77,7 +78,7 @@ class VronApp extends StatelessWidget {
           return ProductDetailScreen(productId: productId);
         },
         AppRoutes.lidar: (context) =>
-            const PlaceholderScreen(title: 'LiDAR Scanner'),
+            const LidarRouterScreen(),
         AppRoutes.profile: (context) => const ProfileScreen(),
         AppRoutes.language: (context) => const LanguageScreen(),
           },
