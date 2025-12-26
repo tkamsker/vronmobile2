@@ -25,7 +25,10 @@ class LidarCapability {
 
   /// Factory: Detect capability at runtime
   static Future<LidarCapability> detect() async {
+    print('🔍 [LIDAR] Starting capability detection...');
+
     if (Platform.isAndroid) {
+      print('🔍 [LIDAR] Platform is Android - LiDAR not applicable');
       return LidarCapability(
         support: LidarSupport.notApplicable,
         deviceModel: await _getDeviceModel(),
@@ -35,15 +38,24 @@ class LidarCapability {
       );
     }
 
+    print('🔍 [LIDAR] Platform is iOS - checking LiDAR support...');
     // iOS: Check via flutter_roomplan
     final isSupported = await _checkIOSLidarSupport();
     final osVersion = await _getOSVersion();
+    final deviceModel = await _getDeviceModel();
     final isMultiRoom = _isIOSVersionAtLeast(osVersion, '17.0');
 
+    print('🔍 [LIDAR] Detection results:');
+    print('  - Device: $deviceModel');
+    print('  - OS Version: $osVersion');
+    print('  - LiDAR Supported: $isSupported');
+    print('  - Multi-room: $isMultiRoom');
+
     if (!isSupported) {
+      print('❌ [LIDAR] Device does not support LiDAR');
       return LidarCapability(
         support: LidarSupport.noLidar,
-        deviceModel: await _getDeviceModel(),
+        deviceModel: deviceModel,
         osVersion: osVersion,
         isMultiRoomSupported: false,
         unsupportedReason: 'Your device does not have a LiDAR scanner. LiDAR is available on iPhone 12 Pro and newer Pro models.',
@@ -51,18 +63,20 @@ class LidarCapability {
     }
 
     if (!_isIOSVersionAtLeast(osVersion, '16.0')) {
+      print('❌ [LIDAR] iOS version too old (requires 16.0+)');
       return LidarCapability(
         support: LidarSupport.oldIOS,
-        deviceModel: await _getDeviceModel(),
+        deviceModel: deviceModel,
         osVersion: osVersion,
         isMultiRoomSupported: false,
         unsupportedReason: 'LiDAR scanning requires iOS 16.0 or later. Please update your device.',
       );
     }
 
+    print('✅ [LIDAR] LiDAR fully supported!');
     return LidarCapability(
       support: LidarSupport.supported,
-      deviceModel: await _getDeviceModel(),
+      deviceModel: deviceModel,
       osVersion: osVersion,
       isMultiRoomSupported: isMultiRoom,
     );
@@ -73,11 +87,16 @@ class LidarCapability {
   // Helper methods
   static Future<bool> _checkIOSLidarSupport() async {
     try {
+      print('🔍 [LIDAR] Checking LiDAR support...');
       // Use flutter_roomplan's isSupported() method
-      final isSupported = await FlutterRoomplan.isSupported();
+      final roomplan = FlutterRoomplan();
+      print('🔍 [LIDAR] FlutterRoomplan instance created');
+      final isSupported = await roomplan.isSupported();
+      print('🔍 [LIDAR] isSupported() returned: $isSupported');
       return isSupported;
     } catch (e) {
       // If flutter_roomplan is not available or throws, assume unsupported
+      print('❌ [LIDAR] Error checking support: $e');
       return false;
     }
   }

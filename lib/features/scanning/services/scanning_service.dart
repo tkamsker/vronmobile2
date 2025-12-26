@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter_roomplan/flutter_roomplan.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,27 +54,54 @@ class ScanningService {
         status: ScanStatus.capturing,
       );
 
-      // Start RoomPlan scan
-      final result = await _roomplan.startSession(
-        onProgress: (progress) {
-          if (onProgress != null) {
-            onProgress(progress);
-          }
-        },
-      );
+      // Use Completer to wait for the callback
+      final completer = Completer<String?>();
 
-      if (result == null || result.isEmpty) {
-        throw Exception('Scan failed: No data captured');
+      // Register callback BEFORE starting scan (required by flutter_roomplan)
+      print('📱 [SERVICE] Registering onRoomCaptureFinished callback...');
+      _roomplan.onRoomCaptureFinished(() async {
+        print('✅ [SERVICE] onRoomCaptureFinished callback triggered!');
+        try {
+          final usdzPath = await _roomplan.getUsdzFilePath();
+          print('📁 [SERVICE] USDZ path from callback: $usdzPath');
+          completer.complete(usdzPath);
+        } catch (e) {
+          print('❌ [SERVICE] Error in callback: $e');
+          completer.completeError(e);
+        }
+      });
+
+      // Start RoomPlan scan
+      // Note: startScan() launches the iOS scanning UI and blocks until user taps Done
+      print('📱 [SERVICE] Launching RoomPlan startScan()...');
+      await _roomplan.startScan();
+      print('✅ [SERVICE] RoomPlan startScan() completed (user tapped Done)');
+
+      // Wait for the callback to provide the file path
+      print('⏳ [SERVICE] Waiting for USDZ file path from callback...');
+      final usdzPath = await completer.future;
+      print('📁 [SERVICE] Received USDZ path: $usdzPath');
+
+      if (usdzPath == null || usdzPath.isEmpty) {
+        print('❌ [SERVICE] No USDZ path returned - scan may have insufficient data');
+        throw Exception('Scan failed: Insufficient data captured. Try scanning more of the room slowly and ensure good lighting.');
       }
 
-      // result contains the USDZ file path from RoomPlan
-      final usdzPath = result;
+      // Simulate progress updates (actual progress comes from iOS UI)
+      if (onProgress != null) {
+        print('📊 [SERVICE] Setting progress to 100%');
+        onProgress(1.0); // Scan complete
+      }
 
       // Save scan locally and get final path
+      print('💾 [SERVICE] Saving scan locally...');
       final savedScan = await _saveScanLocally(
         scanId: scanId,
         usdzPath: usdzPath,
       );
+      print('✅ [SERVICE] Scan saved successfully!');
+      print('📦 [SERVICE] Final path: ${savedScan.localPath}');
+      print('📦 [SERVICE] File size: ${savedScan.fileSizeBytes} bytes');
 
       _currentScan = savedScan;
       _isScanning = false;
@@ -92,19 +120,16 @@ class ScanningService {
   }
 
   /// Stop the current scan
+  /// Note: flutter_roomplan doesn't have an explicit stop method
+  /// The scan is controlled through the iOS UI
   Future<void> stopScan() async {
     if (!_isScanning) {
       return;
     }
 
-    try {
-      await _roomplan.stopSession();
-      _isScanning = false;
-      _currentScan = null;
-    } catch (e) {
-      print('Error stopping scan: $e');
-      _isScanning = false;
-    }
+    // Mark as not scanning - actual stop happens through iOS UI
+    _isScanning = false;
+    _currentScan = null;
   }
 
   /// Save USDZ scan data to local filesystem and SharedPreferences
