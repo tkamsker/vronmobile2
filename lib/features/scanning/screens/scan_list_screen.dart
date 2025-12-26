@@ -318,9 +318,9 @@ class _ScanListScreenState extends State<ScanListScreen> {
     );
 
     if (result != null) {
-      setState(() {
-        _sessionManager.addScan(result);
-      });
+      // Scan was already added to session in ScanningScreen
+      // Just refresh the UI to show the updated list
+      setState(() {});
     }
   }
 

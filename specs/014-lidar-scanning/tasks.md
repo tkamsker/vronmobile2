@@ -112,6 +112,27 @@ Flutter mobile app with feature-based architecture:
 
 **Checkpoint**: User Story 1 (MVP) is fully functional - users can scan rooms with LiDAR and store USDZ locally
 
+### Additional MVP Enhancements (Completed During Implementation)
+
+- [X] T043a [US1] Create LidarRouterScreen to route between scan list and scanning based on auth state in lib/features/scanning/screens/lidar_router_screen.dart
+- [X] T043b [US1] Create ScanListScreen matching Requirements/ScanList.jpg design in lib/features/scanning/screens/scan_list_screen.dart
+- [X] T043c [US1] Implement ScanSessionManager singleton for in-memory scan storage in lib/features/scanning/services/scan_session_manager.dart
+- [X] T043d [US1] Add "Scan another room" button to ScanListScreen with navigation to ScanningScreen
+- [X] T043e [US1] Implement scan list display with scan details (time, file size, format)
+- [X] T043f [US1] Add scan deletion functionality with undo capability in ScanListScreen
+- [X] T043g [US1] Fix scan duplication bug (removed duplicate addScan call in scan_list_screen.dart)
+- [X] T043h [US1] Remove interruption handling (RoomPlan handles this natively)
+- [X] T043i [US1] Fix Navigator locked assertion error by removing lifecycle observer
+- [X] T043j [US1] Fix UI overflow in scan list header (removed redundant date text)
+- [X] T043k [US1] Add detailed logging for navigation flow debugging
+- [X] T043l [US1] Add guest mode success dialog with account creation button linked to VRON_MERCHANTS_URL
+
+**Implementation Notes**:
+- Logged-in users see scan list first, then tap "Scan another room" to initiate scanning
+- Guest users are taken directly to scanning screen with auto-launch
+- Interruption handling removed as RoomPlan handles its own lifecycle management
+- Scans stored in memory only (session-based, cleared on app restart)
+
 ---
 
 ## Phase 4: User Story 2 - Upload GLB File (Priority: P2)
