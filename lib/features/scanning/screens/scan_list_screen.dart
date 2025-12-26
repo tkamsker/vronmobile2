@@ -188,52 +188,102 @@ class _ScanListScreenState extends State<ScanListScreen> {
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
+      child: Column(
         children: [
-          // Scan icon
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.threed_rotation,
-              color: Colors.blue.shade600,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: 16),
+          Row(
+            children: [
+              // Scan icon
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.threed_rotation,
+                  color: Colors.blue.shade600,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 16),
 
-          // Scan info
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Scan $scanNumber',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+              // Scan info
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Scan $scanNumber',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatTime(scan.capturedAt),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Action buttons row (USDZ, GLBView, Delete)
+          Row(
+            children: [
+              // USDZ button
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _viewUsdzPreview(scan),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey.shade300),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('USDZ'),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // GLBView button
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => _viewGlbPreview(scan),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.grey.shade300),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('GLBView'),
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Delete button
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _confirmDeleteScan(scan),
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  label: const Text('Delete'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.red.shade700,
+                    side: BorderSide(color: Colors.red.shade200),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${_formatTime(scan.capturedAt)} • ${_formatFileSize(scan.fileSizeBytes)}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // View details button
-          TextButton(
-            onPressed: () => _viewScanDetails(scan),
-            child: const Text('View details'),
+              ),
+            ],
           ),
         ],
       ),
@@ -375,7 +425,8 @@ class _ScanListScreenState extends State<ScanListScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Scan deleted'),
+        content: const Text('Scan deleted'),
+        duration: const Duration(seconds: 20),
         action: SnackBarAction(
           label: 'Undo',
           onPressed: () {
