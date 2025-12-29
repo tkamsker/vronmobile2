@@ -19,7 +19,9 @@ Implement LiDAR-based 3D room scanning for iOS devices using Apple's RoomPlan fr
 - flutter_secure_storage 9.0.0 (existing - optional for scan metadata)
 - file_picker ^10.3.8 (cross-platform GLB file selection)
 - path_provider ^2.1.5 (local USDZ/GLB storage management)
-- USDZ→GLB conversion: Server-side via Sirv API or AWS Lambda (Phase 1), on-device preview evaluation deferred to Phase 2
+- http ^1.1.0 (existing - for BlenderAPI REST client)
+- flutter_dotenv ^5.1.0 (for .env configuration of BlenderAPI credentials)
+- USDZ→GLB conversion: Server-side via BlenderAPI (https://blenderapi.stage.motorenflug.at) using Blender's native USDZ import and GLB export
 
 **Storage**:
 - Local filesystem for USDZ scan files (iOS Documents directory)
@@ -35,14 +37,17 @@ Implement LiDAR-based 3D room scanning for iOS devices using Apple's RoomPlan fr
 **Performance Goals**:
 - LiDAR scanning maintains 30fps minimum (SC-002)
 - Scan initiates within 2 seconds of button tap (SC-001)
-- USDZ→GLB conversion <10 seconds for typical rooms (≤200k triangles)
+- USDZ→GLB conversion 5-30 seconds for typical rooms via BlenderAPI (≤200k triangles)
+- Upload time <30 seconds for 50 MB file on 10 Mbps connection
 - Scan data captured without data loss (SC-003)
 
 **Constraints**:
 - iOS-only LiDAR scanning (no Android LiDAR support in MVP)
 - Minimum iOS 16.0+ (RoomPlan framework requirement)
-- 250 MB maximum file size for GLB uploads
-- <512 MB memory usage during USDZ→GLB conversion
+- 250 MB maximum file size for GLB uploads (User Story 2)
+- 500 MB maximum file size for USDZ uploads to BlenderAPI (User Story 3)
+- BlenderAPI rate limit: 3 concurrent sessions per API key
+- BlenderAPI timeout: 15 minutes (900 seconds) maximum processing time
 - Device must have LiDAR scanner hardware
 - Requires camera/sensor permissions from user
 
@@ -140,7 +145,7 @@ Implement LiDAR-based 3D room scanning for iOS devices using Apple's RoomPlan fr
 
 ### II. Simplicity & YAGNI
 - ✅ **PASS**: Design maintains simplicity
-- **Decision confirmed**: Server-side conversion (Hybrid approach) for US3 instead of on-device (saves 50-150 MB binary size, 6-8 weeks development)
+- **Decision confirmed**: Server-side conversion via BlenderAPI for US3 instead of on-device (saves 50-150 MB binary size, 6-8 weeks development, uses proven Blender USDZ/GLB conversion)
 - Using flutter_roomplan package (no custom RoomPlan integration)
 - Using file_picker and path_provider (existing, proven packages)
 - Data model limited to 3 entities (ScanData, LidarCapability, ConversionResult)
@@ -166,8 +171,9 @@ Implement LiDAR-based 3D room scanning for iOS devices using Apple's RoomPlan fr
 - ✅ **PASS**: Performance targets achievable
 - Scan initiation <2 seconds (RoomPlan native performance)
 - 30fps scanning (RoomPlan requirement)
-- Server-side conversion 5-30 seconds (proven via research)
+- BlenderAPI server-side conversion 5-30 seconds (typical room, proven via research and API testing)
 - File upload <30 seconds for 50 MB on 10 Mbps connection
+- Polling interval 2 seconds (BlenderAPI status endpoint)
 
 ### Accessibility Requirements
 - ✅ **PASS**: Accessibility considered
@@ -206,12 +212,13 @@ lib/features/scanning/
 ├── models/
 │   ├── scan_data.dart              # USDZ/GLB file metadata model
 │   ├── lidar_capability.dart       # Device capability model
-│   └── conversion_result.dart      # USDZ→GLB conversion result (US3)
+│   ├── conversion_result.dart      # BlenderAPI conversion result (US3)
+│   └── blender_api_models.dart     # BlenderAPI request/response models
 ├── services/
 │   ├── scanning_service.dart       # LiDAR scan orchestration
 │   ├── file_storage_service.dart   # Local USDZ/GLB storage
-│   ├── conversion_service.dart     # USDZ→GLB conversion (US3)
-│   └── scan_upload_service.dart    # Backend GraphQL integration
+│   ├── blender_api_client.dart     # BlenderAPI REST client (session, upload, convert, status, download)
+│   └── scan_upload_service.dart    # Orchestrates BlenderAPI + GraphQL integration
 ├── screens/
 │   ├── scanning_screen.dart        # Main LiDAR scanning UI (iOS)
 │   └── file_upload_screen.dart     # GLB file picker UI (Android/iOS)
@@ -232,7 +239,6 @@ lib/core/
 ios/
 ├── Runner/
 │   ├── RoomPlanBridge.swift        # Platform channel for RoomPlan integration
-│   ├── UsdzConverter.swift         # Native USDZ→GLB conversion (US3)
 │   └── Info.plist                  # Camera usage description added
 └── Podfile                         # RoomPlan framework dependency
 
@@ -240,21 +246,25 @@ android/
 └── app/
     └── src/main/AndroidManifest.xml # File picker permissions (GLB upload only)
 
+.env                                # BlenderAPI configuration (BLENDER_API_BASE_URL, BLENDER_API_KEY)
+
 test/
 ├── features/scanning/
 │   ├── services/
 │   │   ├── scanning_service_test.dart
 │   │   ├── file_storage_service_test.dart
-│   │   └── conversion_service_test.dart
+│   │   ├── blender_api_client_test.dart
+│   │   └── scan_upload_service_test.dart
 │   └── widgets/
 │       ├── scan_button_test.dart
 │       └── scan_progress_test.dart
 └── integration/
     ├── scanning_flow_test.dart      # Complete iOS scan workflow
-    └── file_upload_flow_test.dart   # GLB upload workflow
+    ├── file_upload_flow_test.dart   # GLB upload workflow
+    └── blender_api_workflow_test.dart # Complete BlenderAPI workflow (session → upload → convert → download)
 ```
 
-**Structure Decision**: Flutter mobile app with feature-based architecture. All LiDAR scanning implementation resides in `lib/features/scanning/` alongside existing features (auth, projects, products). Native iOS integration via `ios/Runner/RoomPlanBridge.swift` platform channel. Reuses existing GraphQL infrastructure for backend communication. Android support limited to GLB file upload (no LiDAR scanning).
+**Structure Decision**: Flutter mobile app with feature-based architecture. All LiDAR scanning implementation resides in `lib/features/scanning/` alongside existing features (auth, projects, products). Native iOS integration via `ios/Runner/RoomPlanBridge.swift` platform channel. BlenderAPI client service handles USDZ→GLB conversion via REST API. Reuses existing GraphQL infrastructure for scan metadata storage after conversion completes. Android support limited to GLB file upload (no LiDAR scanning). Configuration via `.env` file for BlenderAPI credentials.
 
 ## Complexity Tracking
 

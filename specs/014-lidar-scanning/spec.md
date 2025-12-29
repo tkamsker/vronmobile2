@@ -2,7 +2,7 @@
 
 **Feature Branch**: `014-lidar-scanning`
 **Created**: 2025-12-20
-**Status**: Draft
+**Status**: Phase 1-3 Complete (MVP deployed), Phase 4-6 In Planning
 
 ## Clarifications
 
@@ -30,7 +30,7 @@ User with LiDAR-capable device initiates room scan.
 2. **Given** button visible, **When** device has LiDAR, **Then** button enabled
 3. **Given** button tapped, **When** permissions granted, **Then** scan interface appears
 4. **Given** scanning active, **When** room captured, **Then** scan data stored locally as USDZ (not uploaded yet)
-5. **Given** scan stored locally, **When** user saves to project (UC20), **Then** USDZ uploaded to backend for GLB conversion
+5. **Given** scan stored locally, **When** user saves to project (US3), **Then** USDZ uploaded to BlenderAPI for GLB conversion
 
 ### User Story 2 - Upload GLB (Priority: P2)
 
@@ -45,67 +45,107 @@ User can upload existing GLB file instead of scanning. To use Pre view feature w
 1. **Given** scanning screen, **When** user taps upload, **Then** file picker opens
 2. **Given** GLB selected, **When** upload completes, **Then** file stored locally
 
-### User Story 3 - On-Device USDZ→GLB Conversion (Priority: P2)
+### User Story 3 - Save Scan to Project with Server-Side Conversion (Priority: P2)
 
-User can convert USDZ scan to GLB format locally on-device for immediate web preview, offline validation, and cross-platform compatibility without requiring server upload or network connectivity.
+User can upload USDZ scan to backend BlenderAPI service where it is converted to GLB format, enabling cross-platform preview and project integration without requiring on-device conversion complexity.
 
-**Why this priority**: Enables instant validation of scans in web viewers (Three.js, Babylon.js, WebXR) within the app, provides offline capability for privacy-sensitive users, and reduces server load. Essential for professional users who need immediate quality checks before committing scans to projects.
+**Why this priority**: Enables scans to be saved to projects and viewed in web-based 3D viewers (Three.js, Babylon.js, WebXR). Server-side conversion reduces app complexity, avoids 50-150 MB binary size increase from USD SDK, and leverages proven cloud conversion services (BlenderAPI with Blender's USDZ import and GLB export).
 
-**Independent Test**: Complete room scan, trigger local conversion, verify GLB file created on device, load in web preview successfully.
+**Independent Test**: Complete LiDAR scan, tap "Save to Project", select project, verify USDZ uploaded to BlenderAPI, poll for conversion status, verify GLB download URL returned and scan associated with project.
 
 **Acceptance Scenarios**:
 
-1. **Given** USDZ scan completed and stored locally, **When** user taps "Preview" or "Convert to GLB", **Then** on-device conversion begins with progress indicator
-2. **Given** conversion in progress (typical room <200k triangles), **When** processing completes, **Then** GLB file created locally within 10 seconds
-3. **Given** GLB conversion successful, **When** user opens web preview, **Then** GLB loads in Three.js/WebGL viewer with correct geometry, materials, and textures
-4. **Given** conversion fails (unsupported geometry, memory limit), **When** error occurs, **Then** clear error message displayed with specific error code (e.g., "UNSUPPORTED_PRIM", "MEMORY_EXCEEDED")
-5. **Given** GLB file created, **When** user saves to project, **Then** both USDZ and GLB uploaded to backend (GLB cached for faster web delivery)
+1. **Given** USDZ scan completed and stored locally, **When** authenticated user taps "Save to Project", **Then** project selection screen appears
+2. **Given** project selected, **When** user confirms save, **Then** BlenderAPI session created and USDZ file uploads with progress indicator showing upload percentage
+3. **Given** upload completes successfully, **When** BlenderAPI begins USDZ→GLB conversion, **Then** app polls conversion status every 2 seconds with "Converting scan..." progress message and percentage
+4. **Given** conversion in progress (typical room <200k triangles), **When** server processing completes, **Then** GLB download URL returned within 5-30 seconds
+5. **Given** conversion successful, **When** GLB downloaded and scan data saved, **Then** both USDZ source and GLB preview files stored in backend project storage and scan metadata saved to GraphQL database
+6. **Given** conversion fails (unsupported geometry, server timeout, invalid USDZ), **When** error occurs, **Then** clear error message displayed with retry option and scan remains in local storage
+7. **Given** guest user taps "Save to Project", **When** not authenticated, **Then** prompt to create account or sign in appears with link to VRON merchant portal
 
-**Technical Architecture** (from PRD):
+**Backend Integration - BlenderAPI Service**:
 
-- **Core**: C++ static library wrapping Pixar USD SDK (read USDZ) + glTF/GLB writer (export binary GLB 2.0)
-- **iOS Binding**: Swift wrapper framework `UsdToGlbConverter` with async APIs
-- **Flutter Interface**:
-  ```dart
-  Future<GlbConversionResult> convertUsdzToGlb(
-    String usdzPath,
-    {String? outPath, GlbConversionOptions? options}
-  )
-  ```
-- **Result Object**:
-  - `bool success`
-  - `String? glbPath`
-  - `String? errorCode` (e.g., UNSUPPORTED_PRIM, MISSING_TEXTURE, READ_ERROR)
-  - `String? errorMessage`
-  - `ConversionStats? stats` (triangle count, mesh count, duration)
+- **API Base URL**: Stored in `.env` file as `BLENDER_API_BASE_URL` (default: `https://blenderapi.stage.motorenflug.at`)
+- **API Key**: Stored in `.env` file as `BLENDER_API_KEY` (obtained from administrator, min 16 characters)
+- **Authentication**: All requests require `X-API-Key` header
+- **Rate Limiting**: Maximum 3 concurrent sessions per API key
+- **File Size Limit**: 500MB per file (USDZ scans typically 5-50 MB)
+- **Processing Timeout**: 15 minutes (900 seconds) maximum
 
-**Conversion Rules**:
+**Conversion Workflow** (see `Requirements/FLUTTER_API_PRD.md` for complete API details):
 
-1. **Geometry**: Triangulate non-triangle faces, preserve vertex positions/normals/UVs/indices
-2. **Materials**: Map USD PBR → glTF PBR (baseColor, metallicRoughness, normal, AO), fallback to flat baseColor if unsupported
-3. **Textures**: Embed textures as PNG/JPEG in GLB binary, downscale if exceeds maxTextureSize option
-4. **Coordinate System**: Convert USD right-handed Z-up → glTF right-handed Y-up, bake corrections into node transforms
-5. **Scene Structure**: Support single scene, single root, multiple nodes (no animations/rigs in v1)
+1. **Create Session**: `POST /sessions`
+   - Returns: `session_id` (UUID), `expires_at` (1 hour expiration)
+
+2. **Upload USDZ**: `POST /sessions/{session_id}/upload`
+   - Headers: `X-Asset-Type: model/vnd.usdz+zip`, `X-Filename: scan.usdz`
+   - Body: Binary USDZ file content
+   - Returns: Upload confirmation with file size and timestamp
+
+3. **Start Conversion**: `POST /sessions/{session_id}/convert`
+   - Body:
+     ```json
+     {
+       "job_type": "usdz_to_glb",
+       "input_filename": "scan.usdz",
+       "output_filename": "scan.glb",
+       "conversion_params": {
+         "apply_scale": false,
+         "merge_meshes": false,
+         "target_scale": 1.0
+       }
+     }
+     ```
+   - Returns: Processing started confirmation
+
+4. **Poll Status**: `GET /sessions/{session_id}/status` (every 2 seconds)
+   - Returns: `session_status` (processing/completed/failed), `progress` (0-100%), `result` object
+   - Status values: `pending`, `uploading`, `validating`, `processing`, `completed`, `failed`, `expired`
+
+5. **Download GLB**: `GET /sessions/{session_id}/download/{filename}`
+   - Returns: Binary GLB file content
+   - Content-Type: `model/gltf-binary`
+
+6. **Cleanup**: `DELETE /sessions/{session_id}` (optional, sessions auto-expire after 1 hour)
+
+**GraphQL Integration** (after BlenderAPI conversion completes):
+
+- **Mutation**: `uploadProjectScan(input: UploadProjectScanInput!)`
+  - Input: `projectId` (ID), `usdzUrl` (String), `glbUrl` (String), `format` (ScanFormat.USDZ), `metadata` (JSON with file sizes, polygon counts)
+  - Output: `scan` (Scan with id, usdzUrl, glbUrl, status), `success` (Boolean), `message` (String)
+- **Storage**: USDZ and GLB files stored in S3 or equivalent cloud storage (URLs returned by BlenderAPI)
+- **Association**: Scan entity linked to Project entity in PostgreSQL database
 
 **Performance Requirements**:
 
-- Typical room (≤200k triangles): <10 seconds on mid-range iOS devices (iPhone 13 Pro baseline)
-- Peak memory usage: <512 MB for typical models
-- Deterministic output: Same USDZ input → identical GLB bytes (given same options)
-
-**Conversion Options** (user configurable via settings):
-
-- `optimizeMeshes` (bool): Enable vertex deduplication and mesh merging by material
-- `maxTextureSize` (int): Downscale textures larger than threshold (default: 2048px)
-- `bakeTransforms` (bool): Bake node transforms into vertices for simpler scene graph
+- Upload time: <30 seconds for 50 MB file on 10 Mbps connection
+- Server conversion time: 5-30 seconds for typical room (BlenderAPI SLA)
+- Polling interval: 2 seconds (balance between responsiveness and server load)
+- Timeout: 15 minutes maximum (BlenderAPI processing timeout), show "Taking longer than expected" after 60 seconds with manual refresh option
+- GLB download time: <15 seconds for typical converted file
 
 **Error Handling**:
 
-- `UNSUPPORTED_PRIM`: USDZ contains geometry types not supported in glTF (e.g., NURBS, volumes)
-- `MISSING_TEXTURE`: Referenced texture file not found in USDZ bundle
-- `READ_ERROR`: Cannot read USDZ file (corrupted, access denied)
-- `MEMORY_EXCEEDED`: Conversion requires more than 512 MB RAM
-- `TIMEOUT`: Conversion exceeds 30 second timeout (abnormally complex model)
+- **Network failure during upload**: Show "Upload failed. Check your connection and try again." with retry button
+- **BlenderAPI session creation failure (401 Unauthorized)**: Show "Service authentication failed. Please contact support." (indicates .env API key issue)
+- **BlenderAPI rate limit (429 Too Many Requests)**: Show "Service busy. Maximum 3 scans can be processed simultaneously. Please try again in a moment."
+- **BlenderAPI conversion timeout (>15 minutes)**: Show "Conversion timed out. The scan file may be too complex. Please try a smaller area."
+- **Conversion failure (session_status: failed)**: Show "Unable to convert scan. The scan file may be corrupted or contain unsupported geometry." with retry or contact support options
+- **File size exceeded (>500MB)**: Show "Scan file too large. Maximum file size is 500MB." (should not occur with typical LiDAR scans)
+- **Authentication expired during upload**: Prompt user to re-authenticate and resume upload
+- **GraphQL save failure**: Show "Scan converted successfully but failed to save to project. Please try again."
+
+**Configuration** (.env file):
+
+```env
+# BlenderAPI Configuration
+BLENDER_API_BASE_URL=https://blenderapi.stage.motorenflug.at
+BLENDER_API_KEY=your-api-key-here-min-16-chars
+
+# Optional: Override default timeouts
+BLENDER_API_TIMEOUT_SECONDS=900
+BLENDER_API_POLL_INTERVAL_SECONDS=2
+```
 
 ### Edge Cases
 
@@ -113,12 +153,17 @@ User can convert USDZ scan to GLB format locally on-device for immediate web pre
 - Permissions denied (camera/sensor access)
 - Insufficient device storage for USDZ and/or GLB files
 - Scan interrupted by phone call or app backgrounding (user prompted to save partial, discard, or continue)
-- GLB file exceeds 250 MB size limit
-- USDZ→GLB conversion fails due to unsupported geometry (NURBS, volumes)
-- USDZ→GLB conversion exceeds memory limit (>512 MB)
-- USDZ→GLB conversion timeout (>30 seconds for abnormally complex models)
-- Missing or corrupted textures in USDZ bundle during conversion
-- Device thermal throttling during conversion (performance degradation)
+- GLB file exceeds 250 MB size limit (GLB upload via US2)
+- USDZ file exceeds 500 MB size limit (rare, typical scans 5-50 MB)
+- Network failure during USDZ upload to BlenderAPI
+- BlenderAPI service unavailable (503 Service Unavailable)
+- BlenderAPI conversion timeout (>15 minutes for abnormally complex models)
+- BlenderAPI conversion fails due to unsupported USDZ geometry or corrupted file
+- BlenderAPI rate limit exceeded (>3 concurrent sessions per API key)
+- User authentication token expires during upload/conversion (requires re-authentication)
+- User loses network connectivity while polling conversion status (resume on reconnect)
+- Project storage quota exceeded (cannot save additional scans to project)
+- User navigates away from app during upload/conversion (background upload handling or cancellation prompt)
 
 ## Requirements *(mandatory)*
 
@@ -131,7 +176,7 @@ User can convert USDZ scan to GLB format locally on-device for immediate web pre
 - **FR-005**: System MUST store scan data locally in USDZ format (Apple's native Room Plan output) without immediate upload
 - **FR-006**: System MUST support GLB file upload with maximum file size of 250 MB
 - **FR-007**: System MUST validate GLB file size before upload and reject files exceeding 250 MB with clear error message
-- **FR-008**: System MUST upload USDZ scan data to backend only when user explicitly saves to project (via UC20 Save to Project)
+- **FR-008**: System MUST upload USDZ scan data to BlenderAPI backend only when user explicitly saves to project (via US3 Save Scan to Project)
 - **FR-009**: System MUST detect scan interruptions (phone call, app backgrounded, low battery warning) and prompt user with options: "Save Partial Scan", "Discard", or "Continue Scanning"
 
 ### Data Model
@@ -160,6 +205,6 @@ User can convert USDZ scan to GLB format locally on-device for immediate web pre
 
 ## Dependencies
 
-- **Depends on**: UC7 (Guest Mode) or UC2 (Auth) for access
-- **Blocks**: UC15 (Post-Scan Preview)
-- **Enables**: UC20 (Save to Project) - scan data upload triggered via save flow
+- **Depends on**: Feature 007 (Guest Mode) or Feature 003 (Auth) for access
+- **Blocks**: Feature 015 (Post-Scan Preview)
+- **Enables**: US3 (Save Scan to Project) - USDZ upload to BlenderAPI and GLB conversion triggered via save flow
