@@ -198,44 +198,15 @@ curl -X POST https://blenderapi.stage.motorenflug.at/sessions/550e8400-e29b-41d4
 
 #### Flutter Example
 
+**Important**: The API expects raw binary data in the request body, not multipart form data. Always read the file as bytes first to avoid stream errors:
+
 ```dart
 Future<UploadResponse> uploadFile(
   String sessionId,
   File file,
   String assetType, // 'model/gltf-binary' or 'model/vnd.usdz+zip'
 ) async {
-  final request = http.MultipartRequest(
-    'POST',
-    Uri.parse('https://blenderapi.stage.motorenflug.at/sessions/$sessionId/upload'),
-  );
-  
-  request.headers['X-API-Key'] = 'your-api-key-here';
-  request.headers['X-Asset-Type'] = assetType;
-  request.headers['X-Filename'] = file.path.split('/').last;
-  
-  request.files.add(
-    await http.MultipartFile.fromPath('file', file.path),
-  );
-  
-  final streamedResponse = await request.send();
-  final response = await http.Response.fromStream(streamedResponse);
-  
-  if (response.statusCode == 200) {
-    return UploadResponse.fromJson(json.decode(response.body));
-  } else {
-    throw Exception('Upload failed: ${response.body}');
-  }
-}
-```
-
-**Note**: The API expects raw binary data in the request body, not multipart form data. Use `http.ByteStream` for direct binary upload:
-
-```dart
-Future<UploadResponse> uploadFileBinary(
-  String sessionId,
-  File file,
-  String assetType,
-) async {
+  // ✅ Read file as bytes ONCE (avoids "Stream has already been listened to" error)
   final fileBytes = await file.readAsBytes();
   
   final response = await http.post(
@@ -246,7 +217,7 @@ Future<UploadResponse> uploadFileBinary(
       'X-Filename': file.path.split('/').last,
       'Content-Type': 'application/octet-stream',
     },
-    body: fileBytes,
+    body: fileBytes, // ✅ Direct bytes, not a stream
   );
   
   if (response.statusCode == 200) {
@@ -256,6 +227,8 @@ Future<UploadResponse> uploadFileBinary(
   }
 }
 ```
+
+**⚠️ Common Error**: If you get `Bad state: Stream has already been listened to`, you're likely using `file.openRead()` or a stream. Always use `file.readAsBytes()` instead.
 
 ---
 
@@ -289,6 +262,8 @@ Content-Type: application/json
   }
 }
 ```
+
+**⚠️ Important**: The `job_type` field is **REQUIRED** and must be exactly `"navmesh_generation"` for this endpoint.
 
 #### NavMesh Parameters (All Optional)
 
@@ -392,6 +367,8 @@ Content-Type: application/json
   }
 }
 ```
+
+**⚠️ Important**: The `job_type` field is **REQUIRED** and must be exactly `"usdz_to_glb"` for this endpoint. If you get a 422 error saying "Field required" for `job_type`, make sure you're including it in your request body.
 
 #### Conversion Parameters (All Optional)
 
@@ -856,9 +833,11 @@ Future<T> _handleResponse<T>(http.Response response, T Function(Map<String, dyna
 
 ### 4. File Upload Best Practices
 
-- Use `http.ByteStream` for large files to avoid memory issues
-- Show upload progress using `StreamedResponse`
+- **Always use `file.readAsBytes()`** - Read the file into memory once, then pass bytes directly
+- **Don't use `file.openRead()`** - This creates a single-subscription stream that causes errors
+- **Don't use `MultipartRequest`** - The API expects raw binary data, not multipart form data
 - Validate file size before upload (max 500MB)
+- For progress tracking, see the example in `FLUTTER_STREAM_FIX.md`
 
 ```dart
 Future<UploadResponse> uploadFileWithProgress(
@@ -867,6 +846,7 @@ Future<UploadResponse> uploadFileWithProgress(
   String assetType,
   Function(int sent, int total)? onProgress,
 ) async {
+  // ✅ Read file as bytes first (avoids stream errors)
   final fileBytes = await file.readAsBytes();
   final totalBytes = fileBytes.length;
   
@@ -874,36 +854,32 @@ Future<UploadResponse> uploadFileWithProgress(
     throw Exception('File size exceeds 500MB limit');
   }
   
-  final request = http.Request(
-    'POST',
-    Uri.parse('$baseUrl/sessions/$sessionId/upload'),
-  );
-  
-  request.headers.addAll({
-    'X-API-Key': apiKey,
-    'X-Asset-Type': assetType,
-    'X-Filename': file.path.split('/').last,
-    'Content-Type': 'application/octet-stream',
-  });
-  
-  request.bodyBytes = fileBytes;
-  
-  final streamedResponse = await http.Client().send(request);
-  
+  // Call progress callback with total bytes (upload happens atomically)
   if (onProgress != null) {
-    int sent = 0;
-    streamedResponse.stream.listen(
-      (chunk) {
-        sent += chunk.length;
-        onProgress(sent, totalBytes);
-      },
-    );
+    onProgress(totalBytes, totalBytes);
   }
   
-  final response = await http.Response.fromStream(streamedResponse);
-  return _handleResponse(response, (json) => UploadResponse.fromJson(json));
+  // ✅ Use simple http.post with body parameter
+  final response = await http.post(
+    Uri.parse('$baseUrl/sessions/$sessionId/upload'),
+    headers: {
+      'X-API-Key': apiKey,
+      'X-Asset-Type': assetType,
+      'X-Filename': file.path.split('/').last,
+      'Content-Type': 'application/octet-stream',
+    },
+    body: fileBytes, // ✅ Direct bytes
+  );
+  
+  if (response.statusCode == 200) {
+    return UploadResponse.fromJson(json.decode(response.body));
+  } else {
+    throw Exception('Upload failed: ${response.body}');
+  }
 }
 ```
+
+**Note**: For true progress tracking during upload, you'd need to use `http.Client().send()` with a streamed request, but this is more complex. For most use cases, the simple approach above is sufficient since the upload typically completes quickly.
 
 ---
 
@@ -1089,6 +1065,22 @@ Future<File> convertUsdzToGlb(File inputUsdz) async {
      }
    }
    ```
+
+5. **Missing Required Field (job_type)**
+   ```json
+   {
+     "detail": [{
+       "type": "missing",
+       "loc": ["body", "job_type"],
+       "msg": "Field required",
+       "input": {
+         "input_filename": "model.usdz",
+         "conversion_params": {...}
+       }
+     }]
+   }
+   ```
+   **Fix**: Always include `"job_type": "usdz_to_glb"` (for conversion) or `"job_type": "navmesh_generation"` (for navmesh) in your request body. See `FLUTTER_JOB_TYPE_FIX.md` for details.
 
 ---
 

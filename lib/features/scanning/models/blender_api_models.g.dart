@@ -46,11 +46,13 @@ BlenderApiConversionRequest _$BlenderApiConversionRequestFromJson(
       : ConversionParams.fromJson(
           json['conversion_params'] as Map<String, dynamic>,
         ),
+  jobType: json['job_type'] as String? ?? 'usdz_to_glb',
 );
 
 Map<String, dynamic> _$BlenderApiConversionRequestToJson(
   BlenderApiConversionRequest instance,
 ) => <String, dynamic>{
+  'job_type': instance.jobType,
   'input_filename': instance.inputFilename,
   'output_filename': instance.outputFilename,
   'conversion_params': instance.conversionParams,
