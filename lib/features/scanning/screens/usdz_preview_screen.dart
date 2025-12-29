@@ -337,14 +337,16 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
       });
 
       final usdzFile = File(widget.scanData.localPath);
+
+      // Note: Upload happens atomically (file is read as bytes, then sent)
+      // Progress jumps to 40% once upload completes
       final uploadResponse = await _apiClient!.uploadFile(
         sessionId: sessionId,
         file: usdzFile,
         onProgress: (sent, total) {
           if (mounted) {
             setState(() {
-              final uploadProgress = sent / total;
-              _conversionProgress = 0.1 + (uploadProgress * 0.3); // 10% → 40%
+              _conversionProgress = 0.4; // Upload complete
             });
           }
         },

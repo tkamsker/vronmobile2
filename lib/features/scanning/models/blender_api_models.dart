@@ -84,7 +84,8 @@ class BlenderApiConversionRequest {
     required this.inputFilename,
     this.outputFilename,
     this.conversionParams,
-  }) : jobType = 'usdz_to_glb';
+    this.jobType = 'usdz_to_glb', // Default value, always "usdz_to_glb"
+  });
 
   factory BlenderApiConversionRequest.fromJson(Map<String, dynamic> json) =>
       _$BlenderApiConversionRequestFromJson(json);

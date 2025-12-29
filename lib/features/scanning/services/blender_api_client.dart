@@ -97,6 +97,9 @@ class BlenderApiClient {
   /// Upload USDZ file to session
   /// POST /sessions/{sessionId}/upload
   /// Returns upload confirmation with file metadata
+  ///
+  /// IMPORTANT: Always reads file as bytes first (not as stream) to avoid
+  /// "Stream has already been listened to" error. See FLUTTER_STREAM_FIX.md
   Future<BlenderApiUploadResponse> uploadFile({
     required String sessionId,
     required File file,
@@ -104,6 +107,7 @@ class BlenderApiClient {
     Function(int sent, int total)? onProgress,
   }) async {
     try {
+      // ✅ Read file as bytes ONCE (not as stream)
       final fileBytes = await file.readAsBytes();
       final totalBytes = fileBytes.length;
 
@@ -116,36 +120,25 @@ class BlenderApiClient {
         );
       }
 
-      final request = http.Request(
-        'POST',
-        Uri.parse('$baseUrl/sessions/$sessionId/upload'),
-      );
-
-      request.headers.addAll({
-        'X-API-Key': apiKey,
-        'X-Asset-Type': assetType,
-        'X-Filename': file.path.split('/').last,
-        'Content-Type': 'application/octet-stream',
-      });
-
-      request.bodyBytes = fileBytes;
-
-      final streamedResponse = await _client.send(request).timeout(
-        Duration(seconds: timeoutSeconds),
-      );
-
-      // Monitor upload progress if callback provided
+      // Call progress callback with total bytes (upload happens atomically)
+      // Note: http package doesn't easily support real-time upload progress
       if (onProgress != null) {
-        int sent = 0;
-        streamedResponse.stream.listen(
-          (chunk) {
-            sent += chunk.length;
-            onProgress(sent, totalBytes);
-          },
-        );
+        onProgress(totalBytes, totalBytes);
       }
 
-      final response = await http.Response.fromStream(streamedResponse);
+      // ✅ Use simple http.post with body parameter (not stream)
+      final response = await _client.post(
+        Uri.parse('$baseUrl/sessions/$sessionId/upload'),
+        headers: {
+          'X-API-Key': apiKey,
+          'X-Asset-Type': assetType,
+          'X-Filename': file.path.split('/').last,
+          'Content-Type': 'application/octet-stream',
+        },
+        body: fileBytes, // ✅ Direct bytes, not a stream
+      ).timeout(
+        Duration(seconds: timeoutSeconds),
+      );
 
       if (response.statusCode == 200) {
         return BlenderApiUploadResponse.fromJson(json.decode(response.body));
