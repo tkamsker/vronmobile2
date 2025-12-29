@@ -177,56 +177,126 @@ Flutter mobile app with feature-based architecture:
 
 ---
 
-## Phase 5: User Story 3 - Save Scan to Project (Backend Upload & Conversion)
+## Phase 5: User Story 3 - Save Scan to Project (BlenderAPI Upload & Conversion)
 
-**Goal**: Enable authenticated users to upload USDZ scans to backend, triggering server-side USDZ→GLB conversion
+**Goal**: Enable authenticated users to upload USDZ scans to BlenderAPI for server-side USDZ→GLB conversion, then save scan metadata to GraphQL backend
 
-**Independent Test**: Complete LiDAR scan, tap "Save to Project", select project, verify USDZ uploaded to backend, poll for conversion status, verify GLB URL returned
+**Independent Test**: Complete LiDAR scan, tap "Save to Project", select project, verify USDZ uploaded to BlenderAPI, poll for conversion status, verify GLB downloaded and scan metadata saved to GraphQL database
 
 **Success Criteria**:
-- File upload <30 seconds for 50 MB file on 10 Mbps connection
-- Server-side conversion 5-30 seconds for typical room
-- Conversion status polling with progress updates
-- Both USDZ and GLB URLs returned
+- File upload <30 seconds for 50 MB file on 10 Mbps connection to BlenderAPI
+- Server-side conversion 5-30 seconds for typical room via BlenderAPI
+- Conversion status polling with progress updates (2-second interval)
+- Both USDZ and GLB files downloaded and stored
+- Scan metadata saved to GraphQL backend with project association
 
 ### Tests for User Story 3 (TDD - Write FIRST) ⚠️
 
 > **CRITICAL (Constitution)**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T058 [P] [US3] Write unit test for ConversionResult.success factory in test/features/scanning/models/conversion_result_test.dart
-- [ ] T059 [P] [US3] Write unit test for ConversionResult.failure factory in test/features/scanning/models/conversion_result_test.dart
-- [ ] T060 [P] [US3] Write unit test for ConversionResult error code mapping in test/features/scanning/models/conversion_result_test.dart
-- [ ] T061 [P] [US3] Write unit test for ScanUploadService.uploadScan() success case in test/features/scanning/services/scan_upload_service_test.dart
-- [ ] T062 [P] [US3] Write unit test for ScanUploadService.uploadScan() network error handling in test/features/scanning/services/scan_upload_service_test.dart
-- [ ] T063 [P] [US3] Write unit test for ScanUploadService.pollConversionStatus() completion in test/features/scanning/services/scan_upload_service_test.dart
-- [ ] T064 [P] [US3] Write unit test for ScanUploadService.pollConversionStatus() failure in test/features/scanning/services/scan_upload_service_test.dart
-- [ ] T065 [P] [US3] Write widget test for SaveToProjectScreen upload progress indicator in test/features/scanning/screens/save_to_project_screen_test.dart
-- [ ] T066 [P] [US3] Write widget test for SaveToProjectScreen conversion progress indicator in test/features/scanning/screens/save_to_project_screen_test.dart
-- [ ] T067 [P] [US3] Write integration test for complete upload + conversion workflow in test/integration/scan_upload_flow_test.dart
+#### BlenderAPI Client Tests
+
+- [ ] T058 [P] [US3] Write unit test for BlenderApiClient.createSession() success case in test/features/scanning/services/blender_api_client_test.dart
+- [ ] T059 [P] [US3] Write unit test for BlenderApiClient.createSession() 401 Unauthorized in test/features/scanning/services/blender_api_client_test.dart
+- [ ] T060 [P] [US3] Write unit test for BlenderApiClient.uploadFile() success case in test/features/scanning/services/blender_api_client_test.dart
+- [ ] T061 [P] [US3] Write unit test for BlenderApiClient.uploadFile() file size exceeded (>500MB) in test/features/scanning/services/blender_api_client_test.dart
+- [ ] T062 [P] [US3] Write unit test for BlenderApiClient.startConversion() success case in test/features/scanning/services/blender_api_client_test.dart
+- [ ] T063 [P] [US3] Write unit test for BlenderApiClient.getStatus() processing in test/features/scanning/services/blender_api_client_test.dart
+- [ ] T064 [P] [US3] Write unit test for BlenderApiClient.getStatus() completed in test/features/scanning/services/blender_api_client_test.dart
+- [ ] T065 [P] [US3] Write unit test for BlenderApiClient.getStatus() failed in test/features/scanning/services/blender_api_client_test.dart
+- [ ] T066 [P] [US3] Write unit test for BlenderApiClient.downloadFile() success case in test/features/scanning/services/blender_api_client_test.dart
+- [ ] T067 [P] [US3] Write unit test for BlenderApiClient error handling (429 rate limit) in test/features/scanning/services/blender_api_client_test.dart
+
+#### Model Tests
+
+- [ ] T068 [P] [US3] Write unit test for BlenderApiSession model JSON serialization in test/features/scanning/models/blender_api_models_test.dart
+- [ ] T069 [P] [US3] Write unit test for BlenderApiStatus model with all status values in test/features/scanning/models/blender_api_models_test.dart
+- [ ] T070 [P] [US3] Write unit test for ConversionResult.success factory in test/features/scanning/models/conversion_result_test.dart
+- [ ] T071 [P] [US3] Write unit test for ConversionResult.failure factory with error codes in test/features/scanning/models/conversion_result_test.dart
+
+#### Orchestration Service Tests
+
+- [ ] T072 [P] [US3] Write unit test for ScanUploadService.uploadAndConvert() success workflow in test/features/scanning/services/scan_upload_service_test.dart
+- [ ] T073 [P] [US3] Write unit test for ScanUploadService.uploadAndConvert() BlenderAPI failure in test/features/scanning/services/scan_upload_service_test.dart
+- [ ] T074 [P] [US3] Write unit test for ScanUploadService.uploadAndConvert() GraphQL save failure in test/features/scanning/services/scan_upload_service_test.dart
+- [ ] T075 [P] [US3] Write unit test for ScanUploadService status polling with progress callback in test/features/scanning/services/scan_upload_service_test.dart
+
+#### UI Tests
+
+- [ ] T076 [P] [US3] Write widget test for SaveToProjectScreen project selection in test/features/scanning/screens/save_to_project_screen_test.dart
+- [ ] T077 [P] [US3] Write widget test for SaveToProjectScreen upload progress indicator in test/features/scanning/screens/save_to_project_screen_test.dart
+- [ ] T078 [P] [US3] Write widget test for SaveToProjectScreen conversion progress with percentage in test/features/scanning/screens/save_to_project_screen_test.dart
+- [ ] T079 [P] [US3] Write widget test for SaveToProjectScreen error messages (network, BlenderAPI, GraphQL) in test/features/scanning/screens/save_to_project_screen_test.dart
+
+#### Integration Test
+
+- [ ] T080 [P] [US3] Write integration test for complete BlenderAPI workflow (session → upload → convert → poll → download) in test/integration/blender_api_workflow_test.dart
 
 **TDD Checkpoint**: ✅ All US3 tests written and FAILING - proceed to implementation
 
 ### Implementation for User Story 3
 
-- [ ] T068 [P] [US3] Create ConversionResult model in lib/features/scanning/models/conversion_result.dart
-- [ ] T069 [P] [US3] Create ConversionStats model in lib/features/scanning/models/conversion_result.dart
-- [ ] T070 [US3] Extend GraphQLService with uploadProjectScan mutation in lib/core/services/graphql_service.dart
-- [ ] T071 [US3] Create ScanUploadService with GraphQL file upload in lib/features/scanning/services/scan_upload_service.dart
-- [ ] T072 [US3] Implement uploadScan() method with multipart file upload in lib/features/scanning/services/scan_upload_service.dart
-- [ ] T073 [US3] Implement pollConversionStatus() method with 2-second interval in lib/features/scanning/services/scan_upload_service.dart
-- [ ] T074 [US3] Implement _updateLocalScanData() to persist upload status in lib/features/scanning/services/scan_upload_service.dart
-- [ ] T075 [US3] Create SaveToProjectScreen with project selection in lib/features/scanning/screens/save_to_project_screen.dart
-- [ ] T076 [US3] Add upload progress indicator (CircularProgressIndicator) in lib/features/scanning/screens/save_to_project_screen.dart
-- [ ] T077 [US3] Add conversion progress indicator with status text in lib/features/scanning/screens/save_to_project_screen.dart
-- [ ] T078 [US3] Add error handling for network failures with retry button in lib/features/scanning/screens/save_to_project_screen.dart
-- [ ] T079 [US3] Add error handling for conversion failures with user-friendly messages in lib/features/scanning/screens/save_to_project_screen.dart
-- [ ] T080 [US3] Implement guest mode detection and account creation dialog in lib/features/scanning/screens/save_to_project_screen.dart
-- [ ] T081 [US3] Add navigation from ScanningScreen to SaveToProjectScreen
-- [ ] T082 [US3] Verify all US3 tests now PASS (Red → Green)
+#### Configuration Setup
 
-**Refactor Checkpoint** (TDD): Refactor upload and polling logic while keeping tests green
+- [ ] T081 [US3] Add flutter_dotenv ^5.1.0 to pubspec.yaml dependencies
+- [ ] T082 [US3] Create .env file at project root with BLENDER_API_BASE_URL and BLENDER_API_KEY placeholders
+- [ ] T083 [US3] Add .env to .gitignore to prevent committing API keys
+- [ ] T084 [US3] Create .env.example with placeholder values for documentation
+- [ ] T085 [US3] Load .env file in main.dart using dotenv.load()
 
-**Checkpoint**: User Story 3 complete - users can upload scans to backend with server-side USDZ→GLB conversion
+#### BlenderAPI Models
+
+- [ ] T086 [P] [US3] Create BlenderApiSession model in lib/features/scanning/models/blender_api_models.dart
+- [ ] T087 [P] [US3] Create BlenderApiUploadResponse model in lib/features/scanning/models/blender_api_models.dart
+- [ ] T088 [P] [US3] Create BlenderApiStatus model in lib/features/scanning/models/blender_api_models.dart
+- [ ] T089 [P] [US3] Create BlenderApiConversionRequest model in lib/features/scanning/models/blender_api_models.dart
+- [ ] T090 [P] [US3] Create ConversionResult model with success/failure factories in lib/features/scanning/models/conversion_result.dart
+
+#### BlenderAPI Client Service
+
+- [ ] T091 [US3] Create BlenderApiClient class with constructor loading .env config in lib/features/scanning/services/blender_api_client.dart
+- [ ] T092 [US3] Implement createSession() → POST /sessions in lib/features/scanning/services/blender_api_client.dart
+- [ ] T093 [US3] Implement uploadFile() → POST /sessions/{id}/upload with binary USDZ in lib/features/scanning/services/blender_api_client.dart
+- [ ] T094 [US3] Implement startConversion() → POST /sessions/{id}/convert with conversion_params in lib/features/scanning/services/blender_api_client.dart
+- [ ] T095 [US3] Implement getStatus() → GET /sessions/{id}/status in lib/features/scanning/services/blender_api_client.dart
+- [ ] T096 [US3] Implement downloadFile() → GET /sessions/{id}/download/{filename} returning File in lib/features/scanning/services/blender_api_client.dart
+- [ ] T097 [US3] Implement deleteSession() → DELETE /sessions/{id} for cleanup in lib/features/scanning/services/blender_api_client.dart
+- [ ] T098 [US3] Add error handling for all HTTP status codes (401, 404, 409, 422, 429, 500, 504) in lib/features/scanning/services/blender_api_client.dart
+
+#### Orchestration Service
+
+- [ ] T099 [US3] Create ScanUploadService class in lib/features/scanning/services/scan_upload_service.dart
+- [ ] T100 [US3] Implement uploadAndConvert() orchestrating full workflow (create session → upload → convert → poll → download) in lib/features/scanning/services/scan_upload_service.dart
+- [ ] T101 [US3] Implement _pollStatus() with 2-second interval and progress callback in lib/features/scanning/services/scan_upload_service.dart
+- [ ] T102 [US3] Implement _saveToGraphQL() calling uploadProjectScan mutation with USDZ/GLB URLs in lib/features/scanning/services/scan_upload_service.dart
+- [ ] T103 [US3] Add cleanup logic (delete BlenderAPI session) in finally block in lib/features/scanning/services/scan_upload_service.dart
+
+#### GraphQL Integration
+
+- [ ] T104 [US3] Add uploadProjectScan mutation to lib/core/services/graphql_service.dart
+- [ ] T105 [US3] Define UploadProjectScanInput with projectId, usdzUrl, glbUrl, metadata fields in lib/core/services/graphql_service.dart
+
+#### UI Implementation
+
+- [ ] T106 [US3] Create SaveToProjectScreen with project selection dropdown in lib/features/scanning/screens/save_to_project_screen.dart
+- [ ] T107 [US3] Add upload progress indicator showing upload percentage in lib/features/scanning/screens/save_to_project_screen.dart
+- [ ] T108 [US3] Add conversion progress indicator showing BlenderAPI status and percentage in lib/features/scanning/screens/save_to_project_screen.dart
+- [ ] T109 [US3] Implement error handling with user-friendly messages for all failure scenarios in lib/features/scanning/screens/save_to_project_screen.dart
+- [ ] T110 [US3] Add retry button for recoverable errors (network failures, timeouts) in lib/features/scanning/screens/save_to_project_screen.dart
+- [ ] T111 [US3] Implement guest mode detection with account creation prompt in lib/features/scanning/screens/save_to_project_screen.dart
+- [ ] T112 [US3] Add navigation from ScanListScreen to SaveToProjectScreen
+- [ ] T113 [US3] Add "Taking longer than expected" message after 60 seconds with manual refresh option in lib/features/scanning/screens/save_to_project_screen.dart
+
+#### Testing & Validation
+
+- [ ] T114 [US3] Verify all US3 tests now PASS (Red → Green)
+- [ ] T115 [US3] Test complete workflow with real BlenderAPI stage environment
+- [ ] T116 [US3] Test error scenarios: network failure, 429 rate limit, conversion timeout
+- [ ] T117 [US3] Verify .env configuration loading and error messages for missing API key
+
+**Refactor Checkpoint** (TDD): Refactor BlenderAPI client and orchestration logic while keeping tests green
+
+**Checkpoint**: User Story 3 complete - users can upload USDZ scans to BlenderAPI, poll for GLB conversion, and save scan metadata to GraphQL backend
 
 ---
 
@@ -350,12 +420,12 @@ This delivers:
 1. **RED Phase**: Write failing tests
    - US1: Write T019-T029, verify they FAIL
    - US2: Write T043-T048, verify they FAIL
-   - US3: Write T058-T067, verify they FAIL
+   - US3: Write T058-T080, verify they FAIL
 
 2. **GREEN Phase**: Implement minimum code to pass tests
    - US1: Implement T030-T041, verify tests PASS
    - US2: Implement T049-T056, verify tests PASS
-   - US3: Implement T068-T081, verify tests PASS
+   - US3: Implement T081-T117, verify tests PASS
 
 3. **REFACTOR Phase**: Improve code quality while keeping tests green
    - Extract helper methods
@@ -364,9 +434,9 @@ This delivers:
    - Verify tests still PASS after each refactor
 
 **Test Coverage Goals**:
-- Unit tests: Models (ScanData, LidarCapability, ConversionResult), Services (ScanningService, FileUploadService, ScanUploadService)
+- Unit tests: Models (ScanData, LidarCapability, ConversionResult, BlenderApiModels), Services (ScanningService, FileUploadService, BlenderApiClient, ScanUploadService)
 - Widget tests: ScanButton, ScanProgress, FileUploadScreen, SaveToProjectScreen
-- Integration tests: Complete scan workflow, GLB upload workflow, backend upload + conversion workflow
+- Integration tests: Complete scan workflow, GLB upload workflow, BlenderAPI workflow (session → upload → convert → download), full save-to-project workflow
 
 ---
 
@@ -388,23 +458,43 @@ This delivers:
 
 ### Backend Coordination
 
-**GraphQL Mutation Required**: `uploadProjectScan(input: UploadProjectScanInput!)`
-- Input: `projectId` (ID), `scanFile` (Upload), `format` (ScanFormat), `metadata` (JSON)
-- Output: `scan` (Scan), `success` (Boolean), `message` (String)
-- Backend validates token with user authentication
-- Backend handles USDZ→GLB conversion via Sirv API or AWS Lambda
-- Backend stores both USDZ and GLB in S3 (or equivalent cloud storage)
+**BlenderAPI Workflow** (User Story 3):
+1. **Create Session**: `POST /sessions` → Returns session_id
+2. **Upload USDZ**: `POST /sessions/{id}/upload` with binary USDZ file
+3. **Start Conversion**: `POST /sessions/{id}/convert` with conversion_params
+4. **Poll Status**: `GET /sessions/{id}/status` every 2 seconds until completed/failed
+5. **Download GLB**: `GET /sessions/{id}/download/{filename}` → Save GLB file locally
+6. **Cleanup**: `DELETE /sessions/{id}` after download complete
 
-**Contract Location**: `specs/014-lidar-scanning/contracts/graphql-api.md`
+**BlenderAPI Configuration** (.env file):
+- `BLENDER_API_BASE_URL`: https://blenderapi.stage.motorenflug.at
+- `BLENDER_API_KEY`: Obtained from administrator (min 16 characters)
+- Rate limit: 3 concurrent sessions per API key
+- File size limit: 500MB (USDZ scans typically 5-50 MB)
+- Processing timeout: 15 minutes (900 seconds)
+
+**GraphQL Mutation Required** (after BlenderAPI conversion): `uploadProjectScan(input: UploadProjectScanInput!)`
+- Input: `projectId` (ID), `usdzUrl` (String), `glbUrl` (String), `format` (ScanFormat.USDZ), `metadata` (JSON with file sizes, polygon counts)
+- Output: `scan` (Scan with id, usdzUrl, glbUrl, status), `success` (Boolean), `message` (String)
+- Backend validates token with user authentication
+- Backend stores scan metadata in PostgreSQL and links to Project entity
+- USDZ and GLB files already stored in cloud storage (URLs provided by BlenderAPI)
+
+**Contract Locations**:
+- BlenderAPI: `Requirements/FLUTTER_API_PRD.md`
+- GraphQL: `specs/014-lidar-scanning/contracts/graphql-api.md`
 
 ### Security Checklist
 
 - [ ] USDZ/GLB files never contain sensitive user data (only geometric data)
 - [ ] Files stored in app sandbox (not accessible to other apps)
-- [ ] Backend upload requires authentication (validated JWT token)
-- [ ] File size validated before upload (250 MB limit)
-- [ ] HTTPS enforced for all GraphQL API calls
-- [ ] Error messages don't expose sensitive info (file paths, internal errors)
+- [ ] BlenderAPI authentication via X-API-Key header (loaded from .env, never hardcoded)
+- [ ] .env file added to .gitignore to prevent committing API keys
+- [ ] Backend GraphQL requires authentication (validated JWT token)
+- [ ] File size validated before upload (500 MB limit for BlenderAPI, 250 MB for GLB upload)
+- [ ] HTTPS enforced for all BlenderAPI and GraphQL API calls
+- [ ] Error messages don't expose sensitive info (file paths, API keys, internal errors)
+- [ ] BlenderAPI sessions cleaned up after use (DELETE /sessions/{id})
 
 ### Accessibility Checklist
 
@@ -420,36 +510,48 @@ This delivers:
 
 ## Task Summary
 
-**Total Tasks**: 104
-**MVP Tasks** (US1 only): 42 (T001-T042)
-**Test Tasks**: 32 (T019-T029, T043-T048, T058-T067, constitution-required TDD)
-**Implementation Tasks**: 72 (excluding tests)
+**Total Tasks**: 151
+**MVP Tasks** (US1 only): 54 (T001-T043l - includes additional enhancements)
+**Test Tasks**: 63 (T019-T029, T043-T048, T058-T080, constitution-required TDD)
+**Implementation Tasks**: 88 (excluding tests)
 
 **Task Distribution by Phase**:
-- Phase 1 (Setup): 8 tasks
-- Phase 2 (Foundational): 10 tasks
-- Phase 3 (US1 - MVP): 24 tasks (11 tests + 13 implementation)
-- Phase 4 (US2): 15 tasks (6 tests + 9 implementation)
-- Phase 5 (US3): 25 tasks (10 tests + 15 implementation)
-- Phase 6 (Polish): 22 tasks
+- Phase 1 (Setup): 8 tasks (T001-T008) ✅ COMPLETE
+- Phase 2 (Foundational): 10 tasks (T009-T018) ✅ COMPLETE
+- Phase 3 (US1 - MVP): 36 tasks (11 tests + 13 implementation + 12 enhancements) ✅ COMPLETE
+- Phase 4 (US2): 15 tasks (6 tests + 9 implementation) ⏳ PENDING
+- Phase 5 (US3): 60 tasks (23 tests + 37 implementation) ⏳ PENDING - **BlenderAPI Integration**
+- Phase 6 (Polish): 22 tasks ⏳ PENDING
 
-**Parallel Opportunities**: 48 tasks marked [P] can run in parallel
+**Parallel Opportunities**: 65+ tasks marked [P] can run in parallel
 
 **Independent Test Criteria**:
-- ✅ US1: Complete LiDAR scan, verify USDZ stored in Documents directory, check SharedPreferences metadata
-- ✅ US2: Upload GLB file via file picker, verify file copied to Documents directory, check file size and extension validation
-- ✅ US3: Save scan to project, verify backend upload successful, poll conversion status, verify GLB URL returned
+- ✅ US1: Complete LiDAR scan, verify USDZ stored locally, check scan list display ✅ **COMPLETE**
+- ⏳ US2: Upload GLB file via file picker, verify file copied to Documents directory, check file size and extension validation
+- ⏳ US3: Complete LiDAR scan, upload USDZ to BlenderAPI, poll conversion status, download GLB, save scan metadata to GraphQL with project association
 
 ---
 
 ## Next Steps
 
-1. **Start with MVP**: Execute T001-T042 to deliver functional LiDAR scanning with local storage
-2. **Follow TDD**: Write failing tests BEFORE implementation (constitution requirement)
-3. **Test on Physical Devices**: LiDAR scanning requires iPhone 12 Pro+ (not available in simulator)
-4. **Coordinate with Backend**: Ensure `uploadProjectScan` GraphQL mutation is deployed before US3 implementation
-5. **Incremental Delivery**: Ship US1 (MVP) → US2 (GLB upload) → US3 (backend integration) → Polish
+1. **MVP Complete** ✅: Phase 1-3 (T001-T043l) delivered - LiDAR scanning with local storage functional
+2. **Phase 4 (US2)**: Implement GLB file upload functionality (T043-T057)
+3. **Phase 5 (US3) - BlenderAPI Integration**:
+   - Set up .env configuration with BlenderAPI credentials (T081-T085)
+   - Implement BlenderAPI client service (T086-T098)
+   - Implement orchestration and UI (T099-T113)
+   - Test with real BlenderAPI stage environment (T114-T117)
+4. **Follow TDD**: Write failing tests BEFORE implementation (constitution requirement)
+5. **Test on Physical Devices**: LiDAR scanning requires iPhone 12 Pro+ (not available in simulator)
+6. **Coordinate with Backends**:
+   - Ensure BlenderAPI stage environment is accessible with valid API key
+   - Ensure `uploadProjectScan` GraphQL mutation is deployed
+7. **Incremental Delivery**: ✅ US1 (MVP) → US2 (GLB upload) → US3 (BlenderAPI integration) → Polish
 
-**Recommended First Task**: T001 (add flutter_roomplan dependency to pubspec.yaml)
+**Recommended Next Task**: T043 (start US2 GLB upload tests) or T081 (start US3 BlenderAPI setup)
 
-**Estimated Total Time**: 3-4 weeks (including TDD, device testing, backend integration, polish)
+**Estimated Remaining Time**:
+- Phase 4 (US2): 1 week
+- Phase 5 (US3): 2-3 weeks (including BlenderAPI integration, testing)
+- Phase 6 (Polish): 1 week
+- **Total**: 4-5 weeks remaining
