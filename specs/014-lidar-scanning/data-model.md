@@ -637,6 +637,6 @@ CREATE INDEX idx_scans_project_id ON scans(project_id);
 
 - [Spec: User Story 1 (Start Scan)](./spec.md#user-story-1---start-scan-priority-p1)
 - [Spec: User Story 2 (Upload GLB)](./spec.md#user-story-2---upload-glb-priority-p2)
-- [Spec: User Story 3 (On-Device Conversion)](./spec.md#user-story-3---on-device-usdzglb-conversion-priority-p2)
+- [Spec: User Story 3 (Server-Side Conversion via BlenderAPI)](./spec.md#user-story-3---save-scan-to-project-with-server-side-conversion-priority-p2)
 - [Research: USDZ→GLB Conversion Strategy](./research.md#decision-3-usdzglb-conversion-strategy)
 - [Contracts: GraphQL API](./contracts/graphql-api.md)

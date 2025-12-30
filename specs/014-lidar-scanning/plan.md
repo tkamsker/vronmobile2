@@ -51,6 +51,8 @@ Implement LiDAR-based 3D room scanning for iOS devices using Apple's RoomPlan fr
 - Device must have LiDAR scanner hardware
 - Requires camera/sensor permissions from user
 
+**Edge Cases**: See complete edge case list in [spec.md Edge Cases section](./spec.md#edge-cases) covering device limitations, permissions, storage, interruptions, network failures, and BlenderAPI error scenarios.
+
 **Scale/Scope**:
 - Single feature addition to existing mobile app
 - ~10-15 new files (scanning UI, native platform channels, file management)
@@ -58,81 +60,6 @@ Implement LiDAR-based 3D room scanning for iOS devices using Apple's RoomPlan fr
 - Typical USDZ file size: 5-50 MB per room scan
 
 ## Constitution Check
-
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
-
-### I. Test-First Development (NON-NEGOTIABLE)
-- ✅ **PASS**: TDD approach required for all implementation
-- Tests MUST be written before code:
-  - Unit tests for LiDAR capability detection (iOS device models)
-  - Widget tests for scanning UI components (start/stop buttons, progress indicators)
-  - Platform channel tests for RoomPlan integration
-  - Unit tests for USDZ file handling and storage
-  - Unit tests for USDZ→GLB conversion (if on-device)
-  - Integration tests for complete scan workflow (initiate → capture → store → upload)
-  - Widget tests for GLB file picker
-- Red-Green-Refactor cycle enforced
-
-### II. Simplicity & YAGNI
-- ✅ **PASS**: Implementation focused only on stated requirements
-- iOS-only LiDAR scanning for MVP (no premature Android support)
-- Using Apple's RoomPlan framework (not building custom SLAM algorithms)
-- User Story 3 (on-device USDZ→GLB conversion) is P2 - can be deferred if complexity exceeds value
-- No abstractions for other 3D formats (OBJ, FBX, etc.) unless required
-- Minimal file management: store locally, upload on demand
-- **Decision Point**: US3 on-device conversion requires Pixar USD SDK integration (C++/Swift). If complexity too high, defer to server-side conversion (simpler, proven pattern from other features)
-
-### III. Platform-Native Patterns
-- ✅ **PASS**: Following Flutter and iOS idioms
-- Widget composition for scanning UI
-- Feature-based architecture: `lib/features/scanning/`
-- Platform channels for RoomPlan integration (MethodChannel for iOS)
-- Async/await for scan operations and file I/O
-- Platform-specific handling:
-  - iOS: RoomPlan + USDZ capture
-  - Android: GLB upload only (file picker)
-- Existing patterns preserved (GraphQLService, project management)
-
-### Security & Privacy Requirements
-- ✅ **PASS**: Secure handling of scan data and permissions
-- Camera/sensor permissions requested with clear user justification ("Scan room with LiDAR")
-- HTTPS enforced by GraphQL backend for file uploads
-- Local USDZ files stored in sandboxed app directory
-- No sensitive data in scan files (only geometric data)
-- File size validation before upload (250 MB limit)
-- Permissions: Camera, Photo Library (for saving scans)
-
-### Performance Standards
-- ✅ **PASS**: Performance targets defined
-- Scanning maintains 30fps minimum (RoomPlan requirement)
-- Scan initiation < 2 seconds
-- USDZ→GLB conversion <10 seconds for typical rooms (if on-device)
-- Memory usage <512 MB during conversion
-- **Risk**: Pixar USD SDK binary size impact - monitor APK/IPA size increase
-- Profile memory usage with Flutter DevTools during scan and conversion
-
-### Accessibility Requirements
-- ✅ **PASS**: Accessible scanning interface
-- Semantic labels on all scan controls ("Start Scanning" button, "Stop" button, "Upload" button)
-- Screen reader announcements for scan progress ("Scanning in progress", "Scan complete")
-- Error messages accessible to screen readers
-- Touch target size adequate (44x44 minimum) for scan controls
-- Visual and audio feedback for scan start/stop
-
-### CI/CD & DevOps Practices
-- ✅ **PASS**: Feature branch `014-lidar-scanning`
-- Tests required before merge to main
-- Code review required
-- Platform-specific CI: iOS simulator tests + real device LiDAR tests (manual)
-- Binary size monitoring for USD SDK impact
-
-**GATE RESULT**: ✅ **PASS** - Proceed to Phase 0 Research
-
-**COMPLEXITY WARNING**: User Story 3 (on-device USDZ→GLB conversion) requires significant native development (C++ USD SDK integration). Recommend research phase evaluation: if complexity exceeds 2 weeks effort, defer US3 to future release and use server-side conversion instead.
-
----
-
-## Post-Design Constitution Re-Check
 
 *Re-evaluated after Phase 1 (Research, Data Model, Contracts, Quickstart) complete.*
 

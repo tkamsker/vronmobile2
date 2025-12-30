@@ -47,9 +47,9 @@ User can upload existing GLB file instead of scanning. To use Pre view feature w
 
 ### User Story 3 - Save Scan to Project with Server-Side Conversion (Priority: P2)
 
-User can upload USDZ scan to backend BlenderAPI service where it is converted to GLB format, enabling cross-platform preview and project integration without requiring on-device conversion complexity.
+User can upload USDZ scan to backend BlenderAPI service where it is converted to GLB format server-side, enabling cross-platform preview and project integration.
 
-**Why this priority**: Enables scans to be saved to projects and viewed in web-based 3D viewers (Three.js, Babylon.js, WebXR). Server-side conversion reduces app complexity, avoids 50-150 MB binary size increase from USD SDK, and leverages proven cloud conversion services (BlenderAPI with Blender's USDZ import and GLB export).
+**Why this priority**: Enables scans to be saved to projects and viewed in web-based 3D viewers (Three.js, Babylon.js, WebXR). Server-side conversion via BlenderAPI reduces app complexity, avoids 50-150 MB binary size increase that would be required for on-device conversion with USD SDK, and leverages proven cloud conversion services (BlenderAPI with Blender's USDZ import and GLB export). On-device conversion was evaluated and deferred due to complexity (see research.md Decision 3).
 
 **Independent Test**: Complete LiDAR scan, tap "Save to Project", select project, verify USDZ uploaded to BlenderAPI, poll for conversion status, verify GLB download URL returned and scan associated with project.
 
@@ -153,8 +153,8 @@ BLENDER_API_POLL_INTERVAL_SECONDS=2
 - Permissions denied (camera/sensor access)
 - Insufficient device storage for USDZ and/or GLB files
 - Scan interrupted by phone call or app backgrounding (user prompted to save partial, discard, or continue)
-- GLB file exceeds 250 MB size limit (GLB upload via US2)
-- USDZ file exceeds 500 MB size limit (rare, typical scans 5-50 MB)
+- GLB file exceeds 250 MB size limit during manual upload (US2 - user uploads existing GLB file from device storage)
+- USDZ file exceeds 500 MB size limit during upload to BlenderAPI (US3 - rare, typical LiDAR scans are 5-50 MB, max tested 250 MB for complex commercial spaces)
 - Network failure during USDZ upload to BlenderAPI
 - BlenderAPI service unavailable (503 Service Unavailable)
 - BlenderAPI conversion timeout (>15 minutes for abnormally complex models)
@@ -164,6 +164,8 @@ BLENDER_API_POLL_INTERVAL_SECONDS=2
 - User loses network connectivity while polling conversion status (resume on reconnect)
 - Project storage quota exceeded (cannot save additional scans to project)
 - User navigates away from app during upload/conversion (background upload handling or cancellation prompt)
+- Upload exceeds 30 seconds on slow connection (<1 Mbps) (show progress indicator, allow cancel, estimate remaining time)
+- Network connection drops mid-upload (save progress, offer resume when reconnected)
 
 ## Requirements *(mandatory)*
 
