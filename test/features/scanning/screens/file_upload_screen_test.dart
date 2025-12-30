@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:vronmobile2/features/scanning/screens/file_upload_screen.dart';
 import 'package:vronmobile2/features/scanning/services/file_upload_service.dart';
 import 'package:vronmobile2/features/scanning/models/scan_data.dart';
 
-// Generate mocks
-@GenerateMocks([FileUploadService])
-import 'file_upload_screen_test.mocks.dart';
+// Manual mock for FileUploadService using mocktail
+class MockFileUploadService extends Mock implements FileUploadService {}
 
 void main() {
   group('FileUploadScreen', () {
