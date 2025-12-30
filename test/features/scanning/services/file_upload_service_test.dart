@@ -1,14 +1,12 @@
 import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mockito/mockito.dart';
-import 'package:mockito/annotations.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:vronmobile2/features/scanning/services/file_upload_service.dart';
 import 'package:vronmobile2/features/scanning/models/scan_data.dart';
 
-// Generate mocks
-@GenerateMocks([FilePicker])
-import 'file_upload_service_test.mocks.dart';
+// Manual mock for FilePicker using mocktail
+class MockFilePicker extends Mock implements FilePicker {}
 
 void main() {
   group('FileUploadService', () {

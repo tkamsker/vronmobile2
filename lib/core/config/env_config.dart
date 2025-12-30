@@ -63,4 +63,38 @@ class EnvConfig {
   /// Backwards compatibility: Merchant web app base URL
   /// @deprecated Use vronMerchantsUrl instead
   static String get merchantUrl => vronMerchantsUrl;
+
+  // BlenderAPI Configuration (for USDZ to GLB conversion)
+  // PRD Reference: Requirements/FLUTTER_API_PRD.md
+
+  /// BlenderAPI base URL for USDZ→GLB conversion
+  /// Example: https://blenderapi.stage.motorenflug.at
+  static String get blenderApiBaseUrl {
+    return dotenv.env['BLENDER_API_BASE_URL'] ??
+        'https://blenderapi.stage.motorenflug.at';
+  }
+
+  /// BlenderAPI authentication key (obtain from administrator)
+  /// Minimum 16 characters required
+  static String get blenderApiKey {
+    final key = dotenv.env['BLENDER_API_KEY'] ?? '';
+    if (key.isEmpty || key == 'your-api-key-here-min-16-chars') {
+      throw Exception(
+        'BLENDER_API_KEY not configured in .env file. Please add a valid API key (minimum 16 characters).',
+      );
+    }
+    return key;
+  }
+
+  /// BlenderAPI processing timeout in seconds (default: 900 = 15 minutes)
+  static int get blenderApiTimeoutSeconds {
+    final timeout = dotenv.env['BLENDER_API_TIMEOUT_SECONDS'];
+    return timeout != null ? int.tryParse(timeout) ?? 900 : 900;
+  }
+
+  /// BlenderAPI status polling interval in seconds (default: 2 seconds)
+  static int get blenderApiPollIntervalSeconds {
+    final interval = dotenv.env['BLENDER_API_POLL_INTERVAL_SECONDS'];
+    return interval != null ? int.tryParse(interval) ?? 2 : 2;
+  }
 }

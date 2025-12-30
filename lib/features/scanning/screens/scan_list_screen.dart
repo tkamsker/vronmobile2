@@ -4,6 +4,7 @@ import '../models/scan_data.dart';
 import '../services/scan_session_manager.dart';
 import 'scanning_screen.dart';
 import 'usdz_preview_screen.dart';
+import 'file_upload_screen.dart';
 
 /// Screen showing list of scans for current session
 /// Matches design from Requirements/ScanList.jpg
@@ -129,6 +130,37 @@ class _ScanListScreenState extends State<ScanListScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue.shade600,
                         foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Upload GLB file button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _uploadGlbFile(),
+                      icon: Icon(
+                        Icons.upload_file,
+                        size: 24,
+                        color: Colors.blue.shade600,
+                      ),
+                      label: Text(
+                        'Upload GLB file',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.blue.shade600,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(
+                          color: Colors.blue.shade600,
+                          width: 2,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(28),
                         ),
@@ -382,6 +414,17 @@ class _ScanListScreenState extends State<ScanListScreen> {
         duration: Duration(seconds: 2),
       ),
     );
+  }
+
+  Future<void> _uploadGlbFile() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const FileUploadScreen(),
+      ),
+    );
+
+    // Refresh UI to show the uploaded file if any
+    setState(() {});
   }
 
   Future<void> _viewUsdzPreview(ScanData scan) async {
