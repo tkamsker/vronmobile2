@@ -74,6 +74,14 @@ Flutter mobile app with feature-based architecture:
 - Scanning maintains 30fps minimum (SC-002)
 - Scan data captured without data loss (SC-003)
 
+**Functional Requirements Coverage**:
+- FR-001 (LiDAR capability check): T019-T020, T023, T030
+- FR-002 (disable button if no LiDAR): T026-T027, T037
+- FR-003 (request camera/sensor permissions): T005, T039
+- FR-004 (use flutter_roomplan): T001, T032-T035
+- FR-005 (store locally in USDZ): T035-T036, T098
+- FR-009 (detect interruptions): T041 → T043h (delegated to RoomPlan native handling)
+
 ### Tests for User Story 1 (TDD - Write FIRST) ⚠️
 
 > **CRITICAL (Constitution)**: Write these tests FIRST, ensure they FAIL before implementation
@@ -110,6 +118,12 @@ Flutter mobile app with feature-based architecture:
 
 **Refactor Checkpoint** (TDD): Refactor if needed while keeping tests green
 
+### Performance Tests for Success Criteria
+
+- [ ] T042a [US1] Performance test: Verify scan initiates within 2 seconds of button tap (SC-001) in test/integration/scanning_performance_test.dart
+- [ ] T042b [US1] Performance test: Verify scanning maintains 30fps minimum using Flutter DevTools timeline (SC-002) - **Requires physical device**
+- [ ] T042c [US1] Integration test: Verify scan data captured without data loss by comparing RoomPlan metadata before/after storage (SC-003)
+
 **Checkpoint**: User Story 1 (MVP) is fully functional - users can scan rooms with LiDAR and store USDZ locally
 
 ### Additional MVP Enhancements (Completed During Implementation)
@@ -145,6 +159,10 @@ Flutter mobile app with feature-based architecture:
 - File size validation (250 MB limit)
 - File extension validation (.glb only)
 - Files stored locally before upload to backend
+
+**Functional Requirements Coverage**:
+- FR-006 (support GLB file upload with 250 MB limit): T049-T052
+- FR-007 (validate GLB file size before upload): T045, T051
 
 ### Tests for User Story 2 (TDD - Write FIRST) ⚠️
 
@@ -189,6 +207,9 @@ Flutter mobile app with feature-based architecture:
 - Conversion status polling with progress updates (2-second interval)
 - Both USDZ and GLB files downloaded and stored
 - Scan metadata saved to GraphQL backend with project association
+
+**Functional Requirements Coverage**:
+- FR-008 (upload USDZ to BlenderAPI on user-initiated save): T081-T117 (complete BlenderAPI workflow)
 
 ### Tests for User Story 3 (TDD - Write FIRST) ⚠️
 
@@ -510,15 +531,15 @@ This delivers:
 
 ## Task Summary
 
-**Total Tasks**: 151
-**MVP Tasks** (US1 only): 54 (T001-T043l - includes additional enhancements)
-**Test Tasks**: 63 (T019-T029, T043-T048, T058-T080, constitution-required TDD)
-**Implementation Tasks**: 88 (excluding tests)
+**Total Tasks**: 157 (T001-T117 base tasks + T042a-T042c performance + T043a-T043l enhancements = 120 + 3 + 12 + 22 Phase 6)
+**MVP Tasks** (US1 only): 57 (T001-T043l includes Phase 1-3 + performance tests T042a-c)
+**Test Tasks**: 66 (T019-T029, T042a-c, T043-T048, T058-T080 - constitution-required TDD)
+**Implementation Tasks**: 91 (excluding tests)
 
 **Task Distribution by Phase**:
 - Phase 1 (Setup): 8 tasks (T001-T008) ✅ COMPLETE
 - Phase 2 (Foundational): 10 tasks (T009-T018) ✅ COMPLETE
-- Phase 3 (US1 - MVP): 36 tasks (11 tests + 13 implementation + 12 enhancements) ✅ COMPLETE
+- Phase 3 (US1 - MVP): 39 tasks (11 tests + 3 performance tests + 13 implementation + 12 enhancements) ✅ COMPLETE except performance tests
 - Phase 4 (US2): 15 tasks (6 tests + 9 implementation) ⏳ PENDING
 - Phase 5 (US3): 60 tasks (23 tests + 37 implementation) ⏳ PENDING - **BlenderAPI Integration**
 - Phase 6 (Polish): 22 tasks ⏳ PENDING
