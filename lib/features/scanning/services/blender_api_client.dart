@@ -19,6 +19,7 @@ import 'package:path_provider/path_provider.dart';
 import '../models/blender_api_models.dart';
 import '../models/error_context.dart';
 import './error_log_service.dart';
+import './session_tracker.dart';
 
 class BlenderApiClient {
   late final String baseUrl;
@@ -28,6 +29,7 @@ class BlenderApiClient {
 
   final http.Client _client;
   final ErrorLogService _errorLogService;
+  final SessionTracker _sessionTracker;
 
   /// Create HTTP client with certificate verification disabled in debug mode
   /// Similar to curl -k, but only for development/testing
@@ -54,8 +56,10 @@ class BlenderApiClient {
     int? timeoutSeconds,
     int? pollIntervalSeconds,
     ErrorLogService? errorLogService,
+    SessionTracker? sessionTracker,
   })  : _client = client ?? _createHttpClient(),
-        _errorLogService = errorLogService ?? ErrorLogService() {
+        _errorLogService = errorLogService ?? ErrorLogService(),
+        _sessionTracker = sessionTracker ?? SessionTracker() {
     // Load configuration from parameters or .env (with fallback defaults for testing)
     String? envBaseUrl;
     String? envApiKey;
@@ -106,7 +110,12 @@ class BlenderApiClient {
       ).timeout(Duration(seconds: 30));
 
       if (response.statusCode == 201) {
-        return BlenderApiSession.fromJson(json.decode(response.body));
+        final session = BlenderApiSession.fromJson(json.decode(response.body));
+
+        // Track session for cleanup (prevents rate limit errors)
+        await _sessionTracker.addSession(session.sessionId);
+
+        return session;
       } else {
         throw await _handleError(response);
       }
@@ -331,11 +340,44 @@ class BlenderApiClient {
       if (response.statusCode != 204 && response.statusCode != 200) {
         // Log error but don't throw - session cleanup is not critical
         print('Warning: Failed to delete session $sessionId: ${response.body}');
+      } else {
+        // Remove from tracking after successful deletion
+        await _sessionTracker.removeSession(sessionId);
       }
     } catch (e) {
       // Log error but don't throw - session cleanup is not critical
       print('Warning: Error deleting session $sessionId: $e');
+      // Still try to remove from tracking (session might be expired anyway)
+      await _sessionTracker.removeSession(sessionId);
     }
+  }
+
+  /// Clean up all tracked sessions
+  /// Use this to resolve rate limit errors (429 TOO_MANY_REQUESTS)
+  /// Returns count of successfully cleaned sessions
+  ///
+  /// BlenderAPI has a limit of 3 concurrent sessions per API key.
+  /// Call this method when you get a 429 error to clean up old sessions.
+  Future<int> cleanupAllSessions() async {
+    return await _sessionTracker.cleanupAllSessions(this);
+  }
+
+  /// Clean up old sessions (older than specified duration)
+  /// Returns count of successfully cleaned sessions
+  Future<int> cleanupOldSessions({Duration maxAge = const Duration(minutes: 30)}) async {
+    return await _sessionTracker.cleanupOldSessions(this, maxAge: maxAge);
+  }
+
+  /// Get count of tracked sessions
+  /// Useful for debugging and monitoring
+  Future<int> getTrackedSessionCount() async {
+    return await _sessionTracker.getSessionCount();
+  }
+
+  /// Get session info for debugging
+  /// Returns map with session details (id, created time, age, expired status)
+  Future<Map<String, dynamic>> getSessionInfo() async {
+    return await _sessionTracker.getSessionInfo();
   }
 
   /// Complete USDZ to GLB conversion workflow with mandatory race condition waits
@@ -507,6 +549,28 @@ class BlenderApiClient {
         message: response.body.isNotEmpty
             ? response.body
             : 'HTTP ${response.statusCode} error',
+        sessionId: sessionId,
+      );
+    }
+
+    // Handle rate limit errors (429 TOO_MANY_REQUESTS)
+    if (response.statusCode == 429) {
+      final sessionCount = await _sessionTracker.getSessionCount();
+      print('⚠️ [BlenderAPI] Rate limit hit: 429 TOO_MANY_REQUESTS');
+      print('📊 [BlenderAPI] Tracked sessions: $sessionCount');
+      print('💡 [BlenderAPI] Suggested action: Call cleanupAllSessions() or cleanupOldSessions()');
+
+      // Add helpful details to exception
+      exception = BlenderApiException(
+        statusCode: 429,
+        message: exception.message,
+        errorCode: 'TOO_MANY_REQUESTS',
+        details: {
+          'tracked_sessions': sessionCount,
+          'suggestion': 'Call cleanupAllSessions() to clean up old sessions',
+          'rate_limit': '3 concurrent sessions per API key',
+          'session_ttl': '60 minutes',
+        },
         sessionId: sessionId,
       );
     }
