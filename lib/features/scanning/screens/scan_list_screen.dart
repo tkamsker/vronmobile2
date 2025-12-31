@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:io';
 import '../models/scan_data.dart';
 import '../services/scan_session_manager.dart';
 import 'scanning_screen.dart';
 import 'usdz_preview_screen.dart';
+import 'glb_preview_screen.dart';
 import 'file_upload_screen.dart';
 
 /// Screen showing list of scans for current session
@@ -442,11 +444,56 @@ class _ScanListScreenState extends State<ScanListScreen> {
   }
 
   Future<void> _viewGlbPreview(ScanData scan) async {
-    // Phase 1: Show USDZ preview (same as USDZ button)
-    // GLB conversion will be implemented via server-side in Phase 2
-    print('📱 [SCAN_LIST] GLBView: Showing USDZ in QuickLook (Phase 1)');
+    // Check if GLB file exists
+    final glbPath = scan.glbLocalPath ??
+        (scan.format == ScanFormat.glb ? scan.localPath : null);
 
-    await _viewUsdzPreview(scan);
+    if (glbPath != null && await File(glbPath).exists()) {
+      // Show GLB preview with real GLB viewer
+      print('📱 [SCAN_LIST] GLBView: Showing GLB viewer');
+
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => GlbPreviewScreen(scanData: scan),
+        ),
+      );
+    } else {
+      // No GLB file available yet, show dialog to convert
+      print('⚠️ [SCAN_LIST] GLBView: No GLB file available');
+
+      final shouldConvert = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('GLB Not Available'),
+          content: const Text(
+            'This scan hasn\'t been converted to GLB format yet.\n\n'
+            'Would you like to view the USDZ preview and convert it now?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade600,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('View USDZ'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldConvert == true && mounted) {
+        // Show USDZ preview where user can convert to GLB
+        await _viewUsdzPreview(scan);
+
+        // Refresh to show updated scan if GLB was created
+        setState(() {});
+      }
+    }
   }
 
   void _confirmDeleteScan(ScanData scan) {
