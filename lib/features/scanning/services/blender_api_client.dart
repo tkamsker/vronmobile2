@@ -17,6 +17,8 @@ import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/blender_api_models.dart';
+import '../models/error_context.dart';
+import './error_log_service.dart';
 
 class BlenderApiClient {
   late final String baseUrl;
@@ -25,6 +27,7 @@ class BlenderApiClient {
   late final int pollIntervalSeconds;
 
   final http.Client _client;
+  final ErrorLogService _errorLogService;
 
   /// Create HTTP client with certificate verification disabled in debug mode
   /// Similar to curl -k, but only for development/testing
@@ -44,15 +47,41 @@ class BlenderApiClient {
     }
   }
 
-  BlenderApiClient({http.Client? client}) : _client = client ?? _createHttpClient() {
-    // Load configuration from .env
-    baseUrl = dotenv.env['BLENDER_API_BASE_URL'] ??
-              'https://blenderapi.stage.motorenflug.at';
-    apiKey = dotenv.env['BLENDER_API_KEY'] ?? '';
-    timeoutSeconds = int.tryParse(dotenv.env['BLENDER_API_TIMEOUT_SECONDS'] ?? '900') ?? 900;
-    pollIntervalSeconds = int.tryParse(dotenv.env['BLENDER_API_POLL_INTERVAL_SECONDS'] ?? '2') ?? 2;
+  BlenderApiClient({
+    http.Client? client,
+    String? baseUrl,
+    String? apiKey,
+    int? timeoutSeconds,
+    int? pollIntervalSeconds,
+    ErrorLogService? errorLogService,
+  })  : _client = client ?? _createHttpClient(),
+        _errorLogService = errorLogService ?? ErrorLogService() {
+    // Load configuration from parameters or .env (with fallback defaults for testing)
+    String? envBaseUrl;
+    String? envApiKey;
+    int? envTimeoutSeconds;
+    int? envPollIntervalSeconds;
 
-    if (apiKey.isEmpty || apiKey.length < 16) {
+    try {
+      envBaseUrl = dotenv.env['BLENDER_API_BASE_URL'];
+      envApiKey = dotenv.env['BLENDER_API_KEY'];
+      envTimeoutSeconds = int.tryParse(dotenv.env['BLENDER_API_TIMEOUT_SECONDS'] ?? '900');
+      envPollIntervalSeconds = int.tryParse(dotenv.env['BLENDER_API_POLL_INTERVAL_SECONDS'] ?? '2');
+    } catch (e) {
+      // DotEnv not initialized (likely in test environment), use defaults
+      if (kDebugMode) {
+        print('⚠️ [BlenderAPI] DotEnv not initialized, using provided parameters or defaults');
+      }
+    }
+
+    this.baseUrl = baseUrl ??
+        envBaseUrl ??
+        'https://blenderapi.stage.motorenflug.at';
+    this.apiKey = apiKey ?? envApiKey ?? '';
+    this.timeoutSeconds = timeoutSeconds ?? envTimeoutSeconds ?? 900;
+    this.pollIntervalSeconds = pollIntervalSeconds ?? envPollIntervalSeconds ?? 2;
+
+    if (this.apiKey.isEmpty || this.apiKey.length < 16) {
       throw BlenderApiException(
         statusCode: 0,
         message: 'BLENDER_API_KEY not configured in .env or too short (minimum 16 characters)',
@@ -79,7 +108,7 @@ class BlenderApiClient {
       if (response.statusCode == 201) {
         return BlenderApiSession.fromJson(json.decode(response.body));
       } else {
-        throw _handleError(response);
+        throw await _handleError(response);
       }
     } on SocketException {
       throw BlenderApiException(
@@ -143,7 +172,7 @@ class BlenderApiClient {
       if (response.statusCode == 200) {
         return BlenderApiUploadResponse.fromJson(json.decode(response.body));
       } else {
-        throw _handleError(response);
+        throw await _handleError(response, sessionId: sessionId);
       }
     } on SocketException {
       throw BlenderApiException(
@@ -183,7 +212,7 @@ class BlenderApiClient {
       if (response.statusCode == 200) {
         return BlenderApiProcessingStarted.fromJson(json.decode(response.body));
       } else {
-        throw _handleError(response);
+        throw await _handleError(response, sessionId: sessionId);
       }
     } on SocketException {
       throw BlenderApiException(
@@ -211,7 +240,7 @@ class BlenderApiClient {
       if (response.statusCode == 200) {
         return BlenderApiStatus.fromJson(json.decode(response.body));
       } else {
-        throw _handleError(response);
+        throw await _handleError(response, sessionId: sessionId);
       }
     } on SocketException {
       throw BlenderApiException(
@@ -229,6 +258,9 @@ class BlenderApiClient {
   /// Download converted GLB file
   /// GET /sessions/{sessionId}/download/{filename}
   /// Returns File object with downloaded GLB
+  ///
+  /// ⚠️ IMPORTANT: Callers must wait 2 seconds after this completes before deleting the session
+  /// (See convertUsdzToGlb() for the recommended high-level workflow)
   Future<File> downloadFile({
     required String sessionId,
     required String filename,
@@ -271,7 +303,7 @@ class BlenderApiClient {
         return file;
       } else {
         final response = await http.Response.fromStream(streamedResponse);
-        throw _handleError(response);
+        throw await _handleError(response, sessionId: sessionId);
       }
     } on SocketException {
       throw BlenderApiException(
@@ -306,9 +338,115 @@ class BlenderApiClient {
     }
   }
 
+  /// Complete USDZ to GLB conversion workflow with mandatory race condition waits
+  ///
+  /// This is the recommended high-level method that orchestrates the entire conversion:
+  /// 1. Create session
+  /// 2. Upload USDZ file
+  /// 3. Start conversion
+  /// 4. Poll until complete
+  /// 5. ⚠️ CRITICAL: Wait 3 seconds (file system flush)
+  /// 6. Download GLB file
+  /// 7. ⚠️ CRITICAL: Wait 2 seconds (HTTP stream closure)
+  /// 8. Delete session (cleanup)
+  ///
+  /// Returns the downloaded GLB file
+  ///
+  /// Reference: PRD lines 890-939 (Race Condition Fix - Mandatory Wait Periods)
+  Future<File> convertUsdzToGlb({
+    required File usdzFile,
+    String? outputFilename,
+    ConversionParams? conversionParams,
+    Function(int sent, int total)? onUploadProgress,
+    Function(int progress)? onConversionProgress,
+  }) async {
+    String? sessionId;
+
+    try {
+      // 1. Create session
+      final session = await createSession();
+      sessionId = session.sessionId;
+
+      // 2. Upload USDZ file
+      final uploadResponse = await uploadFile(
+        sessionId: sessionId,
+        file: usdzFile,
+        onProgress: onUploadProgress,
+      );
+
+      // 3. Start conversion
+      await startConversion(
+        sessionId: sessionId,
+        inputFilename: uploadResponse.filename,
+        outputFilename: outputFilename,
+        conversionParams: conversionParams,
+      );
+
+      // 4. Poll until complete
+      String? downloadFilename;
+      await for (final status in pollStatus(sessionId: sessionId)) {
+        if (onConversionProgress != null) {
+          onConversionProgress(status.progress);
+        }
+
+        if (status.isCompleted) {
+          downloadFilename = status.result?.filename;
+          break;
+        }
+      }
+
+      if (downloadFilename == null) {
+        throw BlenderApiException(
+          statusCode: 500,
+          message: 'Conversion completed but no output filename provided',
+          sessionId: sessionId,
+        );
+      }
+
+      // 5. ⚠️ CRITICAL: Wait 3 seconds after completion
+      //    Reason: File system needs time to finalize the file
+      //    - Backend file system needs to flush buffers
+      //    - Blender may still be writing final metadata
+      //    - File size needs to stabilize
+      print('⏱️ [BlenderAPI] Waiting 3 seconds for file system flush...');
+      await Future.delayed(Duration(seconds: 3));
+
+      // 6. Download GLB file
+      final file = await downloadFile(
+        sessionId: sessionId,
+        filename: downloadFilename,
+      );
+
+      // 7. ⚠️ CRITICAL: Wait 2 seconds after download
+      //    Reason: HTTP stream needs time to fully close
+      //    - HTTP chunked transfer encoding needs to complete
+      //    - Connection needs to cleanly close
+      print('⏱️ [BlenderAPI] Waiting 2 seconds for HTTP stream closure...');
+      await Future.delayed(Duration(seconds: 2));
+
+      // 8. Delete session (cleanup)
+      await deleteSession(sessionId);
+
+      return file;
+    } catch (e) {
+      // Attempt cleanup on error (best effort)
+      if (sessionId != null) {
+        try {
+          await deleteSession(sessionId);
+        } catch (_) {
+          // Ignore cleanup errors
+        }
+      }
+      rethrow;
+    }
+  }
+
   /// Poll session status until completion or failure
   /// Polls every pollIntervalSeconds (default: 2 seconds)
   /// Throws exception if conversion fails or timeout exceeded
+  ///
+  /// ⚠️ IMPORTANT: Callers must wait 3 seconds after this completes before downloading
+  /// (See convertUsdzToGlb() for the recommended high-level workflow)
   Stream<BlenderApiStatus> pollStatus({
     required String sessionId,
     Duration? maxDuration,
@@ -347,19 +485,50 @@ class BlenderApiClient {
   }
 
   /// Handle HTTP error responses
-  BlenderApiException _handleError(http.Response response) {
+  /// Logs errors using ErrorLogService and creates exception with sessionId
+  Future<BlenderApiException> _handleError(
+    http.Response response, {
+    String? sessionId,
+    int retryCount = 0,
+  }) async {
+    BlenderApiException exception;
+
     try {
       final error = BlenderApiError.fromJson(json.decode(response.body));
-      return BlenderApiException.fromError(response.statusCode, error);
+      exception = BlenderApiException.fromError(
+        response.statusCode,
+        error,
+        sessionId: sessionId,
+      );
     } catch (e) {
       // If error response is not JSON, create generic exception
-      return BlenderApiException(
+      exception = BlenderApiException(
         statusCode: response.statusCode,
         message: response.body.isNotEmpty
             ? response.body
             : 'HTTP ${response.statusCode} error',
+        sessionId: sessionId,
       );
     }
+
+    // Log error using ErrorLogService (Phase 3 integration)
+    try {
+      final errorContext = ErrorContext(
+        timestamp: DateTime.now(),
+        sessionId: sessionId,
+        httpStatus: exception.statusCode,
+        errorCode: exception.errorCode,
+        message: exception.message,
+        retryCount: retryCount,
+        isRecoverable: exception.isRecoverable,
+      );
+      await _errorLogService.logError(errorContext);
+    } catch (logError) {
+      // Silently fail - logging errors shouldn't crash the app
+      print('Warning: Failed to log error: $logError');
+    }
+
+    return exception;
   }
 
   /// Close HTTP client
