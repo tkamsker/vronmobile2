@@ -7,6 +7,7 @@ import '../services/blender_api_client.dart';
 import '../models/blender_api_models.dart';
 import 'scanning_screen.dart';
 import 'glb_preview_screen.dart';
+import 'session_diagnostics_screen.dart';
 
 /// USDZ Preview Screen (Requirements/USDZ_Preview.jpg)
 ///
@@ -31,6 +32,7 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
   double _conversionProgress = 0.0;
   String _conversionStatus = '';
   BlenderApiClient? _apiClient;
+  String? _lastFailedSessionId; // Store session ID for diagnostics
 
   @override
   Widget build(BuildContext context) {
@@ -319,6 +321,15 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
       // Initialize BlenderAPI client
       _apiClient = BlenderApiClient();
       print('🔄 [BlenderAPI] Starting USDZ→GLB conversion');
+      print('📄 [BlenderAPI] Source file: ${widget.scanData.localPath}');
+
+      // ========================================
+      // BACKEND-ALIGNED WORKFLOW (Option A)
+      // Following proven workflow from:
+      // - simple_convert_test.py
+      // - download_result.sh
+      // NO artificial waits (backend handles synchronization)
+      // ========================================
 
       // Step 1: Create session (10% progress)
       setState(() {
@@ -329,6 +340,7 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
       final session = await _apiClient!.createSession();
       sessionId = session.sessionId;
       print('✅ [BlenderAPI] Session created: $sessionId');
+      print('⏰ [BlenderAPI] Session expires: ${session.expiresAt}');
 
       // Step 2: Upload USDZ file (10% → 40% progress)
       setState(() {
@@ -337,12 +349,15 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
       });
 
       final usdzFile = File(widget.scanData.localPath);
+      final fileSizeBytes = await usdzFile.length();
+      final fileSizeMB = (fileSizeBytes / 1024 / 1024).toStringAsFixed(2);
+      print('📦 [BlenderAPI] File size: $fileSizeMB MB ($fileSizeBytes bytes)');
 
-      // Note: Upload happens atomically (file is read as bytes, then sent)
-      // Progress jumps to 40% once upload completes
+      // Upload with explicit asset type (matches backend: X-Asset-Type: model/vnd.usdz+zip)
       final uploadResponse = await _apiClient!.uploadFile(
         sessionId: sessionId,
         file: usdzFile,
+        assetType: 'model/vnd.usdz+zip', // ✅ Explicit, matches backend test
         onProgress: (sent, total) {
           if (mounted) {
             setState(() {
@@ -352,6 +367,7 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
         },
       );
       print('✅ [BlenderAPI] File uploaded: ${uploadResponse.filename}');
+      print('📊 [BlenderAPI] Upload size: ${uploadResponse.sizeBytes} bytes');
 
       // Step 3: Start conversion (40% progress)
       setState(() {
@@ -359,7 +375,10 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
         _conversionProgress = 0.4;
       });
 
+      // Generate output filename (matches backend: filename.replace('.usdz', '.glb'))
       final outputFilename = uploadResponse.filename.replaceAll('.usdz', '.glb');
+      print('🎯 [BlenderAPI] Target output: $outputFilename');
+
       await _apiClient!.startConversion(
         sessionId: sessionId,
         inputFilename: uploadResponse.filename,
@@ -372,7 +391,7 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
       );
       print('✅ [BlenderAPI] Conversion started');
 
-      // Step 4: Poll status (40% → 80% progress)
+      // Step 4: Poll status until completed (40% → 80% progress)
       setState(() {
         _conversionStatus = 'Converting...';
       });
@@ -385,27 +404,41 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
             _conversionProgress = 0.4 + (status.progress / 100 * 0.4);
             _conversionStatus = 'Converting... ${status.progress}%';
           });
-          print('📊 [BlenderAPI] Progress: ${status.progress}%');
+          print('📊 [BlenderAPI] Status: ${status.sessionStatus}, '
+              'Progress: ${status.progress}%, '
+              'Stage: ${status.processingStage}');
         }
 
         if (status.isCompleted) {
           finalStatus = status;
+          print('✅ [BlenderAPI] Conversion completed');
+          if (status.result != null) {
+            print('📁 [BlenderAPI] Result filename: ${status.result!.filename}');
+            print('📊 [BlenderAPI] Result size: ${status.result!.sizeBytes} bytes');
+            if (status.result!.polygonCount != null) {
+              print('🔺 [BlenderAPI] Polygons: ${status.result!.polygonCount}');
+            }
+          }
           break;
         }
       }
 
       if (finalStatus?.result == null) {
-        throw Exception('Conversion completed but no result returned');
+        throw BlenderApiException(
+          statusCode: 500,
+          message: 'Conversion completed but no result returned',
+          sessionId: sessionId,
+        );
       }
 
-      print('✅ [BlenderAPI] Conversion complete: ${finalStatus!.result!.filename}');
-
-      // Step 5: Download GLB (80% → 100% progress)
+      // Step 5: Download GLB immediately (80% → 100% progress)
+      // ⚠️ NO ARTIFICIAL WAIT - Backend handles file system synchronization
       setState(() {
         _conversionStatus = 'Downloading GLB...';
         _conversionProgress = 0.8;
       });
 
+      print('⬇️ [BlenderAPI] Starting download: ${finalStatus!.result!.filename}');
       final glbFile = await _apiClient!.downloadFile(
         sessionId: sessionId,
         filename: finalStatus.result!.filename,
@@ -418,17 +451,22 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
           }
         },
       );
+      print('✅ [BlenderAPI] Download complete: ${glbFile.path}');
 
       // Save GLB file permanently
       final documentsDir = await getApplicationDocumentsDirectory();
       final permanentPath = '${documentsDir.path}/${finalStatus.result!.filename}';
       final permanentFile = await glbFile.copy(permanentPath);
-      print('✅ [BlenderAPI] GLB saved: $permanentPath');
+      final savedSize = await permanentFile.length();
+      print('💾 [BlenderAPI] Saved to: $permanentPath');
+      print('✓ [BlenderAPI] File size verified: $savedSize bytes');
 
-      // Cleanup session
+      // Step 6: Cleanup session immediately after download
+      // ⚠️ NO ARTIFICIAL WAIT - Backend handles HTTP stream closure
       if (sessionId != null) {
+        print('🧹 [BlenderAPI] Deleting session: $sessionId');
         await _apiClient!.deleteSession(sessionId);
-        print('🧹 [BlenderAPI] Session cleaned up');
+        print('✅ [BlenderAPI] Session cleaned up');
       }
 
       setState(() {
@@ -462,8 +500,22 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
           ),
         );
       }
-    } on BlenderApiException catch (e) {
-      print('❌ [BlenderAPI] Error: $e');
+    } on BlenderApiException catch (e, stackTrace) {
+      print('❌ [BlenderAPI] BlenderApiException caught');
+      print('   Status Code: ${e.statusCode}');
+      print('   Error Code: ${e.errorCode}');
+      print('   Message: ${e.message}');
+      print('   Session ID: ${e.sessionId ?? sessionId}');
+      print('   Recoverable: ${e.isRecoverable}');
+      print('   User Message: ${e.userMessage}');
+      if (e.recommendedAction != null) {
+        print('   Recommended Action: ${e.recommendedAction}');
+      }
+
+      // Store session ID for diagnostics
+      setState(() {
+        _lastFailedSessionId = e.sessionId ?? sessionId;
+      });
 
       if (mounted) {
         showDialog(
@@ -476,9 +528,64 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                 Text('Conversion Failed'),
               ],
             ),
-            content: Text(e.userMessage),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(e.userMessage),
+                if (e.recommendedAction != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    e.recommendedAction!,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Colors.blue,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+                if (e.sessionId != null || sessionId != null) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'Session ID: ${e.sessionId ?? sessionId}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ],
+                if (e.errorCode != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Error Code: ${e.errorCode}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ],
+              ],
+            ),
             actions: [
-              if (e.statusCode != 401 && e.statusCode != 0)
+              if (e.sessionId != null || sessionId != null)
+                TextButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SessionDiagnosticsScreen(
+                          sessionId: e.sessionId ?? sessionId!,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.info_outline),
+                  label: const Text('View Details'),
+                ),
+              if (e.isRecoverable)
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
@@ -494,14 +601,19 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
           ),
         );
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('❌ [BlenderAPI] Unexpected error: $e');
+      print('   Stack trace: ${stackTrace.toString().split('\n').take(5).join('\n')}');
+      if (sessionId != null) {
+        print('   Session ID: $sessionId');
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Conversion failed: $e'),
+            content: Text('Conversion failed: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
             action: SnackBarAction(
               label: 'Retry',
               textColor: Colors.white,
@@ -511,12 +623,14 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
         );
       }
     } finally {
-      // Cleanup session if still exists
+      // Cleanup session if still exists (final safety net)
       if (sessionId != null) {
         try {
+          print('🧹 [BlenderAPI] Final cleanup check for session: $sessionId');
           await _apiClient?.deleteSession(sessionId);
+          print('✅ [BlenderAPI] Final cleanup completed');
         } catch (e) {
-          print('⚠️ [BlenderAPI] Failed to cleanup session: $e');
+          print('⚠️ [BlenderAPI] Final cleanup failed (non-critical): $e');
         }
       }
 
