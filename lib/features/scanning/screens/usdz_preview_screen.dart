@@ -60,11 +60,11 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
         centerTitle: false,
         actions: [
           TextButton(
-            onPressed: () => _saveToProject(),
-            child: const Text(
-              'Ready to save',
+            onPressed: _isConverting ? null : () => _convertAndSave(),
+            child: Text(
+              _isConverting ? 'Converting...' : 'Ready to save',
               style: TextStyle(
-                color: Colors.blue,
+                color: _isConverting ? Colors.grey : Colors.blue,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -656,6 +656,56 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
   void _saveToProject() {
     // Navigate to SaveToProjectScreen or return with "save" action
     Navigator.of(context).pop({'action': 'save', 'scan': widget.scanData});
+  }
+
+  /// Convert to GLB and then save
+  Future<void> _convertAndSave() async {
+    print('💾 [USDZ_PREVIEW] Ready to save - checking for GLB conversion');
+
+    // Check if already converted
+    if (widget.scanData.glbLocalPath != null &&
+        await File(widget.scanData.glbLocalPath!).exists()) {
+      print('✅ [USDZ_PREVIEW] GLB already exists, proceeding to save');
+      _saveToProject();
+      return;
+    }
+
+    print('⚠️ [USDZ_PREVIEW] No GLB file found, requesting conversion');
+
+    // Show dialog to confirm conversion
+    final shouldConvert = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Convert to GLB?'),
+        content: const Text(
+          'This scan needs to be converted to GLB format for saving. '
+          'This may take a few moments.\n\n'
+          'Would you like to convert now?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade600,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Convert'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldConvert != true || !mounted) return;
+
+    // Trigger conversion
+    await _convertToGLB();
+
+    // After successful conversion, navigate to GLB preview which has save button
+    // The GLB preview screen will handle the actual save action
   }
 
   Future<void> _scanAnotherRoom() async {
