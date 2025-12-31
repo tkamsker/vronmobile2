@@ -512,6 +512,110 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
         print('   Recommended Action: ${e.recommendedAction}');
       }
 
+      // Handle rate limit errors (429 TOO_MANY_REQUESTS) with automatic cleanup
+      if (e.statusCode == 429 && e.errorCode == 'TOO_MANY_REQUESTS') {
+        print('🧹 [BlenderAPI] Handling rate limit error - attempting session cleanup');
+
+        if (mounted) {
+          // Show cleanup dialog
+          final shouldCleanup = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+                  SizedBox(width: 12),
+                  Text('Too Many Sessions'),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'You have reached the limit of 3 concurrent sessions.\n\n'
+                    'Would you like to clean up old sessions and retry?',
+                  ),
+                  if (e.details != null && e.details!['tracked_sessions'] != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      'Tracked sessions: ${e.details!['tracked_sessions']}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  icon: const Icon(Icons.cleaning_services),
+                  label: const Text('Clean Up & Retry'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade600,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          );
+
+          if (shouldCleanup == true && mounted) {
+            // Show cleanup progress
+            setState(() {
+              _conversionStatus = 'Cleaning up old sessions...';
+              _conversionProgress = 0.05;
+            });
+
+            try {
+              // Clean up all tracked sessions
+              final cleaned = await _apiClient!.cleanupAllSessions();
+              print('✅ [BlenderAPI] Cleaned up $cleaned sessions');
+
+              if (mounted) {
+                setState(() {
+                  _conversionStatus = 'Retrying conversion...';
+                  _conversionProgress = 0.1;
+                });
+
+                // Wait a bit before retrying
+                await Future.delayed(const Duration(milliseconds: 500));
+
+                // Retry conversion
+                await _convertToGLB();
+                return; // Exit error handler - retry is in progress
+              }
+            } catch (cleanupError) {
+              print('❌ [BlenderAPI] Cleanup failed: $cleanupError');
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to clean up sessions: $cleanupError'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
+          }
+        }
+
+        // Reset conversion state after failed cleanup or cancel
+        if (mounted) {
+          setState(() {
+            _isConverting = false;
+            _conversionProgress = 0.0;
+            _conversionStatus = '';
+          });
+        }
+        return; // Exit error handler
+      }
+
       // Store session ID for diagnostics
       setState(() {
         _lastFailedSessionId = e.sessionId ?? sessionId;
