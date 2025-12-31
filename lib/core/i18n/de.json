@@ -107,5 +107,30 @@
     "loading": "Lädt...",
     "error": "Fehler",
     "success": "Erfolg"
+  },
+  "errors": {
+    "network": {
+      "timeout": "Zeitüberschreitung der Verbindung. Bitte versuchen Sie es erneut.",
+      "connection_failed": "Verbindung fehlgeschlagen. Überprüfen Sie Ihre Internetverbindung.",
+      "offline": "Sie sind offline. Änderungen werden synchronisiert, sobald Sie wieder verbunden sind."
+    },
+    "http": {
+      "429": "Zu viele Anfragen. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
+      "503": "Dienst vorübergehend nicht verfügbar. Bitte versuchen Sie es in Kürze erneut.",
+      "500": "Serverfehler aufgetreten. Unser Team wurde benachrichtigt.",
+      "404": "Ressource nicht gefunden. Sie wurde möglicherweise entfernt.",
+      "400": "Ungültige Anfrage. Bitte überprüfen Sie Ihre Eingabe."
+    },
+    "blender_api": {
+      "invalid_file": "Dateiformat nicht unterstützt. Bitte verwenden Sie USDZ- oder GLB-Dateien.",
+      "malformed_usdz": "Datei scheint beschädigt zu sein. Versuchen Sie, sie erneut zu exportieren.",
+      "file_too_large": "Datei überschreitet die 250 MB Grenze. Bitte reduzieren Sie die Dateigröße.",
+      "invalid_session": "Sitzung nicht gefunden. Bitte starten Sie eine neue Konvertierung.",
+      "session_expired": "Sitzung nach 1 Stunde abgelaufen. Bitte laden Sie erneut hoch."
+    },
+    "fallback": {
+      "generic": "Etwas ist schief gelaufen. Bitte versuchen Sie es erneut.",
+      "retry_exceeded": "Maximale Anzahl von Wiederholungsversuchen erreicht. Bitte versuchen Sie es später erneut."
+    }
   }
 }

@@ -5,6 +5,7 @@
 /// which handles USDZ to GLB conversion via Blender's native import/export.
 
 import 'package:json_annotation/json_annotation.dart';
+import 'package:vronmobile2/features/scanning/services/error_message_service.dart';
 
 part 'blender_api_models.g.dart';
 
@@ -262,42 +263,122 @@ class BlenderApiException implements Exception {
   final String message;
   final String? errorCode;
   final Map<String, dynamic>? details;
+  final String? sessionId; // NEW: Track which session failed
 
   BlenderApiException({
     required this.statusCode,
     required this.message,
     this.errorCode,
     this.details,
+    this.sessionId,
   });
 
-  factory BlenderApiException.fromError(int statusCode, BlenderApiError error) {
+  factory BlenderApiException.fromError(
+    int statusCode,
+    BlenderApiError error, {
+    String? sessionId,
+  }) {
     return BlenderApiException(
       statusCode: statusCode,
       message: error.message,
       errorCode: error.errorCode,
       details: error.details,
+      sessionId: sessionId,
     );
   }
 
   /// User-friendly error message for display
+  /// Integrated with Phase 3 ErrorMessageService for consistent messaging
   String get userMessage {
-    switch (statusCode) {
-      case 401:
-        return 'Service authentication failed. Please contact support.';
-      case 404:
-        return 'Session not found or expired. Please try again.';
-      case 409:
-        return 'Processing already in progress for this session.';
-      case 422:
-        return 'File validation failed: ${message}';
-      case 429:
-        return 'Service busy. Maximum 3 scans can be processed simultaneously. Please try again in a moment.';
-      case 500:
-      case 504:
-        return 'Service temporarily unavailable. Please try again later.';
-      default:
-        return message;
+    // Import done at top of file: import 'package:vronmobile2/features/scanning/services/error_message_service.dart';
+    final errorMessageService = ErrorMessageService();
+
+    // Map BlenderAPI error codes to ErrorMessageService format
+    String? mappedErrorCode;
+    if (errorCode != null) {
+      switch (errorCode) {
+        case 'FILE_TOO_LARGE':
+          mappedErrorCode = 'file_too_large';
+          break;
+        case 'INVALID_FILE':
+        case 'UNSUPPORTED_FORMAT':
+          mappedErrorCode = 'invalid_file';
+          break;
+        case 'MALFORMED_USDZ':
+        case 'CORRUPTED_FILE':
+          mappedErrorCode = 'malformed_usdz';
+          break;
+        case 'SESSION_EXPIRED':
+        case 'SESSION_NOT_FOUND':
+          mappedErrorCode = 'session_expired';
+          break;
+        case 'TIMEOUT':
+        case 'PROCESSING_TIMEOUT':
+          mappedErrorCode = 'timeout';
+          break;
+        case 'NETWORK_ERROR':
+          mappedErrorCode = 'connection_failed';
+          break;
+      }
     }
+
+    // Use ErrorMessageService for consistent, localized messages
+    return errorMessageService.getUserMessage(mappedErrorCode, statusCode);
+  }
+
+  /// Get recommended action for this error
+  String? get recommendedAction {
+    final errorMessageService = ErrorMessageService();
+
+    // Map error code as above
+    String? mappedErrorCode;
+    if (errorCode != null) {
+      switch (errorCode) {
+        case 'FILE_TOO_LARGE':
+          mappedErrorCode = 'file_too_large';
+          break;
+        case 'INVALID_FILE':
+        case 'UNSUPPORTED_FORMAT':
+          mappedErrorCode = 'invalid_file';
+          break;
+        case 'MALFORMED_USDZ':
+        case 'CORRUPTED_FILE':
+          mappedErrorCode = 'malformed_usdz';
+          break;
+        case 'SESSION_EXPIRED':
+        case 'SESSION_NOT_FOUND':
+          mappedErrorCode = 'session_expired';
+          break;
+        case 'TIMEOUT':
+        case 'PROCESSING_TIMEOUT':
+          mappedErrorCode = 'timeout';
+          break;
+        case 'NETWORK_ERROR':
+          mappedErrorCode = 'connection_failed';
+          break;
+      }
+    }
+
+    return errorMessageService.getRecommendedAction(mappedErrorCode, statusCode);
+  }
+
+  /// Check if error is recoverable (user can retry)
+  bool get isRecoverable {
+    // Network errors, timeouts, and service unavailable are recoverable
+    if (statusCode == 0 || // Network error
+        statusCode == 408 || // Request timeout
+        statusCode == 429 || // Too many requests
+        statusCode == 503 || // Service unavailable
+        statusCode == 504) { // Gateway timeout
+      return true;
+    }
+
+    // Timeout error codes are recoverable
+    if (errorCode == 'TIMEOUT' || errorCode == 'PROCESSING_TIMEOUT' || errorCode == 'NETWORK_ERROR') {
+      return true;
+    }
+
+    return false;
   }
 
   @override
