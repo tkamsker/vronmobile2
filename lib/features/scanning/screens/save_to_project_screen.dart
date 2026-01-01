@@ -52,7 +52,10 @@ class _SaveToProjectScreenState extends State<SaveToProjectScreen> {
     });
 
     try {
-      final projects = await _projectService.fetchProjects();
+      // Only fetch projects with MANAGED_BY_BRING_YOUR_OWN_WORLDS_TIER subscription
+      final projects = await _projectService.fetchProjectsBySubscriptionStatus(
+        'MANAGED_BY_BRING_YOUR_OWN_WORLDS_TIER',
+      );
       setState(() {
         _projects = projects;
         _isLoadingProjects = false;
@@ -223,7 +226,10 @@ class _SaveToProjectScreenState extends State<SaveToProjectScreen> {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    LinearProgressIndicator(value: _uploadProgress),
+                    // Guard against NaN values that can cause CoreGraphics errors
+                    LinearProgressIndicator(
+                      value: (_uploadProgress.isNaN || !_uploadProgress.isFinite) ? null : _uploadProgress,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       _getProgressMessage(),

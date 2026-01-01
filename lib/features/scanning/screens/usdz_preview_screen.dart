@@ -1,6 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:native_ar_viewer/native_ar_viewer.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/scan_data.dart';
+import '../models/conversion_result.dart';
+import '../services/scan_upload_service.dart';
 import 'scanning_screen.dart';
 
 /// USDZ Preview Screen (Requirements/USDZ_Preview.jpg)
@@ -11,10 +15,14 @@ import 'scanning_screen.dart';
 /// - "Ready to save" button to proceed with upload
 class UsdzPreviewScreen extends StatefulWidget {
   final ScanData scanData;
+  final String? projectId;
+  final ScanUploadService? uploadService;
 
   const UsdzPreviewScreen({
     super.key,
     required this.scanData,
+    this.projectId,
+    this.uploadService,
   });
 
   @override
@@ -23,13 +31,25 @@ class UsdzPreviewScreen extends StatefulWidget {
 
 class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
   bool _isConverting = false;
+  late final ScanUploadService _uploadService;
+  ConversionResult? _conversionResult;
+
+  @override
+  void initState() {
+    super.initState();
+    _uploadService = widget.uploadService ?? ScanUploadService();
+  }
 
   @override
   Widget build(BuildContext context) {
     // Extract dimensions from metadata if available
     final metadata = widget.scanData.metadata;
-    final width = metadata?['width'] as double?;
-    final height = metadata?['height'] as double?;
+    final rawWidth = metadata?['width'] as double?;
+    final rawHeight = metadata?['height'] as double?;
+
+    // Guard against NaN values that can cause CoreGraphics errors
+    final width = (rawWidth != null && !rawWidth.isNaN && rawWidth.isFinite) ? rawWidth : null;
+    final height = (rawHeight != null && !rawHeight.isNaN && rawHeight.isFinite) ? rawHeight : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -248,12 +268,33 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
 
   Future<void> _viewInAR() async {
     try {
-      print('🔍 [USDZ] Opening AR viewer for: ${widget.scanData.localPath}');
+      print('🔍 [USDZ] Opening AR viewer in object mode for: ${widget.scanData.localPath}');
 
-      // Use native AR viewer (iOS QuickLook)
-      await NativeArViewer.launchAR(widget.scanData.localPath);
+      if (Platform.isIOS) {
+        // Use url_launcher with URL fragment to start in object mode
+        // #allowsContentScaling=0 tells AR Quick Look to start in object viewing mode
+        final file = File(widget.scanData.localPath);
+        if (!await file.exists()) {
+          throw Exception('USDZ file not found');
+        }
 
-      print('✅ [USDZ] AR viewer launched successfully');
+        final uri = Uri.file(
+          widget.scanData.localPath,
+          windows: false,
+        ).replace(fragment: 'allowsContentScaling=0');
+
+        if (!await canLaunchUrl(uri)) {
+          // Fallback to native_ar_viewer if url_launcher doesn't work
+          await NativeArViewer.launchAR(widget.scanData.localPath);
+        } else {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+
+        print('✅ [USDZ] AR viewer launched successfully in object mode');
+      } else {
+        // Android fallback (though LiDAR is iOS-only)
+        await NativeArViewer.launchAR(widget.scanData.localPath);
+      }
     } catch (e) {
       print('❌ [USDZ] Failed to launch AR viewer: $e');
       if (mounted) {
@@ -268,18 +309,118 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
   }
 
   Future<void> _convertToGLB() async {
-    // Phase 1: Show info dialog about server-side conversion
-    // On-device conversion requires USD SDK integration (4-8 week project)
-    print('ℹ️ [USDZ] Convert to GLB: Showing Phase 2 info dialog');
+    print('🔄 [USDZ] Starting backend GLB conversion');
 
+    // Check if projectId is available
+    if (widget.projectId == null || widget.projectId!.isEmpty) {
+      _showProjectRequiredDialog();
+      return;
+    }
+
+    setState(() {
+      _isConverting = true;
+    });
+
+    try {
+      // Step 1: Upload USDZ to backend
+      print('📤 [USDZ] Uploading to backend for conversion...');
+      final uploadResult = await _uploadService.uploadScan(
+        scanData: widget.scanData,
+        projectId: widget.projectId!,
+        onProgress: (progress) {
+          print('📊 [USDZ] Upload progress: ${(progress * 100).toStringAsFixed(1)}%');
+        },
+      );
+
+      if (!uploadResult.success) {
+        throw Exception(uploadResult.message ?? 'Upload failed');
+      }
+
+      final scanId = uploadResult.scanId;
+      if (scanId == null) {
+        throw Exception('No scan ID returned from upload');
+      }
+
+      print('✅ [USDZ] Upload complete. Scan ID: $scanId');
+      print('🔄 [USDZ] Polling conversion status...');
+
+      // Step 2: Poll for conversion status
+      final conversionResult = await _uploadService.pollConversionStatus(
+        scanId: scanId,
+        onStatusChange: (status) {
+          print('📊 [USDZ] Conversion status: ${status.name}');
+        },
+      );
+
+      setState(() {
+        _conversionResult = conversionResult;
+        _isConverting = false;
+      });
+
+      if (!mounted) return;
+
+      // Step 3: Show result
+      if (conversionResult.isSuccess && conversionResult.glbUrl != null) {
+        _showConversionSuccessDialog(conversionResult.glbUrl!);
+      } else {
+        final errorMessage = conversionResult.error?.message ??
+                            conversionResult.message ??
+                            'Conversion failed';
+        throw Exception(errorMessage);
+      }
+    } catch (e) {
+      print('❌ [USDZ] Conversion failed: $e');
+      setState(() {
+        _isConverting = false;
+      });
+
+      if (mounted) {
+        _showConversionErrorDialog(e.toString());
+      }
+    }
+  }
+
+  void _showProjectRequiredDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
-            Icon(Icons.info_outline, color: Colors.blue, size: 28),
+            Icon(Icons.info_outline, color: Colors.orange, size: 28),
             SizedBox(width: 12),
-            Text('GLB Conversion'),
+            Text('Project Required'),
+          ],
+        ),
+        content: const Text(
+          'To convert this USDZ file to GLB format, please save it to a project first. '
+          'The conversion will be processed on our servers.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _saveToProject();
+            },
+            child: const Text('Save to Project'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showConversionSuccessDialog(String glbUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 28),
+            SizedBox(width: 12),
+            Text('Conversion Complete'),
           ],
         ),
         content: Column(
@@ -287,36 +428,90 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'On-device USDZ→GLB conversion is not supported due to iOS framework limitations.',
+              'Your USDZ file has been successfully converted to GLB format!',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Available options:',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.blue.shade700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text('• View USDZ in native AR viewer (tap "View in AR")'),
-            const SizedBox(height: 4),
-            const Text('• Save to project for server-side GLB conversion'),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: Colors.green.shade50,
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'GLB file is ready',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'The GLB file is now available in your project and can be viewed in the web viewer.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showConversionErrorDialog(String error) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red, size: 28),
+            SizedBox(width: 12),
+            Text('Conversion Failed'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'The GLB conversion failed with the following error:',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.shade200),
               ),
               child: Text(
-                'Server-side conversion will be available in the next update.',
+                error,
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey.shade700,
-                  fontStyle: FontStyle.italic,
+                  color: Colors.red.shade700,
+                  fontFamily: 'monospace',
                 ),
               ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'You can still save the USDZ file to your project and try conversion again later.',
+              style: TextStyle(fontSize: 12),
             ),
           ],
         ),

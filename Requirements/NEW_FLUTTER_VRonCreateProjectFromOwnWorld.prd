@@ -1,0 +1,341 @@
+# Product Requirements Document: Creating a Project from an "Own World"
+
+**Version:** 1.0
+**Date:** 2026-01-01
+**Author:** Gemini
+
+## 1. Overview
+
+This document outlines the process for creating a VRon project from a user's "own world" in a Flutter application.
+
+**IMPORTANT:** The mutation `VRonCreateProjectFromOwnWorld` was not found in the codebase. This document describes a **two-step process** to achieve the same result by combining two separate mutations: one to create the world, and another to create the project.
+
+It is recommended that a single, combined mutation (`VRonCreateProjectFromOwnWorld`) be added to the backend to simplify the client-side implementation.
+
+The two steps are:
+1.  **Create a World:** Upload the world and mesh files to create a new world record in the database. This will return a `worldId`.
+2.  **Create a Project:** Use the `worldId` from the previous step to create a new project.
+
+## 2. Step 1: Create a World
+
+This step involves calling a mutation that creates a new world and uploads the associated `.glb` files. This is based on the `createOrUpdateWorld` method found in `api-revised/src/world/world.service.ts`.
+
+### 2.1. `CreateWorldInput`
+
+The mutation will expect an input of type `CreateWorldInput`, which includes the following fields:
+
+```typescript
+export type CreateWorldInput = {
+  description: I18NFieldValue[];
+  slug: string;
+  isFeatured: boolean;
+  isHidden: boolean;
+  meshFile: FileUpload;
+  worldFile: FileUpload;
+  image: FileUpload;
+  spawnCoordinates: SpatialCoordinates;
+  prices: WorldPrices;
+  assets: Pick<WorldAsset, 'coordinates' | 'width' | 'height'>[];
+  usageRecommendation: I18NFieldValue[];
+};
+```
+
+### 2.2. Shell Script Usage (`curl`)
+
+Here is an example of how to call the `createWorld` mutation from a shell script using `curl`.
+
+```bash
+#!/bin/bash
+
+# Replace with your actual values
+AUTH_TOKEN="your_auth_token"
+GRAPHQL_ENDPOINT="your_graphql_endpoint"
+WORLD_FILE_PATH="./path/to/your/world.glb"
+MESH_FILE_PATH="./path/to/your/mesh.glb"
+IMAGE_FILE_PATH="./path/to/your/image.png"
+SLUG="my-new-world"
+
+# GraphQL mutation
+MUTATION=' 
+mutation createWorld($input: CreateWorldInput!) {
+  createWorld(input: $input) {
+    id
+    slug
+  }
+}
+'
+
+# The `operations` field defines the query and variables
+# The `map` field maps the files to the variables
+curl -X POST "$GRAPHQL_ENDPOINT" \
+     -H "Authorization: Bearer $AUTH_TOKEN" \
+     -F operations='{ "query": "'$MUTATION'", "variables": { "input": { "slug": "'$SLUG'", "worldFile": null, "meshFile": null, "image": null, "description": [], "isFeatured": false, "isHidden": false, "spawnCoordinates": {"x": 0, "y": 0, "z": 0}, "prices": {"monthly": 0, "yearly": 0, "currency": "USD"}, "assets": [], "usageRecommendation": [] } } }' \
+     -F map='{ "worldFile": ["variables.input.worldFile"], "meshFile": ["variables.input.meshFile"], "image": ["variables.input.image"] }' \
+     -F worldFile=@"$WORLD_FILE_PATH" \
+     -F meshFile=@"$MESH_FILE_PATH" \
+     -F image=@"$IMAGE_FILE_PATH"
+```
+
+### 2.3. Flutter Usage
+
+In a Flutter application, you can use the `http` package to make the multipart request.
+
+```dart
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
+import 'dart:io';
+import 'dart:convert';
+
+Future<String> createWorld({
+  required String slug,
+  required File worldFile,
+  required File meshFile,
+  required File imageFile,
+}) async {
+  final uri = Uri.parse('YOUR_GRAPHQL_ENDPOINT');
+  final request = http.MultipartRequest('POST', uri);
+
+  final mutation = """
+    mutation createWorld(\$input: CreateWorldInput!) {
+      createWorld(input: \$input) {
+        id
+        slug
+      }
+    }
+  """;
+
+  final variables = {
+    'input': {
+      'slug': slug,
+      'worldFile': null,
+      'meshFile': null,
+      'image': null,
+      'description': [],
+      'isFeatured': false,
+      'isHidden': false,
+      'spawnCoordinates': {'x': 0, 'y': 0, 'z': 0},
+      'prices': {'monthly': 0, 'yearly': 0, 'currency': 'USD'},
+      'assets': [],
+      'usageRecommendation': [],
+    }
+  };
+
+  request.fields['operations'] = json.encode({
+    'query': mutation,
+    'variables': variables,
+  });
+
+  request.fields['map'] = json.encode({
+    'worldFile': ['variables.input.worldFile'],
+    'meshFile': ['variables.input.meshFile'],
+    'image': ['variables.input.image'],
+  });
+
+  request.files.add(http.MultipartFile(
+    'worldFile',
+    worldFile.readAsBytes().asStream(),
+    worldFile.lengthSync(),
+    filename: worldFile.path.split('/').last,
+    contentType: MediaType('model', 'gltf-binary'),
+  ));
+
+  request.files.add(http.MultipartFile(
+    'meshFile',
+    meshFile.readAsBytes().asStream(),
+    meshFile.lengthSync(),
+    filename: meshFile.path.split('/').last,
+    contentType: MediaType('model', 'gltf-binary'),
+  ));
+
+  request.files.add(http.MultipartFile(
+    'image',
+    imageFile.readAsBytes().asStream(),
+    imageFile.lengthSync(),
+    filename: imageFile.path.split('/').last,
+    contentType: MediaType('image', 'png'), // Or appropriate image type
+  ));
+
+  request.headers['Authorization'] = 'Bearer YOUR_AUTH_TOKEN';
+
+  final response = await request.send();
+  final responseBody = await response.stream.bytesToString();
+
+  if (response.statusCode != 200) {
+    throw Exception('Failed to create world: ${response.statusCode} $responseBody');
+  }
+
+  final jsonResponse = json.decode(responseBody);
+  if (jsonResponse['errors'] != null) {
+    throw Exception('GraphQL Error: ${jsonResponse['errors']}');
+  }
+
+  return jsonResponse['data']['createWorld']['id'];
+}
+```
+
+## 3. Step 2: Create a Project
+
+Once you have the `worldId` from the previous step, you can create a project using the `VRonCreateProject` mutation.
+
+### 3.1. `VRonCreateProjectInput`
+
+This mutation takes a `VRonCreateProjectInput` object, which contains a single field:
+
+```typescript
+export type VRonCreateProjectInput = {
+  worldId: Scalars['String']['input'];
+};
+```
+
+### 3.2. Shell Script Usage (`curl`)
+
+Here is an example of how to call the `VRonCreateProject` mutation from a shell script.
+
+```bash
+#!/bin/bash
+
+# Replace with your actual values
+AUTH_TOKEN="your_auth_token"
+GRAPHQL_ENDPOINT="your_graphql_endpoint"
+WORLD_ID="your_world_id_from_step_1"
+
+# GraphQL mutation
+MUTATION=' 
+mutation CreateProject($input: VRonCreateProjectInput!) {
+  VRonCreateProject(input: $input) {
+    projectId
+  }
+}
+'
+
+# The JSON payload for the request
+JSON_PAYLOAD=$(printf '{"query":"%s","variables":{"input":{"worldId":"%s"}}}' "$MUTATION" "$WORLD_ID")
+
+curl -X POST "$GRAPHQL_ENDPOINT" \
+     -H "Authorization: Bearer $AUTH_TOKEN" \
+     -H "Content-Type: application/json" \
+     -d "$JSON_PAYLOAD"
+```
+
+### 3.3. Flutter Usage
+
+In Flutter, you can use the `graphql_flutter` package to make this mutation.
+
+```dart
+import 'package:graphql_flutter/graphql_flutter.dart';
+
+Future<String> createProject(GraphQLClient client, String worldId) async {
+  final mutation = gql('''
+    mutation CreateProject(\$input: VRonCreateProjectInput!) {
+      VRonCreateProject(input: \$input) {
+        projectId
+      }
+    }
+  ''');
+
+  final result = await client.mutate(
+    MutationOptions(
+      document: mutation,
+      variables: {
+        'input': {
+          'worldId': worldId,
+        },
+      },
+    ),
+  );
+
+  if (result.hasException) {
+    throw result.exception!;
+  }
+
+  return result.data!['VRonCreateProject']['projectId'];
+}
+```
+
+## 4. Combined Flutter Implementation
+
+Here is a complete example of a Flutter widget that combines both steps.
+
+```dart
+import 'package:flutter/material.dart';
+import 'dart:io';
+// import your file picker, API service, and state management solution
+
+class CreateProjectFromOwnWorldScreen extends StatefulWidget {
+  @override
+  _CreateProjectFromOwnWorldScreenState createState() =>
+      _CreateProjectFromOwnWorldScreenState();
+}
+
+class _CreateProjectFromOwnWorldScreenState
+    extends State<CreateProjectFromOwnWorldScreen> {
+  File? _worldFile;
+  File? _meshFile;
+  File? _imageFile;
+  bool _isLoading = false;
+
+  // Methods to pick files...
+
+  Future<void> _createProject() async {
+    if (_worldFile == null || _meshFile == null || _imageFile == null) {
+      // Show error
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // Step 1: Create the world
+      final worldId = await ApiService.createWorld(
+        slug: 'a-unique-slug', // Should be collected from a form field
+        worldFile: _worldFile!,
+        meshFile: _meshFile!,
+        imageFile: _imageFile!,
+      );
+
+      // Step 2: Create the project
+      final projectId = await ApiService.createProject(worldId);
+
+      // Navigate to the new project's page
+      // Navigator.of(context).pushReplacementNamed('/projects/$projectId');
+
+    } catch (e) {
+      // Handle error
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Create Project from Own World'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Add buttons to pick world, mesh, and image files...
+            
+            SizedBox(height: 20),
+            if (_isLoading)
+              CircularProgressIndicator()
+            else
+              ElevatedButton(
+                onPressed: _createProject,
+                child: Text('Create Project'),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+This two-step process, while more complex than a single mutation, provides a clear path to implementing the "Create Project from Own World" feature.
