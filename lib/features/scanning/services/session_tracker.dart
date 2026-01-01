@@ -18,7 +18,9 @@ import 'dart:convert';
 /// ```
 class SessionTracker {
   static const String _storageKey = 'blender_api_sessions';
-  static const Duration _sessionMaxAge = Duration(hours: 1); // Match backend TTL
+  static const Duration _sessionMaxAge = Duration(
+    hours: 1,
+  ); // Match backend TTL
 
   /// Add a session to tracking
   Future<void> addSession(String sessionId) async {
@@ -36,7 +38,9 @@ class SessionTracker {
     });
 
     await prefs.setString(_storageKey, json.encode(sessions));
-    print('📝 [SESSION_TRACKER] Added session: $sessionId (${sessions.length} total)');
+    print(
+      '📝 [SESSION_TRACKER] Added session: $sessionId (${sessions.length} total)',
+    );
   }
 
   /// Remove a session from tracking (after successful deletion)
@@ -46,7 +50,9 @@ class SessionTracker {
 
     if (sessions.remove(sessionId) != null) {
       await prefs.setString(_storageKey, json.encode(sessions));
-      print('✅ [SESSION_TRACKER] Removed session: $sessionId (${sessions.length} remaining)');
+      print(
+        '✅ [SESSION_TRACKER] Removed session: $sessionId (${sessions.length} remaining)',
+      );
     }
   }
 
@@ -71,7 +77,9 @@ class SessionTracker {
       return 0;
     }
 
-    print('🧹 [SESSION_TRACKER] Cleaning up ${sessions.length} tracked sessions...');
+    print(
+      '🧹 [SESSION_TRACKER] Cleaning up ${sessions.length} tracked sessions...',
+    );
 
     int cleaned = 0;
     int failed = 0;
@@ -90,13 +98,17 @@ class SessionTracker {
       }
     }
 
-    print('🧹 [SESSION_TRACKER] Cleanup complete: $cleaned succeeded, $failed failed');
+    print(
+      '🧹 [SESSION_TRACKER] Cleanup complete: $cleaned succeeded, $failed failed',
+    );
     return cleaned;
   }
 
   /// Clean up specific old sessions (older than specified duration)
-  Future<int> cleanupOldSessions(dynamic apiClient,
-      {Duration maxAge = const Duration(minutes: 30)}) async {
+  Future<int> cleanupOldSessions(
+    dynamic apiClient, {
+    Duration maxAge = const Duration(minutes: 30),
+  }) async {
     final sessions = await _getSessions();
     final now = DateTime.now();
     final oldSessions = <String>[];
@@ -114,7 +126,9 @@ class SessionTracker {
       return 0;
     }
 
-    print('🧹 [SESSION_TRACKER] Cleaning up ${oldSessions.length} old sessions (>${maxAge.inMinutes}min)...');
+    print(
+      '🧹 [SESSION_TRACKER] Cleaning up ${oldSessions.length} old sessions (>${maxAge.inMinutes}min)...',
+    );
 
     int cleaned = 0;
     for (final sessionId in oldSessions) {

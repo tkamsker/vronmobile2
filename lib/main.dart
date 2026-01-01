@@ -51,36 +51,36 @@ class VronApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           initialRoute: AppRoutes.main,
           routes: {
-        AppRoutes.main: (context) => const MainScreen(),
-        AppRoutes.home: (context) {
-          final email = ModalRoute.of(context)?.settings.arguments as String?;
-          return HomeScreen(userEmail: email);
-        },
-        AppRoutes.createAccount: (context) =>
-            const PlaceholderScreen(title: 'Create Account'),
-        AppRoutes.guestMode: (context) =>
-            const ScanningScreen(),
-        AppRoutes.projectDetail: (context) {
-          final projectId = ModalRoute.of(context)?.settings.arguments as String?;
-          if (projectId == null) {
-            return const PlaceholderScreen(title: 'Error: No project ID');
-          }
-          return ProjectDetailScreen(projectId: projectId);
-        },
-        AppRoutes.createProject: (context) =>
-            const CreateProjectScreen(),
-        AppRoutes.products: (context) => const ProductsListScreen(),
-        AppRoutes.productDetail: (context) {
-          final productId = ModalRoute.of(context)?.settings.arguments as String?;
-          if (productId == null) {
-            return const PlaceholderScreen(title: 'Error: No product ID');
-          }
-          return ProductDetailScreen(productId: productId);
-        },
-        AppRoutes.lidar: (context) =>
-            const LidarRouterScreen(),
-        AppRoutes.profile: (context) => const ProfileScreen(),
-        AppRoutes.language: (context) => const LanguageScreen(),
+            AppRoutes.main: (context) => const MainScreen(),
+            AppRoutes.home: (context) {
+              final email =
+                  ModalRoute.of(context)?.settings.arguments as String?;
+              return HomeScreen(userEmail: email);
+            },
+            AppRoutes.createAccount: (context) =>
+                const PlaceholderScreen(title: 'Create Account'),
+            AppRoutes.guestMode: (context) => const ScanningScreen(),
+            AppRoutes.projectDetail: (context) {
+              final projectId =
+                  ModalRoute.of(context)?.settings.arguments as String?;
+              if (projectId == null) {
+                return const PlaceholderScreen(title: 'Error: No project ID');
+              }
+              return ProjectDetailScreen(projectId: projectId);
+            },
+            AppRoutes.createProject: (context) => const CreateProjectScreen(),
+            AppRoutes.products: (context) => const ProductsListScreen(),
+            AppRoutes.productDetail: (context) {
+              final productId =
+                  ModalRoute.of(context)?.settings.arguments as String?;
+              if (productId == null) {
+                return const PlaceholderScreen(title: 'Error: No product ID');
+              }
+              return ProductDetailScreen(productId: productId);
+            },
+            AppRoutes.lidar: (context) => const LidarRouterScreen(),
+            AppRoutes.profile: (context) => const ProfileScreen(),
+            AppRoutes.language: (context) => const LanguageScreen(),
           },
           debugShowCheckedModeBanner: false,
         );

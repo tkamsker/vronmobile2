@@ -1,8 +1,5 @@
 /// Product status enum for type-safe status filtering
-enum ProductStatus {
-  ACTIVE,
-  DRAFT,
-}
+enum ProductStatus { ACTIVE, DRAFT }
 
 /// Extension to convert ProductStatus enum to/from String
 extension ProductStatusExtension on ProductStatus {
@@ -55,7 +52,9 @@ class Product {
       title: _extractText(json['title']),
       thumbnail: json['thumbnail'] as String?,
       status: json['status'] as String,
-      category: json['category'] != null ? _extractText(json['category']) : null,
+      category: json['category'] != null
+          ? _extractText(json['category'])
+          : null,
       tracksInventory: json['tracksInventory'] as bool? ?? false,
       variantsCount: json['variantsCount'] as int? ?? 0,
     );

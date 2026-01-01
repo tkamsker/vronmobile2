@@ -48,18 +48,20 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
       // Get initial project count
-      final initialCount =
-          tester.widgetList(find.byType(ProjectCard)).length;
+      final initialCount = tester.widgetList(find.byType(ProjectCard)).length;
 
       if (initialCount > 0) {
         // Enter search text with debounce delay
         await tester.enterText(find.byType(TextField), 'test');
-        await tester.pump(const Duration(milliseconds: 350)); // Wait for debounce
+        await tester.pump(
+          const Duration(milliseconds: 350),
+        ); // Wait for debounce
         await tester.pumpAndSettle();
 
         // Verify filtering occurred
-        final filteredCount =
-            tester.widgetList(find.byType(ProjectCard)).length;
+        final filteredCount = tester
+            .widgetList(find.byType(ProjectCard))
+            .length;
         expect(
           filteredCount <= initialCount,
           isTrue,
@@ -78,16 +80,18 @@ void main() {
         await tester.pump(const Duration(milliseconds: 350));
         await tester.pumpAndSettle();
 
-        final upperCaseCount =
-            tester.widgetList(find.byType(ProjectCard)).length;
+        final upperCaseCount = tester
+            .widgetList(find.byType(ProjectCard))
+            .length;
 
         // Clear and test lowercase
         await tester.enterText(find.byType(TextField), 'project');
         await tester.pump(const Duration(milliseconds: 350));
         await tester.pumpAndSettle();
 
-        final lowerCaseCount =
-            tester.widgetList(find.byType(ProjectCard)).length;
+        final lowerCaseCount = tester
+            .widgetList(find.byType(ProjectCard))
+            .length;
 
         // Case-insensitive search should return same results
         expect(
@@ -105,16 +109,16 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
       if (tester.any(find.byType(ProjectCard))) {
-        final initialCount =
-            tester.widgetList(find.byType(ProjectCard)).length;
+        final initialCount = tester.widgetList(find.byType(ProjectCard)).length;
 
         // Enter text but don't wait for debounce
         await tester.enterText(find.byType(TextField), 'test');
         await tester.pump(const Duration(milliseconds: 50)); // < 300ms
 
         // Projects should not be filtered yet
-        final immediateCount =
-            tester.widgetList(find.byType(ProjectCard)).length;
+        final immediateCount = tester
+            .widgetList(find.byType(ProjectCard))
+            .length;
         expect(
           immediateCount,
           equals(initialCount),
@@ -135,8 +139,9 @@ void main() {
 
         // Verify search executed (state should have updated)
         // This is validated by the fact that we can measure the filtered count
-        final filteredCount =
-            tester.widgetList(find.byType(ProjectCard)).length;
+        final filteredCount = tester
+            .widgetList(find.byType(ProjectCard))
+            .length;
         expect(filteredCount, isNotNull);
       }
     });
@@ -163,8 +168,9 @@ void main() {
         await tester.pumpAndSettle();
 
         // Should only execute search once after final input
-        final filteredCount =
-            tester.widgetList(find.byType(ProjectCard)).length;
+        final filteredCount = tester
+            .widgetList(find.byType(ProjectCard))
+            .length;
         expect(filteredCount, isNotNull);
       }
     });
@@ -178,10 +184,7 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
       // Search for something that won't match
-      await tester.enterText(
-        find.byType(TextField),
-        'xyzabc123nonexistent',
-      );
+      await tester.enterText(find.byType(TextField), 'xyzabc123nonexistent');
       await tester.pump(const Duration(milliseconds: 350));
       await tester.pumpAndSettle();
 
@@ -199,10 +202,7 @@ void main() {
 
       if (tester.any(find.byType(ProjectCard))) {
         // Enter search with no results
-        await tester.enterText(
-          find.byType(TextField),
-          'xyzabc123nonexistent',
-        );
+        await tester.enterText(find.byType(TextField), 'xyzabc123nonexistent');
         await tester.pump(const Duration(milliseconds: 350));
         await tester.pumpAndSettle();
 

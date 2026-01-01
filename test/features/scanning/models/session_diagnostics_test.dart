@@ -22,7 +22,7 @@ void main() {
                   'name': 'scan.usdz',
                   'size_bytes': 1234567,
                   'modified_at': '2025-12-30T12:01:00Z',
-                }
+                },
               ],
             },
             'output': {
@@ -33,7 +33,7 @@ void main() {
                   'name': 'scan.glb',
                   'size_bytes': 2345678,
                   'modified_at': '2025-12-30T12:05:00Z',
-                }
+                },
               ],
             },
             'logs': {
@@ -44,7 +44,7 @@ void main() {
                   'name': 'blender.log',
                   'size_bytes': 45678,
                   'modified_at': '2025-12-30T12:05:00Z',
-                }
+                },
               ],
             },
           },
@@ -53,20 +53,12 @@ void main() {
               'name': 'status.json',
               'size_bytes': 1234,
               'modified_at': '2025-12-30T12:00:00Z',
-            }
+            },
           ],
         },
-        'status_data': {
-          'processing_stage': 'completed',
-          'progress': 100,
-        },
-        'metadata': {
-          'filename': 'scan.glb',
-          'size_bytes': 2345678,
-        },
-        'parameters': {
-          'job_type': 'usdz_to_glb',
-        },
+        'status_data': {'processing_stage': 'completed', 'progress': 100},
+        'metadata': {'filename': 'scan.glb', 'size_bytes': 2345678},
+        'parameters': {'job_type': 'usdz_to_glb'},
         'logs_summary': {
           'total_lines': 150,
           'error_count': 0,
@@ -91,7 +83,10 @@ void main() {
       expect(diagnostics.files!.directories['input']!.exists, true);
       expect(diagnostics.files!.directories['input']!.fileCount, 1);
       expect(diagnostics.files!.directories['input']!.files.length, 1);
-      expect(diagnostics.files!.directories['input']!.files[0].name, 'scan.usdz');
+      expect(
+        diagnostics.files!.directories['input']!.files[0].name,
+        'scan.usdz',
+      );
       expect(diagnostics.logsSummary, isNotNull);
       expect(diagnostics.logsSummary!.totalLines, 150);
       expect(diagnostics.errorDetails, null);
@@ -170,30 +165,37 @@ void main() {
       expect(diagnostics.errorDetails!.lastErrorLogs.length, 2);
     });
 
-    test('isExpired should return true when current time is after expiration', () {
-      // Arrange - create session that expired 1 hour ago
-      final json = {
-        'session_id': 'sess_OLD',
-        'session_status': 'expired',
-        'created_at': DateTime.now().subtract(Duration(hours: 2)).toIso8601String(),
-        'expires_at': DateTime.now().subtract(Duration(hours: 1)).toIso8601String(),
-        'last_accessed': null,
-        'workspace_exists': false,
-        'files': null,
-        'status_data': null,
-        'metadata': null,
-        'parameters': null,
-        'logs_summary': null,
-        'error_details': null,
-        'investigation_timestamp': DateTime.now().toIso8601String(),
-      };
+    test(
+      'isExpired should return true when current time is after expiration',
+      () {
+        // Arrange - create session that expired 1 hour ago
+        final json = {
+          'session_id': 'sess_OLD',
+          'session_status': 'expired',
+          'created_at': DateTime.now()
+              .subtract(Duration(hours: 2))
+              .toIso8601String(),
+          'expires_at': DateTime.now()
+              .subtract(Duration(hours: 1))
+              .toIso8601String(),
+          'last_accessed': null,
+          'workspace_exists': false,
+          'files': null,
+          'status_data': null,
+          'metadata': null,
+          'parameters': null,
+          'logs_summary': null,
+          'error_details': null,
+          'investigation_timestamp': DateTime.now().toIso8601String(),
+        };
 
-      // Act
-      final diagnostics = SessionDiagnostics.fromJson(json);
+        // Act
+        final diagnostics = SessionDiagnostics.fromJson(json);
 
-      // Assert
-      expect(diagnostics.isExpired, true);
-    });
+        // Assert
+        expect(diagnostics.isExpired, true);
+      },
+    );
 
     test('isExpired should return false when session is still valid', () {
       // Arrange - create session that expires in 30 minutes
@@ -201,7 +203,9 @@ void main() {
         'session_id': 'sess_VALID',
         'session_status': 'active',
         'created_at': DateTime.now().toIso8601String(),
-        'expires_at': DateTime.now().add(Duration(minutes: 30)).toIso8601String(),
+        'expires_at': DateTime.now()
+            .add(Duration(minutes: 30))
+            .toIso8601String(),
         'last_accessed': null,
         'workspace_exists': true,
         'files': null,
@@ -256,10 +260,38 @@ void main() {
   group('FileInfo', () {
     test('sizeHumanReadable should format bytes correctly', () {
       // Test different file sizes
-      expect(FileInfo(name: 'test', sizeBytes: 512, modifiedAt: null).sizeHumanReadable, '512 B');
-      expect(FileInfo(name: 'test', sizeBytes: 1536, modifiedAt: null).sizeHumanReadable, '1.5 KB');
-      expect(FileInfo(name: 'test', sizeBytes: 2097152, modifiedAt: null).sizeHumanReadable, '2.0 MB');
-      expect(FileInfo(name: 'test', sizeBytes: 5242880, modifiedAt: null).sizeHumanReadable, '5.0 MB');
+      expect(
+        FileInfo(
+          name: 'test',
+          sizeBytes: 512,
+          modifiedAt: null,
+        ).sizeHumanReadable,
+        '512 B',
+      );
+      expect(
+        FileInfo(
+          name: 'test',
+          sizeBytes: 1536,
+          modifiedAt: null,
+        ).sizeHumanReadable,
+        '1.5 KB',
+      );
+      expect(
+        FileInfo(
+          name: 'test',
+          sizeBytes: 2097152,
+          modifiedAt: null,
+        ).sizeHumanReadable,
+        '2.0 MB',
+      );
+      expect(
+        FileInfo(
+          name: 'test',
+          sizeBytes: 5242880,
+          modifiedAt: null,
+        ).sizeHumanReadable,
+        '5.0 MB',
+      );
     });
   });
 }

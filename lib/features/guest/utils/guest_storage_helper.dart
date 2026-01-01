@@ -19,11 +19,14 @@ class GuestStorageHelper {
       final appDocDir = await getApplicationDocumentsDirectory();
 
       // Create guest_scans subdirectory
-      final guestScansDir = Directory(path.join(appDocDir.path, _guestScansFolder));
+      final guestScansDir = Directory(
+        path.join(appDocDir.path, _guestScansFolder),
+      );
 
       // Create directory if it doesn't exist
       if (!await guestScansDir.exists()) {
-        if (kDebugMode) print('📁 [GUEST STORAGE] Creating guest_scans directory');
+        if (kDebugMode)
+          print('📁 [GUEST STORAGE] Creating guest_scans directory');
         await guestScansDir.create(recursive: true);
       }
 
@@ -54,8 +57,8 @@ class GuestStorageHelper {
       final storagePath = await getGuestStoragePath();
 
       // Generate file name if not provided
-      final scanFileName = fileName ??
-          'guest_scan_${DateTime.now().millisecondsSinceEpoch}.glb';
+      final scanFileName =
+          fileName ?? 'guest_scan_${DateTime.now().millisecondsSinceEpoch}.glb';
 
       // Create full file path
       final filePath = path.join(storagePath, scanFileName);
@@ -65,7 +68,9 @@ class GuestStorageHelper {
       await file.writeAsBytes(scanData);
 
       if (kDebugMode) {
-        print('✅ [GUEST STORAGE] Scan saved: $filePath (${scanData.length} bytes)');
+        print(
+          '✅ [GUEST STORAGE] Scan saved: $filePath (${scanData.length} bytes)',
+        );
       }
 
       return filePath;

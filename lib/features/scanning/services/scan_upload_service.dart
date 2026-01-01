@@ -14,7 +14,7 @@ class ScanUploadService {
   final GraphQLService _graphQLService;
 
   ScanUploadService({GraphQLService? graphQLService})
-      : _graphQLService = graphQLService ?? GraphQLService();
+    : _graphQLService = graphQLService ?? GraphQLService();
 
   /// Upload scan file to backend
   ///

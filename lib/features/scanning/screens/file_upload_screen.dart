@@ -12,10 +12,7 @@ import 'package:vronmobile2/features/scanning/models/scan_data.dart';
 class FileUploadScreen extends StatefulWidget {
   final FileUploadService? uploadService;
 
-  const FileUploadScreen({
-    super.key,
-    this.uploadService,
-  });
+  const FileUploadScreen({super.key, this.uploadService});
 
   @override
   State<FileUploadScreen> createState() => _FileUploadScreenState();
@@ -38,10 +35,7 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Upload GLB File'),
-        centerTitle: false,
-      ),
+      appBar: AppBar(title: const Text('Upload GLB File'), centerTitle: false),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -59,10 +53,7 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
               // Title
               const Text(
                 'Upload 3D Model',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -70,10 +61,7 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
               // Description
               Text(
                 'Select a GLB file from your device to add to this project.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey.shade600,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
@@ -96,9 +84,14 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _buildRequirement(Icons.check_circle_outline, 'Format: GLB'),
                     _buildRequirement(
-                        Icons.check_circle_outline, 'Max size: 250 MB'),
+                      Icons.check_circle_outline,
+                      'Format: GLB',
+                    ),
+                    _buildRequirement(
+                      Icons.check_circle_outline,
+                      'Max size: 250 MB',
+                    ),
                   ],
                 ),
               ),
@@ -165,8 +158,11 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.check_circle,
-                              color: Colors.green.shade700, size: 32),
+                          Icon(
+                            Icons.check_circle,
+                            color: Colors.green.shade700,
+                            size: 32,
+                          ),
                           const SizedBox(width: 12),
                           const Expanded(
                             child: Text(
@@ -186,8 +182,9 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
                       ),
                       _buildFileDetail(
                         'Size',
-                        _uploadService
-                            .formatFileSize(_uploadedScan!.fileSizeBytes),
+                        _uploadService.formatFileSize(
+                          _uploadedScan!.fileSizeBytes,
+                        ),
                       ),
                       _buildFileDetail(
                         'Format',
@@ -249,10 +246,7 @@ class _FileUploadScreenState extends State<FileUploadScreen> {
               fontWeight: FontWeight.w500,
             ),
           ),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
     );

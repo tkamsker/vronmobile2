@@ -60,7 +60,10 @@ void main() {
 
       expect(newManager.isGuestMode, true);
       expect(newManager.scanCount, 5);
-      expect(newManager.enteredAt, isNotNull); // Timestamp not persisted, but should be set
+      expect(
+        newManager.enteredAt,
+        isNotNull,
+      ); // Timestamp not persisted, but should be set
     });
 
     test('increments scan count when in guest mode', () async {

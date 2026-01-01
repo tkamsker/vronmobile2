@@ -93,14 +93,17 @@ void main() {
       // );
     });
 
-    test('startScan() respects 2-second initiation requirement (SC-001)', () async {
-      // final stopwatch = Stopwatch()..start();
+    test(
+      'startScan() respects 2-second initiation requirement (SC-001)',
+      () async {
+        // final stopwatch = Stopwatch()..start();
 
-      // await service.startScan();
+        // await service.startScan();
 
-      // stopwatch.stop();
-      // expect(stopwatch.elapsedMilliseconds, lessThan(2000));
-    });
+        // stopwatch.stop();
+        // expect(stopwatch.elapsedMilliseconds, lessThan(2000));
+      },
+    );
 
     // T025: Test _saveScanLocally()
     test('_saveScanLocally() saves USDZ file to Documents directory', () async {

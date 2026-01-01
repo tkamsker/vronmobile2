@@ -172,7 +172,10 @@ class GraphQLService {
     };
 
     // Create multipart request
-    final request = http.MultipartRequest('POST', Uri.parse(EnvConfig.graphqlEndpoint));
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse(EnvConfig.graphqlEndpoint),
+    );
     request.headers.addAll(headers);
 
     // Add GraphQL operations (per multipart spec)
@@ -187,7 +190,7 @@ class GraphQLService {
 
     // Map file to variable (per multipart spec)
     request.fields['map'] = jsonEncode({
-      '0': ['variables.$fileFieldName']
+      '0': ['variables.$fileFieldName'],
     });
 
     // Add file
@@ -207,14 +210,11 @@ class GraphQLService {
       var bytesUploaded = 0;
       final totalBytes = fileBytes.length;
 
-      streamedResponse.stream.listen(
-        (chunk) {
-          bytesUploaded += chunk.length;
-          final progress = bytesUploaded / totalBytes;
-          onProgress(progress);
-        },
-        onDone: () => onProgress(1.0),
-      );
+      streamedResponse.stream.listen((chunk) {
+        bytesUploaded += chunk.length;
+        final progress = bytesUploaded / totalBytes;
+        onProgress(progress);
+      }, onDone: () => onProgress(1.0));
     }
 
     // Get response
@@ -232,7 +232,9 @@ class GraphQLService {
     // Check for GraphQL errors
     if (jsonResponse.containsKey('errors')) {
       final errors = jsonResponse['errors'] as List;
-      throw Exception('GraphQL errors: ${errors.map((e) => e['message']).join(', ')}');
+      throw Exception(
+        'GraphQL errors: ${errors.map((e) => e['message']).join(', ')}',
+      );
     }
 
     return jsonResponse['data'] as Map<String, dynamic>;

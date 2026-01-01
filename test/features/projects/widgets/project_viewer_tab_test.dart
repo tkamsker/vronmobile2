@@ -44,17 +44,16 @@ void main() {
   }
 
   group('ProjectViewerTab', () {
-    testWidgets('T018: displays 3D/VR viewer placeholder for live project',
-        (WidgetTester tester) async {
+    testWidgets('T018: displays 3D/VR viewer placeholder for live project', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final liveProject = createTestProject(isLive: true);
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectViewerTab(project: liveProject),
-          ),
+          home: Scaffold(body: ProjectViewerTab(project: liveProject)),
         ),
       );
 
@@ -63,8 +62,9 @@ void main() {
       expect(find.byType(Icon), findsWidgets);
     });
 
-    testWidgets('T018: displays project image if available',
-        (WidgetTester tester) async {
+    testWidgets('T018: displays project image if available', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final project = createTestProject(
         imageUrl: 'https://example.com/project.jpg',
@@ -73,9 +73,7 @@ void main() {
       // Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectViewerTab(project: project),
-          ),
+          home: Scaffold(body: ProjectViewerTab(project: project)),
         ),
       );
 
@@ -83,17 +81,16 @@ void main() {
       expect(find.byType(Image), findsWidgets);
     });
 
-    testWidgets('T018: displays message for non-live project',
-        (WidgetTester tester) async {
+    testWidgets('T018: displays message for non-live project', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final notLiveProject = createTestProject(isLive: false);
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectViewerTab(project: notLiveProject),
-          ),
+          home: Scaffold(body: ProjectViewerTab(project: notLiveProject)),
         ),
       );
 
@@ -101,17 +98,16 @@ void main() {
       expect(find.text('Not Live'), findsOneWidget);
     });
 
-    testWidgets('T018: placeholder is not interactive (read-only)',
-        (WidgetTester tester) async {
+    testWidgets('T018: placeholder is not interactive (read-only)', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final project = createTestProject();
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectViewerTab(project: project),
-          ),
+          home: Scaffold(body: ProjectViewerTab(project: project)),
         ),
       );
 

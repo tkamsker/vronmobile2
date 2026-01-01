@@ -5,47 +5,50 @@ import 'package:vronmobile2/features/guest/widgets/guest_mode_banner.dart';
 void main() {
   group('GuestModeBanner Widget', () {
     // T024: Test GuestModeBanner component
-    testWidgets('displays banner with correct text', (WidgetTester tester) async {
+    testWidgets('displays banner with correct text', (
+      WidgetTester tester,
+    ) async {
       // Arrange & Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: GuestModeBanner(
-              onSignUpPressed: () {},
-            ),
-          ),
+          home: Scaffold(body: GuestModeBanner(onSignUpPressed: () {})),
         ),
       );
 
       // Assert
-      expect(find.text('Guest Mode - Scans saved locally only'), findsOneWidget);
+      expect(
+        find.text('Guest Mode - Scans saved locally only'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('displays with amber color scheme', (WidgetTester tester) async {
+    testWidgets('displays with amber color scheme', (
+      WidgetTester tester,
+    ) async {
       // Arrange & Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: GuestModeBanner(
-              onSignUpPressed: () {},
-            ),
-          ),
+          home: Scaffold(body: GuestModeBanner(onSignUpPressed: () {})),
         ),
       );
 
       // Assert
       final container = tester.widget<Container>(
-        find.ancestor(
-          of: find.text('Guest Mode - Scans saved locally only'),
-          matching: find.byType(Container),
-        ).first,
+        find
+            .ancestor(
+              of: find.text('Guest Mode - Scans saved locally only'),
+              matching: find.byType(Container),
+            )
+            .first,
       );
 
       final decoration = container.decoration as BoxDecoration?;
       expect(decoration?.color, Colors.amber.shade100);
     });
 
-    testWidgets('has Sign Up button that is tappable', (WidgetTester tester) async {
+    testWidgets('has Sign Up button that is tappable', (
+      WidgetTester tester,
+    ) async {
       bool signUpPressed = false;
 
       // Arrange
@@ -72,35 +75,35 @@ void main() {
       expect(signUpPressed, true);
     });
 
-    testWidgets('has proper semantic label for accessibility', (WidgetTester tester) async {
+    testWidgets('has proper semantic label for accessibility', (
+      WidgetTester tester,
+    ) async {
       // Arrange & Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: GuestModeBanner(
-              onSignUpPressed: () {},
-            ),
-          ),
+          home: Scaffold(body: GuestModeBanner(onSignUpPressed: () {})),
         ),
       );
 
       // Assert - verify Semantics widget exists with proper structure
       final semantics = find.byType(Semantics);
-      expect(semantics, findsWidgets); // Should find at least one Semantics widget
+      expect(
+        semantics,
+        findsWidgets,
+      ); // Should find at least one Semantics widget
 
       // Verify the banner text is present (which is wrapped in Semantics)
-      expect(find.text('Guest Mode - Scans saved locally only'), findsOneWidget);
+      expect(
+        find.text('Guest Mode - Scans saved locally only'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('has proper touch target size', (WidgetTester tester) async {
       // Arrange & Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: GuestModeBanner(
-              onSignUpPressed: () {},
-            ),
-          ),
+          home: Scaffold(body: GuestModeBanner(onSignUpPressed: () {})),
         ),
       );
 

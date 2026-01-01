@@ -6,11 +6,7 @@ class ProjectTabNavigation extends StatefulWidget {
   final void Function(int index)? onTabChanged;
   final List<Widget>? tabViews;
 
-  const ProjectTabNavigation({
-    super.key,
-    this.onTabChanged,
-    this.tabViews,
-  });
+  const ProjectTabNavigation({super.key, this.onTabChanged, this.tabViews});
 
   @override
   State<ProjectTabNavigation> createState() => _ProjectTabNavigationState();
@@ -68,7 +64,8 @@ class _ProjectTabNavigationState extends State<ProjectTabNavigation>
         Expanded(
           child: TabBarView(
             controller: _tabController,
-            children: widget.tabViews ??
+            children:
+                widget.tabViews ??
                 [
                   const Center(child: Text('Viewer Tab')),
                   const Center(child: Text('Project Data Tab')),

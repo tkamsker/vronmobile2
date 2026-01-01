@@ -61,7 +61,9 @@ class Project {
           ? DateTime.parse(json['liveDate'] as String)
           : null,
       subscription: ProjectSubscription.fromJson(
-        (json['subscription'] as Map<dynamic, dynamic>?)?.cast<String, dynamic>() ?? {},
+        (json['subscription'] as Map<dynamic, dynamic>?)
+                ?.cast<String, dynamic>() ??
+            {},
       ),
     );
   }

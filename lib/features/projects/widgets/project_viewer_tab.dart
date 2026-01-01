@@ -8,10 +8,7 @@ import 'package:vronmobile2/features/home/models/project.dart';
 class ProjectViewerTab extends StatelessWidget {
   final Project project;
 
-  const ProjectViewerTab({
-    super.key,
-    required this.project,
-  });
+  const ProjectViewerTab({super.key, required this.project});
 
   @override
   Widget build(BuildContext context) {
@@ -30,17 +27,15 @@ class ProjectViewerTab extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: CachedNetworkImage(
-                imageUrl: project.imageUrl,
-                height: 250,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  height: 250,
-                  color: Colors.grey[200],
-                  child: const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
+                    imageUrl: project.imageUrl,
+                    height: 250,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      height: 250,
+                      color: Colors.grey[200],
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
                     errorWidget: (context, url, error) => Container(
                       height: 250,
                       color: Colors.grey[200],
@@ -56,7 +51,10 @@ class ProjectViewerTab extends StatelessWidget {
               label: 'Project status: ${project.statusLabel}',
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: _getStatusColor(),
                     borderRadius: BorderRadius.circular(24),
@@ -87,7 +85,8 @@ class ProjectViewerTab extends StatelessWidget {
 
             // 3D Viewer placeholder
             Semantics(
-              label: '3D Viewer placeholder. Coming soon: Interactive 3D and VR viewer',
+              label:
+                  '3D Viewer placeholder. Coming soon: Interactive 3D and VR viewer',
               child: Container(
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
@@ -97,11 +96,7 @@ class ProjectViewerTab extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.view_in_ar,
-                      size: 64,
-                      color: Colors.grey[400],
-                    ),
+                    Icon(Icons.view_in_ar, size: 64, color: Colors.grey[400]),
                     const SizedBox(height: 16),
                     Text(
                       '3D Viewer (Coming Soon)',
@@ -115,10 +110,7 @@ class ProjectViewerTab extends StatelessWidget {
                     Text(
                       'Interactive 3D/VR viewer will be available in a future update',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
                   ],
                 ),

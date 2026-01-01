@@ -7,14 +7,13 @@ import 'package:vronmobile2/features/products/services/product_detail_service.da
 void main() {
   group('ProductDetailScreen', () {
     group('T027: Loading State', () {
-      testWidgets('displays loading indicator while fetching product',
-          (WidgetTester tester) async {
+      testWidgets('displays loading indicator while fetching product', (
+        WidgetTester tester,
+      ) async {
         // Arrange
         final screen = ProductDetailScreen(
           productId: 'prod_123',
-          productDetailService: MockProductDetailService(
-            shouldDelay: true,
-          ),
+          productDetailService: MockProductDetailService(shouldDelay: true),
         );
 
         // Act
@@ -29,14 +28,13 @@ void main() {
         await tester.pumpAndSettle();
       });
 
-      testWidgets('loading state has proper accessibility labels',
-          (WidgetTester tester) async {
+      testWidgets('loading state has proper accessibility labels', (
+        WidgetTester tester,
+      ) async {
         // Arrange
         final screen = ProductDetailScreen(
           productId: 'prod_123',
-          productDetailService: MockProductDetailService(
-            shouldDelay: true,
-          ),
+          productDetailService: MockProductDetailService(shouldDelay: true),
         );
 
         // Act
@@ -44,7 +42,9 @@ void main() {
         await tester.pump();
 
         // Assert
-        final semantics = tester.getSemantics(find.byType(CircularProgressIndicator));
+        final semantics = tester.getSemantics(
+          find.byType(CircularProgressIndicator),
+        );
         expect(semantics.label, contains('Loading'));
 
         // Complete the delayed future to avoid pending timers
@@ -53,8 +53,9 @@ void main() {
     });
 
     group('T028: Error State', () {
-      testWidgets('displays error message when fetch fails',
-          (WidgetTester tester) async {
+      testWidgets('displays error message when fetch fails', (
+        WidgetTester tester,
+      ) async {
         // Arrange
         final screen = ProductDetailScreen(
           productId: 'prod_123',
@@ -74,8 +75,9 @@ void main() {
         expect(find.text('Retry'), findsOneWidget);
       });
 
-      testWidgets('retry button reloads product data',
-          (WidgetTester tester) async {
+      testWidgets('retry button reloads product data', (
+        WidgetTester tester,
+      ) async {
         // Arrange
         final mockService = MockProductDetailService(
           shouldError: true,
@@ -100,8 +102,9 @@ void main() {
         expect(mockService.fetchCallCount, 2);
       });
 
-      testWidgets('error state has proper accessibility',
-          (WidgetTester tester) async {
+      testWidgets('error state has proper accessibility', (
+        WidgetTester tester,
+      ) async {
         // Arrange
         final screen = ProductDetailScreen(
           productId: 'prod_123',
@@ -124,8 +127,9 @@ void main() {
     });
 
     group('T029: Success State with Data', () {
-      testWidgets('displays product detail when loaded successfully',
-          (WidgetTester tester) async {
+      testWidgets('displays product detail when loaded successfully', (
+        WidgetTester tester,
+      ) async {
         // Arrange
         final mockProduct = _createMockProductDetail();
         final screen = ProductDetailScreen(
@@ -145,8 +149,9 @@ void main() {
         expect(find.text('Furniture'), findsOneWidget);
       });
 
-      testWidgets('displays media gallery when media files present',
-          (WidgetTester tester) async {
+      testWidgets('displays media gallery when media files present', (
+        WidgetTester tester,
+      ) async {
         // Arrange
         final mockProduct = _createMockProductDetail();
         final screen = ProductDetailScreen(
@@ -165,8 +170,9 @@ void main() {
         expect(find.byType(GridView), findsOneWidget);
       });
 
-      testWidgets('displays variants section when variants present',
-          (WidgetTester tester) async {
+      testWidgets('displays variants section when variants present', (
+        WidgetTester tester,
+      ) async {
         // Arrange
         final mockProduct = _createMockProductDetail();
         final screen = ProductDetailScreen(
@@ -186,8 +192,7 @@ void main() {
         expect(find.text('\$99.99'), findsOneWidget);
       });
 
-      testWidgets('displays tags when present',
-          (WidgetTester tester) async {
+      testWidgets('displays tags when present', (WidgetTester tester) async {
         // Arrange
         final mockProduct = _createMockProductDetail();
         final screen = ProductDetailScreen(
@@ -209,8 +214,9 @@ void main() {
     });
 
     group('T030: Empty/Minimal Data State', () {
-      testWidgets('displays product with no media files',
-          (WidgetTester tester) async {
+      testWidgets('displays product with no media files', (
+        WidgetTester tester,
+      ) async {
         // Arrange
         final mockProduct = ProductDetail(
           id: 'prod_123',
@@ -238,8 +244,9 @@ void main() {
         expect(find.text('No media files'), findsOneWidget);
       });
 
-      testWidgets('displays product with no variants',
-          (WidgetTester tester) async {
+      testWidgets('displays product with no variants', (
+        WidgetTester tester,
+      ) async {
         // Arrange
         final mockProduct = ProductDetail(
           id: 'prod_123',
@@ -267,8 +274,7 @@ void main() {
         expect(find.text('No variants'), findsOneWidget);
       });
 
-      testWidgets('displays product with no tags',
-          (WidgetTester tester) async {
+      testWidgets('displays product with no tags', (WidgetTester tester) async {
         // Arrange
         final mockProduct = ProductDetail(
           id: 'prod_123',
@@ -349,7 +355,7 @@ ProductDetail _createMockProductDetail() {
         'filename': 'chair_front.jpg',
         'mimeType': 'image/jpeg',
         'size': 245678,
-      }
+      },
     ],
     'variants': [
       {
@@ -359,7 +365,7 @@ ProductDetail _createMockProductDetail() {
         'compareAtPrice': 129.99,
         'inventoryPolicy': 'DENY',
         'inventoryQuantity': 15,
-      }
+      },
     ],
     'createdAt': '2025-01-15T10:30:00Z',
     'updatedAt': '2025-12-20T14:20:00Z',

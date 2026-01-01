@@ -9,8 +9,8 @@ class ProductService {
   final String _language;
 
   ProductService({GraphQLService? graphqlService, String language = 'EN'})
-      : _graphqlService = graphqlService ?? GraphQLService(),
-        _language = language;
+    : _graphqlService = graphqlService ?? GraphQLService(),
+      _language = language;
 
   /// GraphQL query to fetch products for a project
   /// Uses VRonGetProducts query from the API
@@ -74,10 +74,7 @@ class ProductService {
         variables: {
           'input': {
             'filter': filter,
-            'pagination': {
-              'pageIndex': pageIndex,
-              'pageSize': pageSize,
-            },
+            'pagination': {'pageIndex': pageIndex, 'pageSize': pageSize},
           },
           'lang': _language,
         },
@@ -105,7 +102,8 @@ class ProductService {
         return [];
       }
 
-      final productsResponse = result.data!['VRonGetProducts'] as Map<String, dynamic>;
+      final productsResponse =
+          result.data!['VRonGetProducts'] as Map<String, dynamic>;
       final productsData = productsResponse['products'] as List?;
 
       if (productsData == null || productsData.isEmpty) {
@@ -120,7 +118,9 @@ class ProductService {
       if (kDebugMode) {
         print('✅ [PRODUCTS] Fetched ${products.length} products');
         for (final product in products) {
-          print('  - ${product.title} (${product.id}) - ${product.statusLabel}');
+          print(
+            '  - ${product.title} (${product.id}) - ${product.statusLabel}',
+          );
         }
       }
 

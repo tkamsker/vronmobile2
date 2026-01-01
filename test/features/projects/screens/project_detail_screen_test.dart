@@ -51,16 +51,15 @@ void main() {
   }
 
   group('ProjectDetailScreen', () {
-    testWidgets('T016: renders project detail screen with header and tabs',
-        (WidgetTester tester) async {
+    testWidgets('T016: renders project detail screen with header and tabs', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final testProject = createTestProject();
 
       // Act
       await tester.pumpWidget(
-        MaterialApp(
-          home: ProjectDetailScreen(projectId: testProject.id),
-        ),
+        MaterialApp(home: ProjectDetailScreen(projectId: testProject.id)),
       );
       await tester.pumpAndSettle();
 
@@ -71,13 +70,12 @@ void main() {
       expect(find.text('Products'), findsOneWidget);
     });
 
-    testWidgets('T016: displays loading indicator while fetching project',
-        (WidgetTester tester) async {
+    testWidgets('T016: displays loading indicator while fetching project', (
+      WidgetTester tester,
+    ) async {
       // Act
       await tester.pumpWidget(
-        const MaterialApp(
-          home: ProjectDetailScreen(projectId: 'proj_123'),
-        ),
+        const MaterialApp(home: ProjectDetailScreen(projectId: 'proj_123')),
       );
 
       // Use pump() to advance one frame, not pumpAndSettle() which waits for completion
@@ -87,16 +85,15 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('T016: displays error message when project fetch fails',
-        (WidgetTester tester) async {
+    testWidgets('T016: displays error message when project fetch fails', (
+      WidgetTester tester,
+    ) async {
       // Arrange - Mock service will be injected later
       const errorProjectId = 'invalid_id';
 
       // Act
       await tester.pumpWidget(
-        const MaterialApp(
-          home: ProjectDetailScreen(projectId: errorProjectId),
-        ),
+        const MaterialApp(home: ProjectDetailScreen(projectId: errorProjectId)),
       );
 
       // Pump once to show loading
@@ -114,16 +111,15 @@ void main() {
       expect(find.byType(ElevatedButton), findsOneWidget); // Retry button
     });
 
-    testWidgets('T016: navigates between tabs correctly',
-        (WidgetTester tester) async {
+    testWidgets('T016: navigates between tabs correctly', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final testProject = createTestProject();
 
       // Act
       await tester.pumpWidget(
-        MaterialApp(
-          home: ProjectDetailScreen(projectId: testProject.id),
-        ),
+        MaterialApp(home: ProjectDetailScreen(projectId: testProject.id)),
       );
 
       // Pump to show loading

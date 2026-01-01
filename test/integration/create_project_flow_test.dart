@@ -19,72 +19,80 @@ void main() {
 
   group('Create Project Flow Integration Tests (T012)', () {
     testWidgets(
-        'T012: complete flow - tap FAB → fill form → save → verify in list',
-        (tester) async {
-      // Arrange - Start at home screen
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: HomeScreen(),
-        ),
-      );
-      await tester.pumpAndSettle();
+      'T012: complete flow - tap FAB → fill form → save → verify in list',
+      (tester) async {
+        // Arrange - Start at home screen
+        await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
+        await tester.pumpAndSettle();
 
-      // Act 1 - Tap FAB to open create project screen
-      final fabFinder = find.byType(CustomFAB);
-      expect(fabFinder, findsOneWidget,
-          reason: 'FAB should be visible on home screen');
+        // Act 1 - Tap FAB to open create project screen
+        final fabFinder = find.byType(CustomFAB);
+        expect(
+          fabFinder,
+          findsOneWidget,
+          reason: 'FAB should be visible on home screen',
+        );
 
-      await tester.tap(fabFinder);
-      await tester.pumpAndSettle();
+        await tester.tap(fabFinder);
+        await tester.pumpAndSettle();
 
-      // Assert 1 - Create project screen should be displayed
-      expect(find.text(AppStrings.createProjectTitle), findsOneWidget,
-          reason: 'Should navigate to create project screen');
+        // Assert 1 - Create project screen should be displayed
+        expect(
+          find.text(AppStrings.createProjectTitle),
+          findsOneWidget,
+          reason: 'Should navigate to create project screen',
+        );
 
-      // Act 2 - Fill out the form
-      final nameField = find.byType(TextFormField).first;
-      final descriptionField = find.byType(TextFormField).at(2);
+        // Act 2 - Fill out the form
+        final nameField = find.byType(TextFormField).first;
+        final descriptionField = find.byType(TextFormField).at(2);
 
-      await tester.enterText(nameField, 'Integration Test Project');
-      await tester.pump();
+        await tester.enterText(nameField, 'Integration Test Project');
+        await tester.pump();
 
-      await tester.enterText(
-          descriptionField, 'Created via integration test');
-      await tester.pump();
+        await tester.enterText(
+          descriptionField,
+          'Created via integration test',
+        );
+        await tester.pump();
 
-      // Assert 2 - Slug should be auto-generated
-      final slugField = find.byType(TextFormField).at(1);
-      final slugWidget = tester.widget<TextFormField>(slugField);
-      expect(slugWidget.controller!.text, equals('integration-test-project'),
-          reason: 'Slug should be auto-generated');
+        // Assert 2 - Slug should be auto-generated
+        final slugField = find.byType(TextFormField).at(1);
+        final slugWidget = tester.widget<TextFormField>(slugField);
+        expect(
+          slugWidget.controller!.text,
+          equals('integration-test-project'),
+          reason: 'Slug should be auto-generated',
+        );
 
-      // Act 3 - Submit the form
-      await tester.tap(find.byType(ElevatedButton));
-      await tester.pump();
+        // Act 3 - Submit the form
+        await tester.tap(find.byType(ElevatedButton));
+        await tester.pump();
 
-      // Assert 3 - Loading indicator should appear
-      expect(find.byType(CircularProgressIndicator), findsOneWidget,
-          reason: 'Should show loading during save');
+        // Assert 3 - Loading indicator should appear
+        expect(
+          find.byType(CircularProgressIndicator),
+          findsOneWidget,
+          reason: 'Should show loading during save',
+        );
 
-      // Wait for API call to complete (with timeout)
-      await tester.pumpAndSettle(const Duration(seconds: 5));
+        // Wait for API call to complete (with timeout)
+        await tester.pumpAndSettle(const Duration(seconds: 5));
 
-      // Assert 4 - Should show success message or navigate back
-      // Note: In a real test with mocked backend, we'd verify:
-      // - Success SnackBar appears
-      // - Navigation back to home screen
-      // - New project appears in the list
-      // For now, we verify the form submission was attempted
-    });
+        // Assert 4 - Should show success message or navigate back
+        // Note: In a real test with mocked backend, we'd verify:
+        // - Success SnackBar appears
+        // - Navigation back to home screen
+        // - New project appears in the list
+        // For now, we verify the form submission was attempted
+      },
+    );
 
-    testWidgets('T012: handles duplicate slug error gracefully',
-        (tester) async {
+    testWidgets('T012: handles duplicate slug error gracefully', (
+      tester,
+    ) async {
       // Arrange
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: CreateProjectScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: CreateProjectScreen()));
 
       final nameField = find.byType(TextFormField).first;
 
@@ -105,27 +113,30 @@ void main() {
 
     testWidgets('T012: validates form before submission', (tester) async {
       // Arrange
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: CreateProjectScreen(),
-        ),
-      );
+      await tester.pumpWidget(const MaterialApp(home: CreateProjectScreen()));
 
       // Act - Try to submit without filling required fields
       await tester.tap(find.byType(ElevatedButton));
       await tester.pumpAndSettle();
 
       // Assert - Validation errors should appear
-      expect(find.text(AppStrings.projectNameRequired), findsOneWidget,
-          reason: 'Should show validation error for empty name');
+      expect(
+        find.text(AppStrings.projectNameRequired),
+        findsOneWidget,
+        reason: 'Should show validation error for empty name',
+      );
 
       // Assert - No API call should be made (no loading indicator)
-      expect(find.byType(CircularProgressIndicator), findsNothing,
-          reason: 'Should not attempt API call with invalid form');
+      expect(
+        find.byType(CircularProgressIndicator),
+        findsNothing,
+        reason: 'Should not attempt API call with invalid form',
+      );
     });
 
-    testWidgets('T012: unsaved changes warning on back navigation',
-        (tester) async {
+    testWidgets('T012: unsaved changes warning on back navigation', (
+      tester,
+    ) async {
       // Arrange
       await tester.pumpWidget(
         MaterialApp(
@@ -163,8 +174,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // Assert - Unsaved changes dialog should appear
-      expect(find.text(AppStrings.unsavedChangesTitle), findsOneWidget,
-          reason: 'Should show unsaved changes warning');
+      expect(
+        find.text(AppStrings.unsavedChangesTitle),
+        findsOneWidget,
+        reason: 'Should show unsaved changes warning',
+      );
       expect(find.text(AppStrings.keepEditingButton), findsOneWidget);
       expect(find.text(AppStrings.discardButton), findsOneWidget);
     });
@@ -210,14 +224,21 @@ void main() {
       await tester.pumpAndSettle();
 
       // Assert - Should navigate back to previous screen
-      expect(find.text('Open Create'), findsOneWidget,
-          reason: 'Should return to previous screen');
-      expect(find.byType(CreateProjectScreen), findsNothing,
-          reason: 'Create screen should be closed');
+      expect(
+        find.text('Open Create'),
+        findsOneWidget,
+        reason: 'Should return to previous screen',
+      );
+      expect(
+        find.byType(CreateProjectScreen),
+        findsNothing,
+        reason: 'Create screen should be closed',
+      );
     });
 
-    testWidgets('T012: can keep editing from unsaved changes dialog',
-        (tester) async {
+    testWidgets('T012: can keep editing from unsaved changes dialog', (
+      tester,
+    ) async {
       // Arrange
       await tester.pumpWidget(
         MaterialApp(
@@ -258,16 +279,25 @@ void main() {
       await tester.pumpAndSettle();
 
       // Assert - Should stay on create screen
-      expect(find.text(AppStrings.createProjectTitle), findsOneWidget,
-          reason: 'Should stay on create screen');
-      expect(find.byType(CreateProjectScreen), findsOneWidget,
-          reason: 'Create screen should still be visible');
+      expect(
+        find.text(AppStrings.createProjectTitle),
+        findsOneWidget,
+        reason: 'Should stay on create screen',
+      );
+      expect(
+        find.byType(CreateProjectScreen),
+        findsOneWidget,
+        reason: 'Create screen should still be visible',
+      );
 
       // Verify data is preserved
       final nameFieldAfter = find.byType(TextFormField).first;
       final nameWidget = tester.widget<TextFormField>(nameFieldAfter);
-      expect(nameWidget.controller!.text, equals('Test'),
-          reason: 'Form data should be preserved');
+      expect(
+        nameWidget.controller!.text,
+        equals('Test'),
+        reason: 'Form data should be preserved',
+      );
     });
   });
 }

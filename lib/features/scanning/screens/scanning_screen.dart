@@ -56,7 +56,8 @@ class _ScanningScreenState extends State<ScanningScreen> {
 
       // For guest mode, auto-launch if supported
       // For logged-in mode, user will press "Scan another room" button
-      if (capability.isScanningSupportpported && guestSessionManager.isGuestMode) {
+      if (capability.isScanningSupportpported &&
+          guestSessionManager.isGuestMode) {
         print('🎯 [SCANNING] Guest mode: Auto-launching native RoomPlan UI...');
         // Small delay to ensure UI is ready
         await Future.delayed(const Duration(milliseconds: 300));
@@ -162,113 +163,132 @@ class _ScanningScreenState extends State<ScanningScreen> {
 
   Future<void> _showGuestSuccessDialog(ScanData scanData) async {
     return showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            title: const Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.green, size: 32),
-                SizedBox(width: 12),
-                Text('Scan Complete!'),
-              ],
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green, size: 32),
+            SizedBox(width: 12),
+            Text('Scan Complete!'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('✅ Room scanned successfully'),
+            const SizedBox(height: 8),
+            Text(
+              '📦 Size: ${(scanData.fileSizeBytes / 1024 / 1024).toStringAsFixed(2)} MB',
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('✅ Room scanned successfully'),
-                const SizedBox(height: 8),
-                Text('📦 Size: ${(scanData.fileSizeBytes / 1024 / 1024).toStringAsFixed(2)} MB'),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Create an account to:',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue.shade900,
-                              ),
-                            ),
-                          ),
-                        ],
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.blue.shade700,
+                        size: 20,
                       ),
-                      const SizedBox(height: 8),
-                      Text('• Save scans permanently', style: TextStyle(color: Colors.blue.shade900)),
-                      Text('• Upload to server', style: TextStyle(color: Colors.blue.shade900)),
-                      Text('• Stitch multiple rooms', style: TextStyle(color: Colors.blue.shade900)),
-                      Text('• Access from any device', style: TextStyle(color: Colors.blue.shade900)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Create an account to:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade900,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    '• Save scans permanently',
+                    style: TextStyle(color: Colors.blue.shade900),
+                  ),
+                  Text(
+                    '• Upload to server',
+                    style: TextStyle(color: Colors.blue.shade900),
+                  ),
+                  Text(
+                    '• Stitch multiple rooms',
+                    style: TextStyle(color: Colors.blue.shade900),
+                  ),
+                  Text(
+                    '• Access from any device',
+                    style: TextStyle(color: Colors.blue.shade900),
+                  ),
+                ],
+              ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  print('🔘 [GUEST] Done button pressed');
-                  // Close dialog
-                  Navigator.of(context).pop();
-                  // Navigate to home screen and clear navigation stack
-                  Navigator.of(context).pushNamedAndRemoveUntil(
-                    AppRoutes.home,
-                    (route) => false,
-                  );
-                },
-                child: const Text('Done'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  print('🔘 [GUEST] Create Account button pressed');
-
-                  // Close dialog
-                  Navigator.of(context).pop();
-
-                  if (mounted) {
-                    // Navigate to home screen first and clear stack
-                    print('🏠 [GUEST] Navigating to home screen...');
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                      AppRoutes.home,
-                      (route) => false,
-                    );
-
-                    // Wait for home screen to fully render
-                    await Future.delayed(const Duration(milliseconds: 800));
-
-                    if (mounted) {
-                      // Launch merchant web app for account creation
-                      print('🌐 [GUEST] Launching merchant URL...');
-                      final url = Uri.parse(EnvConfig.vronMerchantsUrl);
-                      try {
-                        if (await canLaunchUrl(url)) {
-                          await launchUrl(url, mode: LaunchMode.externalApplication);
-                          print('✅ [GUEST] URL launched successfully');
-                        } else {
-                          print('❌ [GUEST] Cannot launch URL: $url');
-                        }
-                      } catch (e) {
-                        print('❌ [GUEST] Error launching URL: $e');
-                      }
-                    }
-                  }
-                },
-                child: const Text('Create Account'),
-              ),
-            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              print('🔘 [GUEST] Done button pressed');
+              // Close dialog
+              Navigator.of(context).pop();
+              // Navigate to home screen and clear navigation stack
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+            },
+            child: const Text('Done'),
           ),
-        );
+          ElevatedButton(
+            onPressed: () async {
+              print('🔘 [GUEST] Create Account button pressed');
+
+              // Close dialog
+              Navigator.of(context).pop();
+
+              if (mounted) {
+                // Navigate to home screen first and clear stack
+                print('🏠 [GUEST] Navigating to home screen...');
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
+
+                // Wait for home screen to fully render
+                await Future.delayed(const Duration(milliseconds: 800));
+
+                if (mounted) {
+                  // Launch merchant web app for account creation
+                  print('🌐 [GUEST] Launching merchant URL...');
+                  final url = Uri.parse(EnvConfig.vronMerchantsUrl);
+                  try {
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(
+                        url,
+                        mode: LaunchMode.externalApplication,
+                      );
+                      print('✅ [GUEST] URL launched successfully');
+                    } else {
+                      print('❌ [GUEST] Cannot launch URL: $url');
+                    }
+                  } catch (e) {
+                    print('❌ [GUEST] Error launching URL: $e');
+                  }
+                }
+              }
+            },
+            child: const Text('Create Account'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _stopScan() async {
@@ -345,10 +365,7 @@ class _ScanningScreenState extends State<ScanningScreen> {
 
                     // Completed scan info
                     if (_completedScan != null && !_isScanning) ...[
-                      ScanProgress(
-                        progress: 1.0,
-                        elapsedTime: _elapsedTime,
-                      ),
+                      ScanProgress(progress: 1.0, elapsedTime: _elapsedTime),
                       const SizedBox(height: 24.0),
                     ],
 
@@ -363,7 +380,8 @@ class _ScanningScreenState extends State<ScanningScreen> {
                     const SizedBox(height: 24.0),
 
                     // Instructions
-                    if (!_isScanning && _capability?.isScanningSupportpported == true)
+                    if (!_isScanning &&
+                        _capability?.isScanningSupportpported == true)
                       _buildInstructionsCard(),
                   ],
                 ),
@@ -393,16 +411,14 @@ class _ScanningScreenState extends State<ScanningScreen> {
 
     switch (index) {
       case 0: // Home
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          AppRoutes.home,
-          (route) => false,
-        );
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
         break;
       case 1: // Projects
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          AppRoutes.home,
-          (route) => false,
-        );
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
         break;
       case 2: // Products
         Navigator.of(context).pushReplacementNamed(AppRoutes.products);
@@ -448,9 +464,9 @@ class _ScanningScreenState extends State<ScanningScreen> {
           children: [
             Text(
               'Scanning Instructions',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12.0),
             _buildInstructionItem('1. Tap "Start Scanning" to begin'),

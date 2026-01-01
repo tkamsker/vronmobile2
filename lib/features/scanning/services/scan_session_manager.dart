@@ -37,6 +37,17 @@ class ScanSessionManager {
     }
   }
 
+  /// Update an existing scan in the session
+  void updateScan(ScanData updatedScan) {
+    final index = _scans.indexWhere((scan) => scan.id == updatedScan.id);
+    if (index != -1) {
+      _scans[index] = updatedScan;
+      print('📊 [SESSION] Updated scan ${updatedScan.id}');
+    } else {
+      print('⚠️ [SESSION] Scan ${updatedScan.id} not found for update');
+    }
+  }
+
   /// Clear all scans from session
   void clearAll() {
     _scans.clear();

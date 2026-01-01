@@ -31,43 +31,46 @@ void main() {
   });
 
   group('BlenderApiClient - Error Handling Integration', () {
-    test('should log errors using ErrorLogService when request fails', () async {
-      // Arrange
-      final mockClient = MockClient((request) async {
-        return http.Response(
-          json.encode({
-            'error_code': 'INVALID_FILE',
-            'message': 'File format not supported',
-          }),
-          422,
+    test(
+      'should log errors using ErrorLogService when request fails',
+      () async {
+        // Arrange
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            json.encode({
+              'error_code': 'INVALID_FILE',
+              'message': 'File format not supported',
+            }),
+            422,
+          );
+        });
+
+        final client = BlenderApiClient(
+          client: mockClient,
+          baseUrl: 'https://test.example.com',
+          apiKey: 'test-api-key-1234567890',
+          errorLogService: errorLogService,
         );
-      });
 
-      final client = BlenderApiClient(
-        client: mockClient,
-        baseUrl: 'https://test.example.com',
-        apiKey: 'test-api-key-1234567890',
-        errorLogService: errorLogService,
-      );
+        // Act & Assert
+        try {
+          await client.createSession();
+          fail('Should have thrown BlenderApiException');
+        } on BlenderApiException catch (e) {
+          // Verify exception properties
+          expect(e.statusCode, 422);
+          expect(e.errorCode, 'INVALID_FILE');
+          expect(e.message, 'File format not supported');
 
-      // Act & Assert
-      try {
-        await client.createSession();
-        fail('Should have thrown BlenderApiException');
-      } on BlenderApiException catch (e) {
-        // Verify exception properties
-        expect(e.statusCode, 422);
-        expect(e.errorCode, 'INVALID_FILE');
-        expect(e.message, 'File format not supported');
-
-        // Verify error was logged
-        final errors = await errorLogService.getRecentErrors(limit: 1);
-        expect(errors.length, 1);
-        expect(errors[0].httpStatus, 422);
-        expect(errors[0].errorCode, 'INVALID_FILE');
-        expect(errors[0].message, 'File format not supported');
-      }
-    });
+          // Verify error was logged
+          final errors = await errorLogService.getRecentErrors(limit: 1);
+          expect(errors.length, 1);
+          expect(errors[0].httpStatus, 422);
+          expect(errors[0].errorCode, 'INVALID_FILE');
+          expect(errors[0].message, 'File format not supported');
+        }
+      },
+    );
 
     test('should pass sessionId to error log when available', () async {
       // Arrange
@@ -76,7 +79,9 @@ void main() {
           return http.Response(
             json.encode({
               'session_id': 'test-session-123',
-              'expires_at': DateTime.now().add(Duration(hours: 1)).toIso8601String(),
+              'expires_at': DateTime.now()
+                  .add(Duration(hours: 1))
+                  .toIso8601String(),
             }),
             201,
           );
@@ -105,10 +110,7 @@ void main() {
       await testFile.writeAsBytes([1, 2, 3]);
 
       try {
-        await client.uploadFile(
-          sessionId: session.sessionId,
-          file: testFile,
-        );
+        await client.uploadFile(sessionId: session.sessionId, file: testFile);
         fail('Should have thrown BlenderApiException');
       } on BlenderApiException catch (e) {
         // Verify exception includes sessionId
@@ -130,20 +132,23 @@ void main() {
       }
     });
 
-    test('should provide user-friendly error messages via ErrorMessageService', () {
-      // Arrange & Act
-      final exception = BlenderApiException(
-        statusCode: 422,
-        message: 'Raw error message',
-        errorCode: 'FILE_TOO_LARGE',
-        sessionId: 'test-session',
-      );
+    test(
+      'should provide user-friendly error messages via ErrorMessageService',
+      () {
+        // Arrange & Act
+        final exception = BlenderApiException(
+          statusCode: 422,
+          message: 'Raw error message',
+          errorCode: 'FILE_TOO_LARGE',
+          sessionId: 'test-session',
+        );
 
-      // Assert
-      expect(exception.userMessage, contains('250 MB'));
-      expect(exception.recommendedAction, isNotNull);
-      expect(exception.recommendedAction!.toLowerCase(), contains('reduce'));
-    });
+        // Assert
+        expect(exception.userMessage, contains('250 MB'));
+        expect(exception.recommendedAction, isNotNull);
+        expect(exception.recommendedAction!.toLowerCase(), contains('reduce'));
+      },
+    );
 
     test('should map BlenderAPI error codes to ErrorMessageService codes', () {
       final testCases = [
@@ -178,7 +183,10 @@ void main() {
     test('should identify recoverable errors correctly', () {
       // Network errors (statusCode 0)
       expect(
-        BlenderApiException(statusCode: 0, message: 'Network error').isRecoverable,
+        BlenderApiException(
+          statusCode: 0,
+          message: 'Network error',
+        ).isRecoverable,
         isTrue,
       );
 
@@ -188,19 +196,28 @@ void main() {
         isTrue,
       );
       expect(
-        BlenderApiException(statusCode: 504, message: 'Gateway timeout').isRecoverable,
+        BlenderApiException(
+          statusCode: 504,
+          message: 'Gateway timeout',
+        ).isRecoverable,
         isTrue,
       );
 
       // Rate limit (429)
       expect(
-        BlenderApiException(statusCode: 429, message: 'Too many requests').isRecoverable,
+        BlenderApiException(
+          statusCode: 429,
+          message: 'Too many requests',
+        ).isRecoverable,
         isTrue,
       );
 
       // Service unavailable (503)
       expect(
-        BlenderApiException(statusCode: 503, message: 'Service unavailable').isRecoverable,
+        BlenderApiException(
+          statusCode: 503,
+          message: 'Service unavailable',
+        ).isRecoverable,
         isTrue,
       );
 
@@ -224,11 +241,17 @@ void main() {
 
       // Non-recoverable errors
       expect(
-        BlenderApiException(statusCode: 422, message: 'Invalid file').isRecoverable,
+        BlenderApiException(
+          statusCode: 422,
+          message: 'Invalid file',
+        ).isRecoverable,
         isFalse,
       );
       expect(
-        BlenderApiException(statusCode: 400, message: 'Bad request').isRecoverable,
+        BlenderApiException(
+          statusCode: 400,
+          message: 'Bad request',
+        ).isRecoverable,
         isFalse,
       );
     });
@@ -248,7 +271,8 @@ void main() {
         requestCount++;
         final now = DateTime.now();
 
-        if (request.url.path.endsWith('/sessions') && request.method == 'POST') {
+        if (request.url.path.endsWith('/sessions') &&
+            request.method == 'POST') {
           timestamps['session_created'] = now;
           return http.Response(
             json.encode({
@@ -342,9 +366,11 @@ void main() {
       );
 
       // Verify 3-second wait between status check and download
-      if (timestamps['status_checked'] != null && timestamps['download_started'] != null) {
-        final waitBeforeDownload =
-            timestamps['download_started']!.difference(timestamps['status_checked']!);
+      if (timestamps['status_checked'] != null &&
+          timestamps['download_started'] != null) {
+        final waitBeforeDownload = timestamps['download_started']!.difference(
+          timestamps['status_checked']!,
+        );
         expect(
           waitBeforeDownload.inSeconds,
           greaterThanOrEqualTo(3),
@@ -361,11 +387,14 @@ void main() {
       bool sessionDeleted = false;
 
       final mockClient = MockClient((request) async {
-        if (request.url.path.endsWith('/sessions') && request.method == 'POST') {
+        if (request.url.path.endsWith('/sessions') &&
+            request.method == 'POST') {
           return http.Response(
             json.encode({
               'session_id': 'test-session-123',
-              'expires_at': DateTime.now().add(Duration(hours: 1)).toIso8601String(),
+              'expires_at': DateTime.now()
+                  .add(Duration(hours: 1))
+                  .toIso8601String(),
             }),
             201,
           );
@@ -402,68 +431,78 @@ void main() {
         fail('Should have thrown BlenderApiException');
       } on BlenderApiException catch (e) {
         expect(e.errorCode, 'FILE_TOO_LARGE');
-        expect(sessionDeleted, isTrue, reason: 'Session should be cleaned up on error');
+        expect(
+          sessionDeleted,
+          isTrue,
+          reason: 'Session should be cleaned up on error',
+        );
       }
     });
   });
 
   group('BlenderApiClient - Documentation', () {
-    test('pollStatus should have warning comment about 3s wait requirement', () async {
-      // This test verifies that the documentation exists by checking the source
-      // In a real scenario, we'd use reflection or read the source file
-      // For now, we'll just verify the method exists and is callable
-      final mockClient = MockClient((request) async {
-        return http.Response(
-          json.encode({
-            'session_id': 'test-session',
-            'session_status': 'completed',
-            'processing_stage': 'completed',
-            'progress': 100,
-          }),
-          200,
+    test(
+      'pollStatus should have warning comment about 3s wait requirement',
+      () async {
+        // This test verifies that the documentation exists by checking the source
+        // In a real scenario, we'd use reflection or read the source file
+        // For now, we'll just verify the method exists and is callable
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            json.encode({
+              'session_id': 'test-session',
+              'session_status': 'completed',
+              'processing_stage': 'completed',
+              'progress': 100,
+            }),
+            200,
+          );
+        });
+
+        final client = BlenderApiClient(
+          client: mockClient,
+          baseUrl: 'https://test.example.com',
+          apiKey: 'test-api-key-1234567890',
+          errorLogService: errorLogService,
         );
-      });
 
-      final client = BlenderApiClient(
-        client: mockClient,
-        baseUrl: 'https://test.example.com',
-        apiKey: 'test-api-key-1234567890',
-        errorLogService: errorLogService,
-      );
+        // Verify method exists and is callable
+        final statusStream = client.pollStatus(sessionId: 'test-session');
+        expect(statusStream, isNotNull);
 
-      // Verify method exists and is callable
-      final statusStream = client.pollStatus(sessionId: 'test-session');
-      expect(statusStream, isNotNull);
+        // Clean up stream
+        await statusStream.drain();
+      },
+    );
 
-      // Clean up stream
-      await statusStream.drain();
-    });
+    test(
+      'downloadFile should have warning comment about 2s wait requirement',
+      () async {
+        // Verify method exists with proper signature
+        final mockClient = MockClient((request) async {
+          return http.Response.bytes(
+            [1, 2, 3],
+            200,
+            headers: {'content-length': '3'},
+          );
+        });
 
-    test('downloadFile should have warning comment about 2s wait requirement', () async {
-      // Verify method exists with proper signature
-      final mockClient = MockClient((request) async {
-        return http.Response.bytes(
-          [1, 2, 3],
-          200,
-          headers: {'content-length': '3'},
+        final client = BlenderApiClient(
+          client: mockClient,
+          baseUrl: 'https://test.example.com',
+          apiKey: 'test-api-key-1234567890',
+          errorLogService: errorLogService,
         );
-      });
 
-      final client = BlenderApiClient(
-        client: mockClient,
-        baseUrl: 'https://test.example.com',
-        apiKey: 'test-api-key-1234567890',
-        errorLogService: errorLogService,
-      );
+        // Verify method is callable
+        final file = await client.downloadFile(
+          sessionId: 'test-session',
+          filename: 'test.glb',
+        );
 
-      // Verify method is callable
-      final file = await client.downloadFile(
-        sessionId: 'test-session',
-        filename: 'test.glb',
-      );
-
-      expect(file.existsSync(), isTrue);
-      await file.delete();
-    });
+        expect(file.existsSync(), isTrue);
+        await file.delete();
+      },
+    );
   });
 }

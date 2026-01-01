@@ -2,10 +2,10 @@ import 'dart:io';
 import 'package:flutter_roomplan/flutter_roomplan.dart';
 
 enum LidarSupport {
-  supported,      // Device has LiDAR and iOS 16.0+
-  noLidar,        // Device lacks LiDAR hardware
-  oldIOS,         // iOS version < 16.0
-  notApplicable,  // Android device
+  supported, // Device has LiDAR and iOS 16.0+
+  noLidar, // Device lacks LiDAR hardware
+  oldIOS, // iOS version < 16.0
+  notApplicable, // Android device
 }
 
 class LidarCapability {
@@ -13,7 +13,8 @@ class LidarCapability {
   final String deviceModel;
   final String osVersion;
   final bool isMultiRoomSupported; // iOS 17.0+ for multi-room merge
-  final String? unsupportedReason; // Human-readable message for unsupported devices
+  final String?
+  unsupportedReason; // Human-readable message for unsupported devices
 
   LidarCapability({
     required this.support,
@@ -34,7 +35,8 @@ class LidarCapability {
         deviceModel: await _getDeviceModel(),
         osVersion: await _getOSVersion(),
         isMultiRoomSupported: false,
-        unsupportedReason: 'LiDAR scanning is not available on Android devices. You can upload GLB files instead.',
+        unsupportedReason:
+            'LiDAR scanning is not available on Android devices. You can upload GLB files instead.',
       );
     }
 
@@ -58,7 +60,8 @@ class LidarCapability {
         deviceModel: deviceModel,
         osVersion: osVersion,
         isMultiRoomSupported: false,
-        unsupportedReason: 'Your device does not have a LiDAR scanner. LiDAR is available on iPhone 12 Pro and newer Pro models.',
+        unsupportedReason:
+            'Your device does not have a LiDAR scanner. LiDAR is available on iPhone 12 Pro and newer Pro models.',
       );
     }
 
@@ -69,7 +72,8 @@ class LidarCapability {
         deviceModel: deviceModel,
         osVersion: osVersion,
         isMultiRoomSupported: false,
-        unsupportedReason: 'LiDAR scanning requires iOS 16.0 or later. Please update your device.',
+        unsupportedReason:
+            'LiDAR scanning requires iOS 16.0 or later. Please update your device.',
       );
     }
 

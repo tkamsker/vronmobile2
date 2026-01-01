@@ -71,7 +71,8 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
 
   /// Track whether form has unsaved changes
   void _onFieldChanged() {
-    final isDirty = _nameController.text.isNotEmpty ||
+    final isDirty =
+        _nameController.text.isNotEmpty ||
         _slugController.text.isNotEmpty ||
         _descriptionController.text.isNotEmpty;
 
@@ -167,9 +168,7 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
       canPop: !_isDirty,
       onPopInvokedWithResult: (didPop, result) => _handlePopInvoked(didPop),
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text(AppStrings.createProjectTitle),
-        ),
+        appBar: AppBar(title: const Text(AppStrings.createProjectTitle)),
         body: Form(
           key: _formKey,
           child: ListView(
@@ -259,8 +258,9 @@ class _CreateProjectScreenState extends State<CreateProjectScreen> {
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : const Text(AppStrings.createProjectButton),

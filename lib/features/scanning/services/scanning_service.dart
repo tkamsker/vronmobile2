@@ -23,9 +23,7 @@ class ScanningService {
   /// Calls [onProgress] callback with progress values 0.0-1.0
   /// Throws [UnsupportedError] if LiDAR not supported
   /// Throws [Exception] if permissions denied or scan fails
-  Future<ScanData> startScan({
-    Function(double progress)? onProgress,
-  }) async {
+  Future<ScanData> startScan({Function(double progress)? onProgress}) async {
     // Check capability
     final capability = await checkCapability();
     if (!capability.isScanningSupportpported) {
@@ -83,8 +81,12 @@ class ScanningService {
       print('📁 [SERVICE] Received USDZ path: $usdzPath');
 
       if (usdzPath == null || usdzPath.isEmpty) {
-        print('❌ [SERVICE] No USDZ path returned - scan may have insufficient data');
-        throw Exception('Scan failed: Insufficient data captured. Try scanning more of the room slowly and ensure good lighting.');
+        print(
+          '❌ [SERVICE] No USDZ path returned - scan may have insufficient data',
+        );
+        throw Exception(
+          'Scan failed: Insufficient data captured. Try scanning more of the room slowly and ensure good lighting.',
+        );
       }
 
       // Simulate progress updates (actual progress comes from iOS UI)
@@ -227,7 +229,9 @@ class ScanningService {
   }
 
   /// Handle scan interruption (phone call, app backgrounded, low battery)
-  Future<InterruptionAction> handleInterruption(InterruptionReason reason) async {
+  Future<InterruptionAction> handleInterruption(
+    InterruptionReason reason,
+  ) async {
     // In production, this would show a dialog to the user
     // For now, return a default action
     switch (reason) {
@@ -255,14 +259,6 @@ class ScanningService {
   }
 }
 
-enum InterruptionReason {
-  phoneCall,
-  backgrounded,
-  lowBattery,
-}
+enum InterruptionReason { phoneCall, backgrounded, lowBattery }
 
-enum InterruptionAction {
-  savePartial,
-  discard,
-  continue_,
-}
+enum InterruptionAction { savePartial, discard, continue_ }

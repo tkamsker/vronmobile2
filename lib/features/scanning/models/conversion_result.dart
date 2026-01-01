@@ -46,10 +46,7 @@ class ConversionError {
   final String code;
   final String message;
 
-  const ConversionError({
-    required this.code,
-    required this.message,
-  });
+  const ConversionError({required this.code, required this.message});
 
   factory ConversionError.fromJson(Map<String, dynamic> json) {
     return ConversionError(
@@ -59,10 +56,7 @@ class ConversionError {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'code': code,
-      'message': message,
-    };
+    return {'code': code, 'message': message};
   }
 }
 

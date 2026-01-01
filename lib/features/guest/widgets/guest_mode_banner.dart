@@ -7,10 +7,7 @@ import 'package:vronmobile2/core/constants/app_strings.dart';
 class GuestModeBanner extends StatelessWidget {
   final VoidCallback onSignUpPressed;
 
-  const GuestModeBanner({
-    super.key,
-    required this.onSignUpPressed,
-  });
+  const GuestModeBanner({super.key, required this.onSignUpPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -23,19 +20,12 @@ class GuestModeBanner extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.amber.shade100,
           border: Border(
-            bottom: BorderSide(
-              color: Colors.amber.shade700,
-              width: 2,
-            ),
+            bottom: BorderSide(color: Colors.amber.shade700, width: 2),
           ),
         ),
         child: Row(
           children: [
-            Icon(
-              Icons.info_outline,
-              color: Colors.amber.shade900,
-              size: 20,
-            ),
+            Icon(Icons.info_outline, color: Colors.amber.shade900, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -55,15 +45,18 @@ class GuestModeBanner extends StatelessWidget {
                 onPressed: onSignUpPressed,
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.amber.shade900,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  minimumSize: const Size(44, 44), // Accessibility: minimum touch target
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  minimumSize: const Size(
+                    44,
+                    44,
+                  ), // Accessibility: minimum touch target
                 ),
                 child: const Text(
                   'Sign Up',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
               ),
             ),
