@@ -58,10 +58,11 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
+      // Fetch ALL projects (no subscription filter)
       final projects = await _projectService.fetchProjects();
 
       if (kDebugMode) {
-        print('✅ [HOME] Loaded ${projects.length} projects');
+        print('✅ [HOME] Loaded ${projects.length} projects (all subscriptions)');
       }
 
       setState(() {
@@ -103,6 +104,14 @@ class _HomeScreenState extends State<HomeScreen> {
         break;
       case 'Archived':
         filtered = filtered.where((project) => !project.isLive).toList();
+        break;
+      case 'BYO':
+        // Filter for Bring Your Own (MANAGED_BY_BRING_YOUR_OWN_WORLDS_TIER)
+        filtered = filtered
+            .where((project) =>
+                project.subscription.status ==
+                'MANAGED_BY_BRING_YOUR_OWN_WORLDS_TIER')
+            .toList();
         break;
       case 'All':
       default:
@@ -321,6 +330,8 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 8),
             _buildFilterChip('Active'),
             const SizedBox(width: 8),
+            _buildFilterChip('BYO'),
+            const SizedBox(width: 8),
             _buildFilterChip('Archived'),
             const SizedBox(width: 16),
             TextButton.icon(
@@ -347,6 +358,9 @@ class _HomeScreenState extends State<HomeScreen> {
         break;
       case 'Active':
         displayLabel = 'home.filterActive'.tr();
+        break;
+      case 'BYO':
+        displayLabel = 'home.filterBYO'.tr();
         break;
       case 'Archived':
         displayLabel = 'home.filterArchived'.tr();

@@ -1,0 +1,136 @@
+name: Flutter CI/CD
+
+on:
+  push:
+    branches:
+      - stage
+      - main
+  pull_request:
+    branches:
+      - stage
+      - main
+
+env:
+  FLUTTER_VERSION: 'stable'
+  ANDROID_BUILD_DIR: build/app/outputs/flutter-apk
+  IOS_BUILD_DIR: build/ios/ipa
+
+jobs:
+  # 1) Fast checks on feature branches
+  test-feature:
+    if: startsWith(github.ref, 'refs/heads/feature/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_VERSION }}
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+  # 2) Stage: build dev/stage artifacts + optionally upload iOS to TestFlight (internal)
+  build-stage:
+    if: github.ref == 'refs/heads/stage'
+    runs-on: macos-latest
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_VERSION }}
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Run tests
+        run: |
+          flutter analyze
+          flutter test
+
+      # Android stage build (APK / AAB)
+      - name: Build Android stage (AAB)
+        run: |
+          flutter build appbundle \
+            --flavor stage \
+            --release \
+            --dart-define=BUILD_NUMBER=${BUILD_NUMBER}
+
+      - name: Upload Android stage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-stage-aab
+          path: ${{ env.ANDROID_BUILD_DIR }}/*.aab
+
+      # iOS stage build + TestFlight upload via fastlane
+      - name: Install Ruby gems
+        working-directory: ios
+        run: bundle install
+
+      - name: Build & upload iOS stage to TestFlight
+        working-directory: ios
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          MATCH_GIT_PRIVATE_KEY: ${{ secrets.MATCH_GIT_PRIVATE_KEY }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          BUILD_NUMBER: ${{ env.BUILD_NUMBER }}
+        run: |
+          bundle exec fastlane ios build_upload_testflight \
+            build_number:${BUILD_NUMBER} \
+            flavor:stage
+
+  # 3) Main: production builds + TestFlight (external) or App Store
+  build-main:
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-latest
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_VERSION }}
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Run tests
+        run: |
+          flutter analyze
+          flutter test
+
+      - name: Build Android prod (AAB)
+        run: |
+          flutter build appbundle \
+            --flavor prod \
+            --release \
+            --dart-define=BUILD_NUMBER=${BUILD_NUMBER}
+
+      - name: Upload Android prod artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-prod-aab
+          path: ${{ env.ANDROID_BUILD_DIR }}/*.aab
+
+      - name: Install Ruby gems
+        working-directory: ios
+        run: bundle install
+
+      - name: Build & upload iOS prod to TestFlight
+        working-directory: ios
+        env:
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          MATCH_GIT_PRIVATE_KEY: ${{ secrets.MATCH_GIT_PRIVATE_KEY }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          BUILD_NUMBER: ${{ env.BUILD_NUMBER }}
+        run: |
+          bundle exec fastlane ios build_upload_testflight \
+            build_number:${BUILD_NUMBER} \
+            flavor:prod

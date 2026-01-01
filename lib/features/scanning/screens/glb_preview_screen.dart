@@ -27,8 +27,12 @@ class _GlbPreviewScreenState extends State<GlbPreviewScreen> {
   Widget build(BuildContext context) {
     // Extract dimensions from metadata if available
     final metadata = widget.scanData.metadata;
-    final width = metadata?['width'] as double?;
-    final height = metadata?['height'] as double?;
+    final rawWidth = metadata?['width'] as double?;
+    final rawHeight = metadata?['height'] as double?;
+
+    // Guard against NaN values that can cause CoreGraphics errors
+    final width = (rawWidth != null && !rawWidth.isNaN && rawWidth.isFinite) ? rawWidth : null;
+    final height = (rawHeight != null && !rawHeight.isNaN && rawHeight.isFinite) ? rawHeight : null;
 
     // Determine which file to show (glbLocalPath or localPath if format is already GLB)
     final String glbPath = widget.scanData.glbLocalPath ??

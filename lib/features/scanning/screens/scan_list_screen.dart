@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/scan_data.dart';
 import '../services/scan_session_manager.dart';
+import '../../home/models/project.dart';
+import '../../home/services/project_service.dart';
 import 'scanning_screen.dart';
 import 'usdz_preview_screen.dart';
 
 /// Screen showing list of scans for current session
-/// Matches design from Requirements/ScanList.jpg
+/// Matches design from Requirements/ScanList2.jpg
 class ScanListScreen extends StatefulWidget {
   final String? projectName;
 
@@ -21,76 +23,167 @@ class ScanListScreen extends StatefulWidget {
 
 class _ScanListScreenState extends State<ScanListScreen> {
   final ScanSessionManager _sessionManager = ScanSessionManager();
+  final ProjectService _projectService = ProjectService();
+
+  List<Project> _projects = [];
+  Project? _selectedProject;
+  bool _isLoadingProjects = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProjects();
+  }
+
+  Future<void> _loadProjects() async {
+    setState(() {
+      _isLoadingProjects = true;
+    });
+
+    try {
+      final projects = await _projectService.fetchProjectsBySubscriptionStatus(
+        'MANAGED_BY_BRING_YOUR_OWN_WORLDS_TIER',
+      );
+      setState(() {
+        _projects = projects;
+        _selectedProject = projects.isNotEmpty ? projects.first : null;
+        _isLoadingProjects = false;
+      });
+    } catch (e) {
+      print('❌ [SCAN_LIST] Error loading projects: $e');
+      setState(() {
+        _isLoadingProjects = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final scans = _sessionManager.scans;
-    final lastUpdated = scans.isNotEmpty
-        ? scans.map((s) => s.capturedAt).reduce((a, b) => a.isAfter(b) ? a : b)
-        : DateTime.now();
 
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Scan Areas', style: TextStyle(fontSize: 20)),
-            Text(
-              'Separate scans with size & time',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
+        title: const Text('Projects & Scans', style: TextStyle(fontSize: 20)),
         centerTitle: false,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              // Navigate to settings
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
           children: [
-            // Project header
-            Container(
-              width: double.infinity,
+            // Current Project section
+            Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    widget.projectName ?? 'Current Session',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
+                  // Current Project header with ADD Project link
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        '${scans.length} ${scans.length == 1 ? 'scan' : 'scans'}',
-                        style: TextStyle(color: Colors.grey.shade600),
+                      const Text(
+                        'Current Project',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+                      TextButton.icon(
+                        onPressed: _showAddProjectDialog,
+                        icon: Icon(
+                          Icons.add_circle_outline,
+                          color: Colors.blue.shade600,
+                          size: 20,
                         ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          _formatRelativeDate(lastUpdated),
+                        label: Text(
+                          'ADD Project',
                           style: TextStyle(
-                            color: Colors.blue.shade700,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                            color: Colors.blue.shade600,
+                            fontSize: 16,
                           ),
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Project picker dropdown
+                  InkWell(
+                    onTap: _isLoadingProjects ? null : _showProjectPicker,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade900.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade800),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _isLoadingProjects
+                                  ? 'Loading projects...'
+                                  : (_selectedProject?.name ?? 'No project selected'),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.expand_more,
+                            color: Colors.grey.shade400,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Helper text
+                  Text(
+                    'Selecting a project filters the scan list below.',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Recent Scans header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Recent Scans',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      // View all scans
+                    },
+                    child: Text(
+                      'View All',
+                      style: TextStyle(
+                        color: Colors.blue.shade600,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -121,7 +214,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
                     height: 56,
                     child: ElevatedButton.icon(
                       onPressed: () => _scanAnotherRoom(),
-                      icon: const Icon(Icons.add, size: 24),
+                      icon: const Icon(Icons.camera_alt, size: 24),
                       label: const Text(
                         'Scan another room',
                         style: TextStyle(fontSize: 18),
@@ -144,27 +237,30 @@ class _ScanListScreenState extends State<ScanListScreen> {
                     child: OutlinedButton.icon(
                       onPressed: scans.length >= 2 ? () => _roomStitching() : null,
                       icon: Icon(
-                        Icons.auto_awesome_mosaic,
+                        Icons.folder_open,
                         size: 24,
                         color: scans.length >= 2
-                            ? Colors.blue.shade600
-                            : Colors.grey.shade400,
+                            ? Colors.white
+                            : Colors.grey.shade600,
                       ),
                       label: Text(
                         'Room stitching',
                         style: TextStyle(
                           fontSize: 18,
                           color: scans.length >= 2
-                              ? Colors.blue.shade600
-                              : Colors.grey.shade400,
+                              ? Colors.white
+                              : Colors.grey.shade600,
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
+                        backgroundColor: scans.length >= 2
+                            ? Colors.grey.shade800
+                            : Colors.grey.shade900,
                         side: BorderSide(
                           color: scans.length >= 2
-                              ? Colors.blue.shade600
-                              : Colors.grey.shade300,
-                          width: 2,
+                              ? Colors.grey.shade700
+                              : Colors.grey.shade800,
+                          width: 1,
                         ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(28),
@@ -182,51 +278,271 @@ class _ScanListScreenState extends State<ScanListScreen> {
   }
 
   Widget _buildScanCard(ScanData scan, int scanNumber) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              // Scan icon
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.threed_rotation,
-                  color: Colors.blue.shade600,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 16),
+    // Determine room name - use metadata room name or default to "Scan N"
+    final roomName = scan.metadata?['roomName'] as String? ?? 'Scan $scanNumber';
 
-              // Scan info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Scan $scanNumber',
+    // Get project name from metadata or use default
+    final projectName = scan.metadata?['projectName'] as String? ?? 'Current Project';
+
+    // Get square footage from metadata if available
+    final sqFt = scan.metadata?['squareFootage'] as double?;
+    final sqFtText = sqFt != null ? ' • ${sqFt.toStringAsFixed(0)} sq ft' : '';
+
+    // Status badge - for now all scans are "DONE" (green)
+    // In future, drafts or incomplete scans can use "DRAFT" (orange)
+    final isDraft = scan.metadata?['isDraft'] as bool? ?? false;
+    final statusText = isDraft ? 'DRAFT' : 'DONE';
+    final statusColor = isDraft ? Colors.orange : Colors.green;
+
+    return InkWell(
+      onTap: () => _viewUsdzPreview(scan),
+      onLongPress: () => _showScanOptions(scan),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade900.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey.shade800, width: 1),
+        ),
+        child: Row(
+          children: [
+            // Thumbnail with status badge overlay
+            Stack(
+              children: [
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade800,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Icon(
+                      Icons.threed_rotation,
+                      color: Colors.grey.shade600,
+                      size: 48,
+                    ),
+                  ),
+                ),
+                // Status badge (bottom-left corner)
+                Positioned(
+                  bottom: 8,
+                  left: 8,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusColor,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      statusText,
                       style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _formatTime(scan.capturedAt),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(width: 16),
+
+            // Scan info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Room name
+                  Text(
+                    roomName,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Project name with folder icon
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.folder,
+                        size: 16,
+                        color: Colors.blue.shade400,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        projectName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.blue.shade400,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+
+                  // Timestamp and square footage
+                  Text(
+                    '${_formatRelativeDate(scan.capturedAt)}$sqFtText',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Chevron icon
+            Icon(
+              Icons.chevron_right,
+              color: Colors.grey.shade600,
+              size: 28,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddProjectDialog() {
+    final nameController = TextEditingController();
+    final slugController = TextEditingController();
+    final descriptionController = TextEditingController();
+    bool autoGenerateSlug = true;
+
+    // Auto-generate slug from name
+    nameController.addListener(() {
+      if (autoGenerateSlug) {
+        slugController.text = _generateSlug(nameController.text);
+      }
+    });
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: Row(
+          children: [
+            Icon(Icons.add_circle, color: Colors.blue.shade400),
+            const SizedBox(width: 12),
+            const Text('Create New Project', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Project Name
+              Text(
+                'Project Name *',
+                style: TextStyle(
+                  color: Colors.grey.shade400,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: nameController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Enter project name',
+                  hintStyle: TextStyle(color: Colors.grey.shade600),
+                  filled: true,
+                  fillColor: Colors.grey.shade800,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Project Slug
+              Text(
+                'Project Slug *',
+                style: TextStyle(
+                  color: Colors.grey.shade400,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: slugController,
+                style: const TextStyle(color: Colors.white),
+                onChanged: (value) {
+                  autoGenerateSlug = false;
+                },
+                decoration: InputDecoration(
+                  hintText: 'project-slug',
+                  hintStyle: TextStyle(color: Colors.grey.shade600),
+                  filled: true,
+                  fillColor: Colors.grey.shade800,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                  helperText: 'URL-friendly identifier (auto-generated)',
+                  helperStyle: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Description
+              Text(
+                'Description (Optional)',
+                style: TextStyle(
+                  color: Colors.grey.shade400,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: descriptionController,
+                style: const TextStyle(color: Colors.white),
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Enter project description',
+                  hintStyle: TextStyle(color: Colors.grey.shade600),
+                  filled: true,
+                  fillColor: Colors.grey.shade800,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Info text
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade900.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.shade700.withValues(alpha: 0.5)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.blue.shade400, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'This will create a BYO (Bring Your Own) project for uploading your scans.',
+                        style: TextStyle(
+                          color: Colors.blue.shade200,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ],
@@ -234,59 +550,256 @@ class _ScanListScreenState extends State<ScanListScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text('Cancel', style: TextStyle(color: Colors.grey.shade400)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final name = nameController.text.trim();
+              final slug = slugController.text.trim();
+              final description = descriptionController.text.trim();
 
-          // Action buttons row (USDZ, GLBView, Delete)
-          Row(
-            children: [
-              // USDZ button
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => _viewUsdzPreview(scan),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey.shade300),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+              if (name.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter a project name'),
+                    backgroundColor: Colors.red,
                   ),
-                  child: const Text('USDZ'),
-                ),
-              ),
-              const SizedBox(width: 8),
+                );
+                return;
+              }
 
-              // GLBView button
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => _viewGlbPreview(scan),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey.shade300),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+              if (slug.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter a project slug'),
+                    backgroundColor: Colors.red,
                   ),
-                  child: const Text('GLBView'),
-                ),
-              ),
-              const SizedBox(width: 8),
+                );
+                return;
+              }
 
-              // Delete button
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _confirmDeleteScan(scan),
-                  icon: const Icon(Icons.delete_outline, size: 18),
-                  label: const Text('Delete'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.red.shade700,
-                    side: BorderSide(color: Colors.red.shade200),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+              Navigator.of(context).pop();
+              await _createNewProject(name, slug, description.isEmpty ? null : description);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade600,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Create Project'),
           ),
         ],
+      ),
+    );
+  }
+
+  String _generateSlug(String name) {
+    return name
+        .toLowerCase()
+        .trim()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-|-$'), '');
+  }
+
+  Future<void> _createNewProject(String name, String slug, String? description) async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade900,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text(
+                  'Creating project...',
+                  style: TextStyle(color: Colors.grey.shade300),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      print('📦 [SCAN_LIST] Creating new project: $name ($slug)');
+
+      // Create the project using ProjectService
+      final project = await _projectService.createProject(
+        name: name,
+        slug: slug,
+        description: description,
+      );
+
+      print('✅ [SCAN_LIST] Project created: ${project.id}');
+
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+
+      // Set as selected project and refresh
+      if (mounted) {
+        setState(() {
+          _projects.add(project);
+          _selectedProject = project;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green.shade400),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text('Project "${project.name}" created successfully!'),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green.shade700,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      print('❌ [SCAN_LIST] Error creating project: $e');
+
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+
+      if (mounted) {
+        // Check for duplicate slug error
+        final errorMessage = e.toString();
+        String displayMessage = 'Failed to create project: $e';
+
+        if (errorMessage.contains('already exists') || errorMessage.contains('DUPLICATE_SLUG')) {
+          displayMessage = 'A project with this slug already exists. Please choose a different name.';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.red.shade400),
+                const SizedBox(width: 12),
+                Expanded(child: Text(displayMessage)),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
+  void _showProjectPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.grey.shade900,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'Select Project',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            Divider(color: Colors.grey.shade800, height: 1),
+            ..._projects.map((project) => ListTile(
+              leading: Icon(
+                Icons.folder,
+                color: Colors.blue.shade400,
+              ),
+              title: Text(
+                project.name,
+                style: const TextStyle(color: Colors.white),
+              ),
+              trailing: _selectedProject?.id == project.id
+                  ? Icon(Icons.check, color: Colors.blue.shade400)
+                  : null,
+              onTap: () {
+                setState(() {
+                  _selectedProject = project;
+                });
+                Navigator.pop(context);
+              },
+            )),
+            if (_projects.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Text(
+                  'No projects available',
+                  style: TextStyle(color: Colors.grey.shade500),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showScanOptions(ScanData scan) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.grey.shade900,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.visibility, color: Colors.white),
+              title: const Text('View USDZ', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                _viewUsdzPreview(scan);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.view_in_ar, color: Colors.white),
+              title: const Text('View GLB', style: TextStyle(color: Colors.white)),
+              onTap: () {
+                Navigator.pop(context);
+                _viewGlbPreview(scan);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.delete_outline, color: Colors.red.shade400),
+              title: Text('Delete', style: TextStyle(color: Colors.red.shade400)),
+              onTap: () {
+                Navigator.pop(context);
+                _confirmDeleteScan(scan);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -325,30 +838,23 @@ class _ScanListScreenState extends State<ScanListScreen> {
 
   String _formatRelativeDate(DateTime date) {
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final scanDate = DateTime(date.year, date.month, date.day);
+    final difference = now.difference(date);
 
-    if (scanDate == today) {
-      return 'Today · ${DateFormat('HH:mm').format(date)}';
-    } else if (scanDate == today.subtract(const Duration(days: 1))) {
-      return 'Yesterday · ${DateFormat('HH:mm').format(date)}';
+    if (difference.inMinutes < 1) {
+      return 'Just now';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} mins ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} day${difference.inDays == 1 ? '' : 's'} ago';
     } else {
-      return DateFormat('MMM d · HH:mm').format(date);
+      return DateFormat('MMM d').format(date);
     }
   }
 
   String _formatTime(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final scanDate = DateTime(date.year, date.month, date.day);
-
-    if (scanDate == today) {
-      return 'Today · ${DateFormat('HH:mm').format(date)}';
-    } else if (scanDate == today.subtract(const Duration(days: 1))) {
-      return 'Yesterday · ${DateFormat('HH:mm').format(date)}';
-    } else {
-      return DateFormat('MMM d · HH:mm').format(date);
-    }
+    return _formatRelativeDate(date);
   }
 
   String _formatFileSize(int bytes) {

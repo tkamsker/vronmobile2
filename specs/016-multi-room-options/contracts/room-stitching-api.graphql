@@ -1,0 +1,507 @@
+# GraphQL API Contract: Room Stitching - Feature 016
+#
+# Date: 2026-01-01
+# Feature: 016-multi-room-options
+# Backend: BlenderAPI (https://api.vron.stage.motorenflug.at/graphql)
+# Status: Phase 1 Complete - Ready for Backend Implementation
+#
+# This GraphQL schema defines the contract between the mobile app (Feature 016)
+# and the BlenderAPI backend for multi-room stitching operations. It extends
+# the existing Feature 014 pattern (uploadProjectScan mutation + polling query).
+
+# ============================================================================
+# MUTATIONS
+# ============================================================================
+
+"""
+Initiates a room stitching job by uploading 2+ scan files and requesting
+backend alignment and merging into a single cohesive 3D model.
+
+Returns a RoomStitchJob with jobId for polling status.
+
+Authentication: Required (Bearer token)
+Rate Limit: 10 requests/minute per user
+Max Scans: 10 scans per stitching job
+"""
+mutation StitchRooms($input: StitchRoomsInput!) {
+  stitchRooms(input: $input) {
+    jobId: ID!
+    status: StitchJobStatus!
+    estimatedDurationSeconds: Int  # Backend estimate (60-180s typical)
+    createdAt: DateTime!
+  }
+}
+
+# ============================================================================
+# QUERIES
+# ============================================================================
+
+"""
+Polls the status of an active or completed stitching job.
+
+Used for 2-second interval polling until terminal state (COMPLETED or FAILED).
+
+Authentication: Required (Bearer token)
+Rate Limit: Unlimited (polling expected)
+"""
+query GetStitchJobStatus($jobId: ID!) {
+  stitchJob(jobId: $jobId) {
+    jobId: ID!
+    status: StitchJobStatus!
+    progress: Int!              # 0-100 percentage
+    errorCode: String           # Error code if status == FAILED
+    errorMessage: String        # User-friendly error message if status == FAILED
+    resultUrl: String           # Signed S3 URL if status == COMPLETED (expires in 1 hour)
+    createdAt: DateTime!
+    completedAt: DateTime       # Null if in progress
+    metadata: StitchJobMetadata # Optional backend-provided metadata
+  }
+}
+
+"""
+Retrieves detailed diagnostics for a stitching job (similar to Feature 015 session investigation).
+
+Used for debugging failures or investigating slow stitching operations.
+
+Authentication: Required (Bearer token or support API key)
+"""
+query InvestigateStitchJob($jobId: ID!) {
+  stitchJobDiagnostics(jobId: $jobId) {
+    jobId: ID!
+    status: StitchJobStatus!
+    scanUploads: [ScanUploadInfo!]!  # Upload status per scan
+    alignmentResult: AlignmentInfo   # Alignment success/failure details
+    mergingResult: MergingInfo       # Merging logs and stats
+    errorLogs: [String!]             # Backend error logs (last 50 lines)
+    processingDurationSeconds: Int   # Actual time taken
+  }
+}
+
+# ============================================================================
+# INPUT TYPES
+# ============================================================================
+
+"""
+Input for initiating a room stitching job.
+
+Validation:
+- scanIds: Minimum 2, maximum 10 scans
+- projectId: Must be valid UUID and user must have access
+- roomNames: Optional; if provided, each scanId must have corresponding name
+"""
+input StitchRoomsInput {
+  projectId: ID!                # Target project UUID (required for backend association)
+  scanIds: [ID!]!               # List of scan IDs to stitch (minimum 2, maximum 10)
+  alignmentMode: AlignmentMode  # AUTO (default) or MANUAL (future)
+  outputFormat: OutputFormat    # GLB (default) or USDZ
+  roomNames: [RoomNameInput!]   # Optional user-assigned room names
+}
+
+"""
+Maps a scan ID to a user-assigned room name.
+
+Used for metadata and filename generation.
+"""
+input RoomNameInput {
+  scanId: ID!       # Scan UUID
+  name: String!     # Room name (max 50 chars, alphanumeric + spaces + emojis)
+}
+
+# ============================================================================
+# ENUMS
+# ============================================================================
+
+"""
+Alignment mode for stitching algorithm.
+
+- AUTO: Backend automatically detects overlapping areas and aligns scans
+- MANUAL: User provides alignment hints (future enhancement)
+"""
+enum AlignmentMode {
+  AUTO    # System determines alignment (MVP)
+  MANUAL  # User-provided alignment hints (future)
+}
+
+"""
+Output format for stitched 3D model.
+
+- GLB: Default format (binary glTF 2.0) - widely supported
+- USDZ: iOS native format (optional future enhancement)
+"""
+enum OutputFormat {
+  GLB   # Binary glTF 2.0 (default)
+  USDZ  # iOS native format (optional)
+}
+
+"""
+Stitching job status enum.
+
+State transitions:
+  PENDING → UPLOADING → PROCESSING → ALIGNING → MERGING → COMPLETED
+                                                         ↘ FAILED
+
+Terminal states: COMPLETED, FAILED
+"""
+enum StitchJobStatus {
+  PENDING     # Job queued, waiting to start
+  UPLOADING   # Uploading scan files to backend storage
+  PROCESSING  # Backend processing initiated (pre-alignment)
+  ALIGNING    # Aligning coordinate systems of scans
+  MERGING     # Merging geometry and textures
+  COMPLETED   # Success - resultUrl available for download
+  FAILED      # Error occurred - errorCode and errorMessage available
+}
+
+"""
+Error codes for stitching failures.
+
+Used in extensions object for client-side error handling and recovery suggestions.
+"""
+enum StitchJobErrorCode {
+  INSUFFICIENT_OVERLAP      # Scans have <20% common area (recovery: rescan with more overlap)
+  ALIGNMENT_FAILURE         # Cannot align coordinate systems (recovery: scans incompatible)
+  BACKEND_TIMEOUT           # Processing exceeded 5-minute limit (recovery: retry or split into smaller batches)
+  INCOMPATIBLE_FORMATS      # Mixed USDZ/GLB from different sources (recovery: convert all to same format)
+  INVALID_SCAN_ID           # Scan not found or user lacks access (recovery: verify scan exists)
+  INVALID_PROJECT_ID        # Project not found or user lacks access
+  UNAUTHORIZED              # User not authenticated (recovery: reauthenticate)
+  RATE_LIMIT_EXCEEDED       # Too many stitching requests (recovery: wait and retry)
+  SERVER_ERROR              # Internal backend error (recovery: retry with exponential backoff)
+  STORAGE_LIMIT_EXCEEDED    # User or project storage quota exceeded
+  PROCESSING_ERROR          # Blender processing error (recovery: check scan quality)
+}
+
+# ============================================================================
+# OBJECT TYPES
+# ============================================================================
+
+"""
+Response object for stitchRooms mutation.
+
+Contains job identifier and initial status for client-side polling.
+"""
+type StitchRoomsPayload {
+  jobId: ID!                        # Unique job identifier (UUID v4)
+  status: StitchJobStatus!          # Initial status (always PENDING)
+  estimatedDurationSeconds: Int     # Backend estimate (60-180s typical)
+  createdAt: DateTime!              # Job creation timestamp
+}
+
+"""
+Stitching job object returned by polling query.
+
+Used for tracking progress and retrieving result URL or error details.
+"""
+type StitchJob {
+  jobId: ID!                        # Unique job identifier
+  status: StitchJobStatus!          # Current status
+  progress: Int!                    # Progress percentage (0-100)
+  errorCode: String                 # Error code (StitchJobErrorCode enum value as string)
+  errorMessage: String              # User-friendly error message
+  resultUrl: String                 # Signed S3 URL for downloading stitched GLB (expires in 1 hour)
+  createdAt: DateTime!              # Job creation timestamp
+  completedAt: DateTime             # Job completion timestamp (null if in progress)
+  metadata: StitchJobMetadata       # Optional backend-provided metadata
+}
+
+"""
+Optional metadata provided by backend after stitching completes.
+
+Used for quality assessment and user feedback.
+"""
+type StitchJobMetadata {
+  polygonCount: Int                 # Total polygon count in stitched model
+  textureCount: Int                 # Number of textures
+  fileSizeBytes: Int                # File size of stitched GLB in bytes
+  processingDurationSeconds: Int    # Actual processing time
+  alignmentScore: Float             # Alignment quality score (0.0-1.0, higher is better)
+  overlapPercentage: Float          # Average overlap between scans (0.0-1.0)
+}
+
+"""
+Diagnostics object for investigating stitching job failures.
+
+Used by support team or advanced users for debugging.
+"""
+type StitchJobDiagnostics {
+  jobId: ID!                        # Unique job identifier
+  status: StitchJobStatus!          # Current/final status
+  scanUploads: [ScanUploadInfo!]!   # Upload status per scan
+  alignmentResult: AlignmentInfo    # Alignment success/failure details
+  mergingResult: MergingInfo        # Merging logs and statistics
+  errorLogs: [String!]              # Backend error logs (last 50 lines)
+  processingDurationSeconds: Int    # Actual time taken
+}
+
+"""
+Upload information for each scan in the stitching job.
+"""
+type ScanUploadInfo {
+  scanId: ID!                       # Scan UUID
+  uploadStatus: String              # "success", "failed", "pending"
+  uploadDurationSeconds: Int        # Time taken to upload
+  fileSizeBytes: Int                # File size
+  errorMessage: String              # Upload error message (if failed)
+}
+
+"""
+Alignment result details for diagnostics.
+"""
+type AlignmentInfo {
+  status: String                    # "success", "failed", "partial"
+  overlapPercentage: Float          # Average overlap between scans (0.0-1.0)
+  alignmentScore: Float             # Quality score (0.0-1.0)
+  failedPairs: [ScanPair!]          # Scan pairs that failed to align
+  errorMessage: String              # Alignment error details
+}
+
+"""
+Pair of scans that failed to align.
+"""
+type ScanPair {
+  scanId1: ID!
+  scanId2: ID!
+  reason: String                    # Reason for alignment failure
+}
+
+"""
+Merging result details for diagnostics.
+"""
+type MergingInfo {
+  status: String                    # "success", "failed"
+  mergedPolygonCount: Int           # Total polygon count
+  mergedTextureCount: Int           # Total texture count
+  optimizationApplied: Boolean      # Whether geometry optimization was applied
+  errorMessage: String              # Merging error details
+}
+
+# ============================================================================
+# SCALAR TYPES
+# ============================================================================
+
+"""
+ISO 8601 datetime string (e.g., "2025-01-01T12:34:56Z").
+"""
+scalar DateTime
+
+# ============================================================================
+# ERROR HANDLING
+# ============================================================================
+
+"""
+GraphQL extensions object for error details.
+
+Example error response:
+
+{
+  "data": null,
+  "errors": [
+    {
+      "message": "Insufficient overlap between scans",
+      "extensions": {
+        "code": "INSUFFICIENT_OVERLAP",
+        "scanIds": ["scan-001", "scan-002"],
+        "overlapPercentage": 0.12,
+        "minOverlapRequired": 0.20,
+        "recoverySuggestion": "Rescan with more overlap between rooms (at least 20% common area)"
+      }
+    }
+  ]
+}
+
+Mobile app uses ErrorMessageService to translate error codes to user-friendly messages.
+"""
+
+# ============================================================================
+# EXAMPLE QUERIES & MUTATIONS
+# ============================================================================
+
+# Example 1: Initiate stitching for 2 rooms
+# mutation {
+#   stitchRooms(input: {
+#     projectId: "proj-001"
+#     scanIds: ["scan-001", "scan-002"]
+#     alignmentMode: AUTO
+#     outputFormat: GLB
+#     roomNames: [
+#       { scanId: "scan-001", name: "Living Room" }
+#       { scanId: "scan-002", name: "Master Bedroom" }
+#     ]
+#   }) {
+#     jobId
+#     status
+#     estimatedDurationSeconds
+#   }
+# }
+#
+# Response:
+# {
+#   "data": {
+#     "stitchRooms": {
+#       "jobId": "job-abc123",
+#       "status": "PENDING",
+#       "estimatedDurationSeconds": 120
+#     }
+#   }
+# }
+
+# Example 2: Poll job status
+# query {
+#   stitchJob(jobId: "job-abc123") {
+#     jobId
+#     status
+#     progress
+#     errorCode
+#     errorMessage
+#     resultUrl
+#     completedAt
+#     metadata {
+#       polygonCount
+#       fileSizeBytes
+#       alignmentScore
+#     }
+#   }
+# }
+#
+# Response (in progress):
+# {
+#   "data": {
+#     "stitchJob": {
+#       "jobId": "job-abc123",
+#       "status": "ALIGNING",
+#       "progress": 65,
+#       "errorCode": null,
+#       "errorMessage": null,
+#       "resultUrl": null,
+#       "completedAt": null,
+#       "metadata": null
+#     }
+#   }
+# }
+#
+# Response (completed):
+# {
+#   "data": {
+#     "stitchJob": {
+#       "jobId": "job-abc123",
+#       "status": "COMPLETED",
+#       "progress": 100,
+#       "errorCode": null,
+#       "errorMessage": null,
+#       "resultUrl": "https://s3.amazonaws.com/vron-stitched/job-abc123.glb?signature=...",
+#       "completedAt": "2025-01-01T12:38:45Z",
+#       "metadata": {
+#         "polygonCount": 450000,
+#         "fileSizeBytes": 48000000,
+#         "alignmentScore": 0.87
+#       }
+#     }
+#   }
+# }
+
+# Example 3: Investigate failed job
+# query {
+#   stitchJobDiagnostics(jobId: "job-abc123") {
+#     jobId
+#     status
+#     scanUploads {
+#       scanId
+#       uploadStatus
+#       fileSizeBytes
+#     }
+#     alignmentResult {
+#       status
+#       overlapPercentage
+#       failedPairs {
+#         scanId1
+#         scanId2
+#         reason
+#       }
+#     }
+#     errorLogs
+#   }
+# }
+#
+# Response:
+# {
+#   "data": {
+#     "stitchJobDiagnostics": {
+#       "jobId": "job-abc123",
+#       "status": "FAILED",
+#       "scanUploads": [
+#         { "scanId": "scan-001", "uploadStatus": "success", "fileSizeBytes": 15000000 },
+#         { "scanId": "scan-002", "uploadStatus": "success", "fileSizeBytes": 18000000 }
+#       ],
+#       "alignmentResult": {
+#         "status": "failed",
+#         "overlapPercentage": 0.12,
+#         "failedPairs": [
+#           {
+#             "scanId1": "scan-001",
+#             "scanId2": "scan-002",
+#             "reason": "Insufficient overlap (12% < 20% minimum)"
+#           }
+#         ]
+#       },
+#       "errorLogs": [
+#         "[2025-01-01 12:35:12] Starting alignment for 2 scans",
+#         "[2025-01-01 12:35:45] Detecting overlap between scan-001 and scan-002",
+#         "[2025-01-01 12:36:18] Overlap detected: 12.3%",
+#         "[2025-01-01 12:36:19] ERROR: Insufficient overlap (minimum 20% required)",
+#         "[2025-01-01 12:36:20] Stitching job failed"
+#       ]
+#     }
+#   }
+# }
+
+# ============================================================================
+# BACKEND IMPLEMENTATION NOTES
+# ============================================================================
+
+# 1. AUTHENTICATION
+#    - Require Bearer token (same as Feature 014 uploadProjectScan)
+#    - Validate user has access to projectId and all scanIds
+#    - Guest users should be rejected (stitching requires authenticated users per FR-020)
+
+# 2. RATE LIMITING
+#    - Stitching: 10 requests/minute per user (prevent abuse)
+#    - Polling: Unlimited (expected every 2 seconds for 1-3 minutes)
+
+# 3. FILE UPLOAD
+#    - Scans are already uploaded via Feature 014 (uploadProjectScan mutation)
+#    - Backend should reference existing scan files by scanId (no re-upload needed)
+#    - If scan file missing, return INVALID_SCAN_ID error
+
+# 4. PROCESSING PIPELINE
+#    - Step 1: Validate input (2-10 scans, user access, project exists)
+#    - Step 2: Download scan files from S3/storage (UPLOADING status)
+#    - Step 3: Pre-process scans (normalize coordinate systems) (PROCESSING status)
+#    - Step 4: Detect overlapping areas between scans (ALIGNING status)
+#    - Step 5: Align coordinate systems (ALIGNING status)
+#    - Step 6: Merge geometry and textures (MERGING status)
+#    - Step 7: Optimize merged model (collapse vertices, compress textures)
+#    - Step 8: Upload result to S3 and generate signed URL (COMPLETED status)
+#    - Step 9: Cleanup temporary files
+
+# 5. ERROR HANDLING
+#    - Return specific error codes in extensions object
+#    - Provide recovery suggestions for each error type
+#    - Log all errors to backend logs for support investigation
+
+# 6. TIMEOUT POLICY
+#    - Max processing time: 5 minutes (return BACKEND_TIMEOUT if exceeded)
+#    - Adjust estimatedDurationSeconds based on scan count and file sizes
+
+# 7. STORAGE
+#    - Store stitched GLB files in S3 with project-scoped path: s3://bucket/projects/{projectId}/stitched/{jobId}.glb
+#    - Generate signed URLs with 1-hour expiration
+#    - Cleanup stitched files after 7 days if not downloaded
+
+# 8. MONITORING
+#    - Track metrics: stitching success rate, average processing time, error rates
+#    - Alert on failures: INSUFFICIENT_OVERLAP > 20% of jobs, SERVER_ERROR spikes
+
+# 9. TESTING
+#    - Unit tests for alignment algorithm (with known overlapping scans)
+#    - Integration tests for end-to-end stitching flow
+#    - Load tests: 100 concurrent stitching jobs

@@ -45,7 +45,7 @@ post_install do |installer|
   # Fix for Xcode 16 - GoogleUtilities header import style
   # Replace double-quoted includes with angle-bracketed includes in framework headers
   installer.pods_project.targets.each do |target|
-    if target.name == 'GoogleUtilities'
+    if target.name == 'GoogleUtilities' || target.name == 'integration_test'
       target.build_configurations.each do |config|
         config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
       end
@@ -61,5 +61,18 @@ post_install do |installer|
       new_text = text.gsub(/"([^"]+\.h)"/, '<GoogleUtilities/\1>')
       File.write(umbrella_header, new_text) if text != new_text
     end
+  end
+
+  # Fix integration_test umbrella header for Xcode 16
+  integration_test_umbrella = File.join(
+    installer.sandbox.root,
+    'Target Support Files',
+    'integration_test',
+    'integration_test-umbrella.h'
+  )
+  if File.exist?(integration_test_umbrella)
+    text = File.read(integration_test_umbrella)
+    new_text = text.gsub(/"([^"]+\.h)"/, '<integration_test/\1>')
+    File.write(integration_test_umbrella, new_text) if text != new_text
   end
 end

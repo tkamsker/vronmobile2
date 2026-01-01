@@ -15,13 +15,15 @@ class ScanProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isComplete = progress != null && progress! >= 1.0;
-    final progressPercent = progress != null ? (progress! * 100).round() : 0;
+    // Guard against NaN values that can cause CoreGraphics errors
+    final safeProgress = (progress != null && !progress!.isNaN && progress!.isFinite) ? progress : null;
+    final isComplete = safeProgress != null && safeProgress >= 1.0;
+    final progressPercent = safeProgress != null ? (safeProgress * 100).round() : 0;
 
     return Semantics(
       label: AppStrings.scanProgressSemantics,
       hint: AppStrings.scanProgressHint,
-      value: progress != null ? '$progressPercent%' : 'scanning',
+      value: safeProgress != null ? '$progressPercent%' : 'scanning',
       child: Card(
         elevation: 4.0,
         margin: const EdgeInsets.all(16.0),
@@ -42,7 +44,7 @@ class ScanProgress extends StatelessWidget {
 
               // Progress indicator
               LinearProgressIndicator(
-                value: progress,
+                value: safeProgress,
                 minHeight: 8.0,
                 backgroundColor: Colors.grey.shade200,
                 valueColor: AlwaysStoppedAnimation<Color>(
@@ -55,7 +57,7 @@ class ScanProgress extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  if (progress != null)
+                  if (safeProgress != null)
                     Text(
                       '$progressPercent%',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
