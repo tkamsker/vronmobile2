@@ -55,17 +55,17 @@ class ErrorContext {
 
   /// Creates new ErrorContext with incremented retry count and updated timestamp
   ErrorContext withRetry() => ErrorContext(
-        timestamp: DateTime.now(),
-        sessionId: sessionId,
-        httpStatus: httpStatus,
-        errorCode: errorCode,
-        message: message,
-        technicalMessage: technicalMessage,
-        retryCount: retryCount + 1,
-        userId: userId,
-        stackTrace: stackTrace,
-        isRecoverable: isRecoverable,
-      );
+    timestamp: DateTime.now(),
+    sessionId: sessionId,
+    httpStatus: httpStatus,
+    errorCode: errorCode,
+    message: message,
+    technicalMessage: technicalMessage,
+    retryCount: retryCount + 1,
+    userId: userId,
+    stackTrace: stackTrace,
+    isRecoverable: isRecoverable,
+  );
 
   factory ErrorContext.fromJson(Map<String, dynamic> json) =>
       _$ErrorContextFromJson(json);

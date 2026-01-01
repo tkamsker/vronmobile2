@@ -1,5 +1,8 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/scan_data.dart';
 import 'scanning_screen.dart';
 
@@ -13,10 +16,7 @@ import 'scanning_screen.dart';
 class GlbPreviewScreen extends StatefulWidget {
   final ScanData scanData;
 
-  const GlbPreviewScreen({
-    super.key,
-    required this.scanData,
-  });
+  const GlbPreviewScreen({super.key, required this.scanData});
 
   @override
   State<GlbPreviewScreen> createState() => _GlbPreviewScreenState();
@@ -31,7 +31,8 @@ class _GlbPreviewScreenState extends State<GlbPreviewScreen> {
     final height = metadata?['height'] as double?;
 
     // Determine which file to show (glbLocalPath or localPath if format is already GLB)
-    final String glbPath = widget.scanData.glbLocalPath ??
+    final String glbPath =
+        widget.scanData.glbLocalPath ??
         (widget.scanData.format == ScanFormat.glb
             ? widget.scanData.localPath
             : '');
@@ -58,10 +59,7 @@ class _GlbPreviewScreenState extends State<GlbPreviewScreen> {
             onPressed: () => _saveToProject(),
             child: const Text(
               'Ready to save',
-              style: TextStyle(
-                color: Colors.blue,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -225,6 +223,33 @@ class _GlbPreviewScreenState extends State<GlbPreviewScreen> {
                       ),
                     ),
                   ),
+
+                  // Debug Export GLB button (only shown in debug mode)
+                  if (kDebugMode && glbPath.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _exportGlb(),
+                        icon: const Icon(Icons.ios_share, size: 24),
+                        label: const Text(
+                          'Export GLB (Debug)',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.orange.shade600,
+                          side: BorderSide(
+                            color: Colors.orange.shade200,
+                            width: 2,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -263,9 +288,7 @@ class _GlbPreviewScreenState extends State<GlbPreviewScreen> {
   Future<void> _scanAnotherRoom() async {
     // Navigate to ScanningScreen to start new scan
     final result = await Navigator.of(context).push<ScanData>(
-      MaterialPageRoute(
-        builder: (context) => const ScanningScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const ScanningScreen()),
     );
 
     if (result != null && mounted) {
@@ -277,5 +300,72 @@ class _GlbPreviewScreenState extends State<GlbPreviewScreen> {
   void _viewScanAreas() {
     // Return to scan list (AreaScan.jpg)
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  Future<void> _exportGlb() async {
+    // Get GLB file path
+    final String glbPath =
+        widget.scanData.glbLocalPath ??
+        (widget.scanData.format == ScanFormat.glb
+            ? widget.scanData.localPath
+            : '');
+
+    if (glbPath.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No GLB file available to export'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      print('📤 [GLB_PREVIEW] Exporting GLB file: $glbPath');
+
+      // Check if file exists
+      final file = File(glbPath);
+      if (!await file.exists()) {
+        throw Exception('GLB file not found at path: $glbPath');
+      }
+
+      // Get file size
+      final fileSize = await file.length();
+      print(
+        '📦 [GLB_PREVIEW] File size: ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB',
+      );
+
+      // Share the file
+      final result = await Share.shareXFiles(
+        [XFile(glbPath)],
+        text: 'Exported GLB scan',
+        subject: 'Room Scan - ${DateTime.now().toString().split('.')[0]}',
+      );
+
+      print('✅ [GLB_PREVIEW] Export result: ${result.status}');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'GLB file exported: ${(fileSize / 1024 / 1024).toStringAsFixed(2)} MB',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      print('❌ [GLB_PREVIEW] Export failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

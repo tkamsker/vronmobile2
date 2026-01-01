@@ -41,7 +41,8 @@ void main() {
     });
 
     test('handles truncation at word boundaries', () {
-      final longText = 'this is a very long slug that needs truncation at boundary';
+      final longText =
+          'this is a very long slug that needs truncation at boundary';
       final result = SlugGenerator.slugify(longText, maxLength: 30);
 
       expect(result.length, lessThanOrEqualTo(30));

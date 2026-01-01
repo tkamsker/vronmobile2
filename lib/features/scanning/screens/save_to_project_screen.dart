@@ -16,10 +16,7 @@ import 'package:vronmobile2/features/scanning/services/scan_upload_service.dart'
 class SaveToProjectScreen extends StatefulWidget {
   final ScanData scanData;
 
-  const SaveToProjectScreen({
-    super.key,
-    required this.scanData,
-  });
+  const SaveToProjectScreen({super.key, required this.scanData});
 
   @override
   State<SaveToProjectScreen> createState() => _SaveToProjectScreenState();
@@ -75,7 +72,9 @@ class _SaveToProjectScreenState extends State<SaveToProjectScreen> {
     });
 
     try {
-      print('📤 [SAVE] Starting upload to project ${project.name} (${project.id})');
+      print(
+        '📤 [SAVE] Starting upload to project ${project.name} (${project.id})',
+      );
 
       // Upload and poll for completion
       final result = await _uploadService.uploadAndPoll(
@@ -159,7 +158,9 @@ class _SaveToProjectScreenState extends State<SaveToProjectScreen> {
           children: [
             Text('✅ Scan uploaded to ${project.name}'),
             const SizedBox(height: 8),
-            Text('📦 File size: ${(widget.scanData.fileSizeBytes / 1024 / 1024).toStringAsFixed(2)} MB'),
+            Text(
+              '📦 File size: ${(widget.scanData.fileSizeBytes / 1024 / 1024).toStringAsFixed(2)} MB',
+            ),
             if (_uploadResult?.glbUrl != null) ...[
               const SizedBox(height: 8),
               Text('🎉 GLB conversion complete'),
@@ -170,7 +171,9 @@ class _SaveToProjectScreenState extends State<SaveToProjectScreen> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop(); // Close dialog
-              Navigator.of(context).pop(_uploadResult); // Return to previous screen
+              Navigator.of(
+                context,
+              ).pop(_uploadResult); // Return to previous screen
             },
             child: const Text('Done'),
           ),
@@ -195,23 +198,20 @@ class _SaveToProjectScreenState extends State<SaveToProjectScreen> {
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
                 color: Colors.blue.shade50,
-                border: Border(
-                  bottom: BorderSide(color: Colors.blue.shade200),
-                ),
+                border: Border(bottom: BorderSide(color: Colors.blue.shade200)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
                     'Scan Details',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text('Format: ${widget.scanData.format.name.toUpperCase()}'),
-                  Text('Size: ${(widget.scanData.fileSizeBytes / 1024 / 1024).toStringAsFixed(2)} MB'),
+                  Text(
+                    'Size: ${(widget.scanData.fileSizeBytes / 1024 / 1024).toStringAsFixed(2)} MB',
+                  ),
                   Text('Captured: ${_formatTime(widget.scanData.capturedAt)}'),
                 ],
               ),
@@ -263,9 +263,7 @@ class _SaveToProjectScreenState extends State<SaveToProjectScreen> {
             ],
 
             // Project list
-            Expanded(
-              child: _buildProjectList(),
-            ),
+            Expanded(child: _buildProjectList()),
           ],
         ),
       ),
@@ -363,7 +361,11 @@ class _SaveToProjectScreenState extends State<SaveToProjectScreen> {
                         : null,
                   ),
                   child: project.imageUrl.isEmpty
-                      ? Icon(Icons.folder, color: Colors.blue.shade600, size: 32)
+                      ? Icon(
+                          Icons.folder,
+                          color: Colors.blue.shade600,
+                          size: 32,
+                        )
                       : null,
                 ),
                 const SizedBox(width: 16),
@@ -404,7 +406,11 @@ class _SaveToProjectScreenState extends State<SaveToProjectScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 else
-                  Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey.shade400),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Colors.grey.shade400,
+                  ),
               ],
             ),
           ),

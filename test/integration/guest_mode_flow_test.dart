@@ -19,30 +19,34 @@ void main() {
 
   group('Guest Mode Integration Tests', () {
     // T027: Test guest mode banner visibility in complete flow
-    testWidgets('guest mode banner is visible in scanning screen when guest mode enabled', (WidgetTester tester) async {
-      // Arrange - enable guest mode first
-      await guestManager.enableGuestMode();
+    testWidgets(
+      'guest mode banner is visible in scanning screen when guest mode enabled',
+      (WidgetTester tester) async {
+        // Arrange - enable guest mode first
+        await guestManager.enableGuestMode();
 
-      // Act - navigate directly to scanning screen
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ScanningScreen(guestSessionManager: guestManager),
-        ),
-      );
-      await tester.pumpAndSettle();
+        // Act - navigate directly to scanning screen
+        await tester.pumpWidget(
+          MaterialApp(home: ScanningScreen(guestSessionManager: guestManager)),
+        );
+        await tester.pumpAndSettle();
 
-      // Assert - guest banner should be visible on scanning screen
-      expect(find.text('Guest Mode - Scans saved locally only'), findsOneWidget);
-    });
+        // Assert - guest banner should be visible on scanning screen
+        expect(
+          find.text('Guest Mode - Scans saved locally only'),
+          findsOneWidget,
+        );
+      },
+    );
 
     // T028: Test "Sign Up" button in banner triggers dialog
-    testWidgets('Sign Up button in banner triggers account creation dialog', (WidgetTester tester) async {
+    testWidgets('Sign Up button in banner triggers account creation dialog', (
+      WidgetTester tester,
+    ) async {
       // Arrange - enable guest mode and navigate to scanning screen
       await guestManager.enableGuestMode();
       await tester.pumpWidget(
-        MaterialApp(
-          home: ScanningScreen(guestSessionManager: guestManager),
-        ),
+        MaterialApp(home: ScanningScreen(guestSessionManager: guestManager)),
       );
 
       // Act - tap Sign Up button in banner
@@ -52,25 +56,30 @@ void main() {
       // Assert - dialog should appear
       expect(find.text('Create an Account?'), findsOneWidget);
       expect(
-        find.text('Create an account to save your scans to the cloud and access them from any device.'),
+        find.text(
+          'Create an account to save your scans to the cloud and access them from any device.',
+        ),
         findsOneWidget,
       );
     });
 
-    testWidgets('scanning screen shows correct UI in guest mode', (WidgetTester tester) async {
+    testWidgets('scanning screen shows correct UI in guest mode', (
+      WidgetTester tester,
+    ) async {
       // Arrange - enable guest mode
       await guestManager.enableGuestMode();
 
       // Act - navigate to scanning screen
       await tester.pumpWidget(
-        MaterialApp(
-          home: ScanningScreen(guestSessionManager: guestManager),
-        ),
+        MaterialApp(home: ScanningScreen(guestSessionManager: guestManager)),
       );
       await tester.pumpAndSettle();
 
       // Assert - guest mode banner visible
-      expect(find.text('Guest Mode - Scans saved locally only'), findsOneWidget);
+      expect(
+        find.text('Guest Mode - Scans saved locally only'),
+        findsOneWidget,
+      );
 
       // Assert - Save to Project button hidden
       expect(find.text('Save to Project'), findsNothing);
@@ -79,13 +88,13 @@ void main() {
       expect(find.text('Export GLB'), findsOneWidget);
     });
 
-    testWidgets('dialog Continue as Guest keeps user in guest mode', (WidgetTester tester) async {
+    testWidgets('dialog Continue as Guest keeps user in guest mode', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       await guestManager.enableGuestMode();
       await tester.pumpWidget(
-        MaterialApp(
-          home: ScanningScreen(guestSessionManager: guestManager),
-        ),
+        MaterialApp(home: ScanningScreen(guestSessionManager: guestManager)),
       );
 
       // Open dialog
@@ -100,10 +109,15 @@ void main() {
       // Assert - dialog closed, still in guest mode
       expect(find.text('Create an Account?'), findsNothing);
       expect(guestManager.isGuestMode, true);
-      expect(find.text('Guest Mode - Scans saved locally only'), findsOneWidget);
+      expect(
+        find.text('Guest Mode - Scans saved locally only'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('dialog Sign Up navigates to signup and disables guest mode', (WidgetTester tester) async {
+    testWidgets('dialog Sign Up navigates to signup and disables guest mode', (
+      WidgetTester tester,
+    ) async {
       bool navigatedToSignup = false;
 
       // Arrange
@@ -138,20 +152,23 @@ void main() {
       expect(guestManager.isGuestMode, false);
     });
 
-    testWidgets('guest mode persistence across screen navigation', (WidgetTester tester) async {
+    testWidgets('guest mode persistence across screen navigation', (
+      WidgetTester tester,
+    ) async {
       // Arrange - enable guest mode
       await guestManager.enableGuestMode();
 
       // Navigate to scanning screen
       await tester.pumpWidget(
-        MaterialApp(
-          home: ScanningScreen(guestSessionManager: guestManager),
-        ),
+        MaterialApp(home: ScanningScreen(guestSessionManager: guestManager)),
       );
 
       // Assert - guest mode active
       expect(guestManager.isGuestMode, true);
-      expect(find.text('Guest Mode - Scans saved locally only'), findsOneWidget);
+      expect(
+        find.text('Guest Mode - Scans saved locally only'),
+        findsOneWidget,
+      );
 
       // Simulate app restart (new manager instance)
       final newManager = GuestSessionManager(prefs: prefs);

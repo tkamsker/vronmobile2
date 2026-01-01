@@ -53,7 +53,10 @@ void main() {
       final errorContext = ErrorContext.fromJson(json);
 
       // Assert
-      expect(errorContext.timestamp, DateTime.parse('2025-12-30T12:00:00.000Z'));
+      expect(
+        errorContext.timestamp,
+        DateTime.parse('2025-12-30T12:00:00.000Z'),
+      );
       expect(errorContext.sessionId, 'sess_ABC123');
       expect(errorContext.httpStatus, 404);
       expect(errorContext.errorCode, 'not_found');

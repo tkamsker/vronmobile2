@@ -5,21 +5,33 @@ void main() {
   group('ConversionStatus', () {
     test('should have all required status values', () {
       expect(ConversionStatus.values.length, 5);
-      expect(ConversionStatus.values, containsAll([
-        ConversionStatus.pending,
-        ConversionStatus.inProgress,
-        ConversionStatus.completed,
-        ConversionStatus.failed,
-        ConversionStatus.notApplicable,
-      ]));
+      expect(
+        ConversionStatus.values,
+        containsAll([
+          ConversionStatus.pending,
+          ConversionStatus.inProgress,
+          ConversionStatus.completed,
+          ConversionStatus.failed,
+          ConversionStatus.notApplicable,
+        ]),
+      );
     });
 
     test('should parse from string (backend format)', () {
       expect(ConversionStatus.fromString('PENDING'), ConversionStatus.pending);
-      expect(ConversionStatus.fromString('IN_PROGRESS'), ConversionStatus.inProgress);
-      expect(ConversionStatus.fromString('COMPLETED'), ConversionStatus.completed);
+      expect(
+        ConversionStatus.fromString('IN_PROGRESS'),
+        ConversionStatus.inProgress,
+      );
+      expect(
+        ConversionStatus.fromString('COMPLETED'),
+        ConversionStatus.completed,
+      );
       expect(ConversionStatus.fromString('FAILED'), ConversionStatus.failed);
-      expect(ConversionStatus.fromString('NOT_APPLICABLE'), ConversionStatus.notApplicable);
+      expect(
+        ConversionStatus.fromString('NOT_APPLICABLE'),
+        ConversionStatus.notApplicable,
+      );
     });
 
     test('should convert to GraphQL format', () {
@@ -41,7 +53,10 @@ void main() {
       final error = ConversionError.fromJson(json);
 
       expect(error.code, 'UNSUPPORTED_PRIM');
-      expect(error.message, 'USDZ contains geometry types not supported in glTF');
+      expect(
+        error.message,
+        'USDZ contains geometry types not supported in glTF',
+      );
     });
 
     test('should convert to JSON', () {
@@ -149,7 +164,10 @@ void main() {
 
       expect(completed.isComplete, true);
       expect(pending.isComplete, false);
-      expect(failed.isComplete, true); // Failed is also "complete" (terminal state)
+      expect(
+        failed.isComplete,
+        true,
+      ); // Failed is also "complete" (terminal state)
     });
 
     test('should provide isSuccess getter', () {

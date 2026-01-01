@@ -160,8 +160,9 @@ class ErrorLogService {
           .toList();
 
       // Calculate cutoff date (7 days ago from reference time)
-      final cutoffDate =
-          (referenceTime ?? DateTime.now()).subtract(Duration(days: _ttlDays));
+      final cutoffDate = (referenceTime ?? DateTime.now()).subtract(
+        Duration(days: _ttlDays),
+      );
 
       // Filter out old errors (keep errors >= cutoffDate, i.e., from last 7 days including boundary)
       final recentErrors = errors

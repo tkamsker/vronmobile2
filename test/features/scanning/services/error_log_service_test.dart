@@ -92,9 +92,7 @@ void main() {
       );
 
       // Act - write concurrently
-      await Future.wait(
-        errors.map((error) => service.logError(error)),
-      );
+      await Future.wait(errors.map((error) => service.logError(error)));
 
       // Assert - all errors should be logged
       final logged = await service.getRecentErrors();
@@ -110,24 +108,30 @@ void main() {
 
     test('should return errors sorted by timestamp descending', () async {
       // Arrange - log errors with different timestamps
-      await service.logError(ErrorContext(
-        timestamp: DateTime.parse('2025-12-30T10:00:00Z'),
-        message: 'Old error',
-        retryCount: 0,
-        isRecoverable: true,
-      ));
-      await service.logError(ErrorContext(
-        timestamp: DateTime.parse('2025-12-30T12:00:00Z'),
-        message: 'Recent error',
-        retryCount: 0,
-        isRecoverable: true,
-      ));
-      await service.logError(ErrorContext(
-        timestamp: DateTime.parse('2025-12-30T11:00:00Z'),
-        message: 'Middle error',
-        retryCount: 0,
-        isRecoverable: true,
-      ));
+      await service.logError(
+        ErrorContext(
+          timestamp: DateTime.parse('2025-12-30T10:00:00Z'),
+          message: 'Old error',
+          retryCount: 0,
+          isRecoverable: true,
+        ),
+      );
+      await service.logError(
+        ErrorContext(
+          timestamp: DateTime.parse('2025-12-30T12:00:00Z'),
+          message: 'Recent error',
+          retryCount: 0,
+          isRecoverable: true,
+        ),
+      );
+      await service.logError(
+        ErrorContext(
+          timestamp: DateTime.parse('2025-12-30T11:00:00Z'),
+          message: 'Middle error',
+          retryCount: 0,
+          isRecoverable: true,
+        ),
+      );
 
       // Act
       final errors = await service.getRecentErrors();
@@ -141,27 +145,33 @@ void main() {
 
     test('should filter by sessionId when provided', () async {
       // Arrange
-      await service.logError(ErrorContext(
-        timestamp: DateTime.now(),
-        sessionId: 'sess_A',
-        message: 'Error A1',
-        retryCount: 0,
-        isRecoverable: true,
-      ));
-      await service.logError(ErrorContext(
-        timestamp: DateTime.now(),
-        sessionId: 'sess_B',
-        message: 'Error B1',
-        retryCount: 0,
-        isRecoverable: true,
-      ));
-      await service.logError(ErrorContext(
-        timestamp: DateTime.now(),
-        sessionId: 'sess_A',
-        message: 'Error A2',
-        retryCount: 0,
-        isRecoverable: true,
-      ));
+      await service.logError(
+        ErrorContext(
+          timestamp: DateTime.now(),
+          sessionId: 'sess_A',
+          message: 'Error A1',
+          retryCount: 0,
+          isRecoverable: true,
+        ),
+      );
+      await service.logError(
+        ErrorContext(
+          timestamp: DateTime.now(),
+          sessionId: 'sess_B',
+          message: 'Error B1',
+          retryCount: 0,
+          isRecoverable: true,
+        ),
+      );
+      await service.logError(
+        ErrorContext(
+          timestamp: DateTime.now(),
+          sessionId: 'sess_A',
+          message: 'Error A2',
+          retryCount: 0,
+          isRecoverable: true,
+        ),
+      );
 
       // Act
       final errors = await service.getRecentErrors(sessionId: 'sess_A');
@@ -173,27 +183,33 @@ void main() {
 
     test('should filter by errorCode when provided', () async {
       // Arrange
-      await service.logError(ErrorContext(
-        timestamp: DateTime.now(),
-        errorCode: 'timeout',
-        message: 'Timeout 1',
-        retryCount: 0,
-        isRecoverable: true,
-      ));
-      await service.logError(ErrorContext(
-        timestamp: DateTime.now(),
-        errorCode: 'invalid_file',
-        message: 'Invalid file',
-        retryCount: 0,
-        isRecoverable: true,
-      ));
-      await service.logError(ErrorContext(
-        timestamp: DateTime.now(),
-        errorCode: 'timeout',
-        message: 'Timeout 2',
-        retryCount: 0,
-        isRecoverable: true,
-      ));
+      await service.logError(
+        ErrorContext(
+          timestamp: DateTime.now(),
+          errorCode: 'timeout',
+          message: 'Timeout 1',
+          retryCount: 0,
+          isRecoverable: true,
+        ),
+      );
+      await service.logError(
+        ErrorContext(
+          timestamp: DateTime.now(),
+          errorCode: 'invalid_file',
+          message: 'Invalid file',
+          retryCount: 0,
+          isRecoverable: true,
+        ),
+      );
+      await service.logError(
+        ErrorContext(
+          timestamp: DateTime.now(),
+          errorCode: 'timeout',
+          message: 'Timeout 2',
+          retryCount: 0,
+          isRecoverable: true,
+        ),
+      );
 
       // Act
       final errors = await service.getRecentErrors(errorCode: 'timeout');
@@ -206,12 +222,14 @@ void main() {
     test('should limit results when limit parameter provided', () async {
       // Arrange - log 10 errors
       for (int i = 0; i < 10; i++) {
-        await service.logError(ErrorContext(
-          timestamp: DateTime.now().add(Duration(minutes: i)),
-          message: 'Error $i',
-          retryCount: 0,
-          isRecoverable: true,
-        ));
+        await service.logError(
+          ErrorContext(
+            timestamp: DateTime.now().add(Duration(minutes: i)),
+            message: 'Error $i',
+            retryCount: 0,
+            isRecoverable: true,
+          ),
+        );
       }
 
       // Act
@@ -228,28 +246,34 @@ void main() {
       final now = DateTime.now();
 
       // Recent error (keep)
-      await service.logError(ErrorContext(
-        timestamp: now.subtract(Duration(days: 3)),
-        message: 'Recent error',
-        retryCount: 0,
-        isRecoverable: true,
-      ));
+      await service.logError(
+        ErrorContext(
+          timestamp: now.subtract(Duration(days: 3)),
+          message: 'Recent error',
+          retryCount: 0,
+          isRecoverable: true,
+        ),
+      );
 
       // Old error (remove)
-      await service.logError(ErrorContext(
-        timestamp: now.subtract(Duration(days: 8)),
-        message: 'Old error',
-        retryCount: 0,
-        isRecoverable: true,
-      ));
+      await service.logError(
+        ErrorContext(
+          timestamp: now.subtract(Duration(days: 8)),
+          message: 'Old error',
+          retryCount: 0,
+          isRecoverable: true,
+        ),
+      );
 
       // Exactly 7 days (keep)
-      await service.logError(ErrorContext(
-        timestamp: now.subtract(Duration(days: 7)),
-        message: 'Boundary error',
-        retryCount: 0,
-        isRecoverable: true,
-      ));
+      await service.logError(
+        ErrorContext(
+          timestamp: now.subtract(Duration(days: 7)),
+          message: 'Boundary error',
+          retryCount: 0,
+          isRecoverable: true,
+        ),
+      );
 
       // Act - pass now as reference time to ensure consistent cutoff
       await service.cleanup(referenceTime: now);
@@ -269,12 +293,14 @@ void main() {
 
     test('should preserve file structure after cleanup', () async {
       // Arrange
-      await service.logError(ErrorContext(
-        timestamp: DateTime.now(),
-        message: 'Recent error',
-        retryCount: 0,
-        isRecoverable: true,
-      ));
+      await service.logError(
+        ErrorContext(
+          timestamp: DateTime.now(),
+          message: 'Recent error',
+          retryCount: 0,
+          isRecoverable: true,
+        ),
+      );
 
       // Act
       await service.cleanup();
@@ -283,12 +309,14 @@ void main() {
       final errors = await service.getRecentErrors();
       expect(errors.length, 1);
 
-      await service.logError(ErrorContext(
-        timestamp: DateTime.now(),
-        message: 'New error',
-        retryCount: 0,
-        isRecoverable: true,
-      ));
+      await service.logError(
+        ErrorContext(
+          timestamp: DateTime.now(),
+          message: 'New error',
+          retryCount: 0,
+          isRecoverable: true,
+        ),
+      );
 
       final updatedErrors = await service.getRecentErrors();
       expect(updatedErrors.length, 2);

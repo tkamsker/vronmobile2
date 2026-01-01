@@ -4,6 +4,7 @@ import 'package:native_ar_viewer/native_ar_viewer.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/scan_data.dart';
 import '../services/blender_api_client.dart';
+import '../services/scan_session_manager.dart';
 import '../models/blender_api_models.dart';
 import 'scanning_screen.dart';
 import 'glb_preview_screen.dart';
@@ -18,10 +19,7 @@ import 'session_diagnostics_screen.dart';
 class UsdzPreviewScreen extends StatefulWidget {
   final ScanData scanData;
 
-  const UsdzPreviewScreen({
-    super.key,
-    required this.scanData,
-  });
+  const UsdzPreviewScreen({super.key, required this.scanData});
 
   @override
   State<UsdzPreviewScreen> createState() => _UsdzPreviewScreenState();
@@ -164,7 +162,9 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade600,
-                              backgroundColor: Colors.white.withValues(alpha: 0.9),
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.9,
+                              ),
                             ),
                           ),
                         ),
@@ -182,7 +182,9 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade600,
-                                backgroundColor: Colors.white.withValues(alpha: 0.9),
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: 0.9,
+                                ),
                               ),
                             ),
                           ),
@@ -205,7 +207,9 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                         LinearProgressIndicator(
                           value: _conversionProgress,
                           backgroundColor: Colors.grey.shade200,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade600),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.blue.shade600,
+                          ),
                           minHeight: 8,
                         ),
                         const SizedBox(height: 8),
@@ -240,7 +244,9 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : const Icon(Icons.transform, size: 24),
@@ -376,7 +382,10 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
       });
 
       // Generate output filename (matches backend: filename.replace('.usdz', '.glb'))
-      final outputFilename = uploadResponse.filename.replaceAll('.usdz', '.glb');
+      final outputFilename = uploadResponse.filename.replaceAll(
+        '.usdz',
+        '.glb',
+      );
       print('🎯 [BlenderAPI] Target output: $outputFilename');
 
       await _apiClient!.startConversion(
@@ -404,17 +413,23 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
             _conversionProgress = 0.4 + (status.progress / 100 * 0.4);
             _conversionStatus = 'Converting... ${status.progress}%';
           });
-          print('📊 [BlenderAPI] Status: ${status.sessionStatus}, '
-              'Progress: ${status.progress}%, '
-              'Stage: ${status.processingStage}');
+          print(
+            '📊 [BlenderAPI] Status: ${status.sessionStatus}, '
+            'Progress: ${status.progress}%, '
+            'Stage: ${status.processingStage}',
+          );
         }
 
         if (status.isCompleted) {
           finalStatus = status;
           print('✅ [BlenderAPI] Conversion completed');
           if (status.result != null) {
-            print('📁 [BlenderAPI] Result filename: ${status.result!.filename}');
-            print('📊 [BlenderAPI] Result size: ${status.result!.sizeBytes} bytes');
+            print(
+              '📁 [BlenderAPI] Result filename: ${status.result!.filename}',
+            );
+            print(
+              '📊 [BlenderAPI] Result size: ${status.result!.sizeBytes} bytes',
+            );
             if (status.result!.polygonCount != null) {
               print('🔺 [BlenderAPI] Polygons: ${status.result!.polygonCount}');
             }
@@ -438,7 +453,9 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
         _conversionProgress = 0.8;
       });
 
-      print('⬇️ [BlenderAPI] Starting download: ${finalStatus!.result!.filename}');
+      print(
+        '⬇️ [BlenderAPI] Starting download: ${finalStatus!.result!.filename}',
+      );
       final glbFile = await _apiClient!.downloadFile(
         sessionId: sessionId,
         filename: finalStatus.result!.filename,
@@ -446,7 +463,8 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
           if (mounted) {
             setState(() {
               final downloadProgress = received / total;
-              _conversionProgress = 0.8 + (downloadProgress * 0.2); // 80% → 100%
+              _conversionProgress =
+                  0.8 + (downloadProgress * 0.2); // 80% → 100%
             });
           }
         },
@@ -455,7 +473,8 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
 
       // Save GLB file permanently
       final documentsDir = await getApplicationDocumentsDirectory();
-      final permanentPath = '${documentsDir.path}/${finalStatus.result!.filename}';
+      final permanentPath =
+          '${documentsDir.path}/${finalStatus.result!.filename}';
       final permanentFile = await glbFile.copy(permanentPath);
       final savedSize = await permanentFile.length();
       print('💾 [BlenderAPI] Saved to: $permanentPath');
@@ -478,25 +497,25 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
       if (mounted) {
         await Future.delayed(const Duration(milliseconds: 500));
 
-        // Create ScanData for GLB
-        final glbScanData = ScanData(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          localPath: permanentPath,
-          format: ScanFormat.glb,
-          capturedAt: DateTime.now(),
-          fileSizeBytes: finalStatus.result!.sizeBytes,
-          status: ScanStatus.completed,
+        // Update existing USDZ scan with GLB path instead of creating new scan
+        final updatedScan = widget.scanData.copyWith(
+          glbLocalPath: permanentPath,
           metadata: {
-            'converted_from': widget.scanData.id,
+            ...?widget.scanData.metadata,
+            'glb_conversion_date': DateTime.now().toIso8601String(),
             'polygon_count': finalStatus.result!.polygonCount,
             'mesh_count': finalStatus.result!.meshCount,
             'material_count': finalStatus.result!.materialCount,
           },
         );
 
+        // Update scan in session manager
+        ScanSessionManager().updateScan(updatedScan);
+        print('✅ [USDZ_PREVIEW] Updated scan with GLB path: $permanentPath');
+
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => GlbPreviewScreen(scanData: glbScanData),
+            builder: (context) => GlbPreviewScreen(scanData: updatedScan),
           ),
         );
       }
@@ -514,7 +533,9 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
 
       // Handle rate limit errors (429 TOO_MANY_REQUESTS) with automatic cleanup
       if (e.statusCode == 429 && e.errorCode == 'TOO_MANY_REQUESTS') {
-        print('🧹 [BlenderAPI] Handling rate limit error - attempting session cleanup');
+        print(
+          '🧹 [BlenderAPI] Handling rate limit error - attempting session cleanup',
+        );
 
         if (mounted) {
           // Show cleanup dialog
@@ -523,7 +544,11 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
             builder: (context) => AlertDialog(
               title: const Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.orange,
+                    size: 28,
+                  ),
                   SizedBox(width: 12),
                   Text('Too Many Sessions'),
                 ],
@@ -536,14 +561,12 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                     'You have reached the limit of 3 concurrent sessions.\n\n'
                     'Would you like to clean up old sessions and retry?',
                   ),
-                  if (e.details != null && e.details!['tracked_sessions'] != null) ...[
+                  if (e.details != null &&
+                      e.details!['tracked_sessions'] != null) ...[
                     const SizedBox(height: 12),
                     Text(
                       'Tracked sessions: ${e.details!['tracked_sessions']}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ],
@@ -707,7 +730,9 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
       }
     } catch (e, stackTrace) {
       print('❌ [BlenderAPI] Unexpected error: $e');
-      print('   Stack trace: ${stackTrace.toString().split('\n').take(5).join('\n')}');
+      print(
+        '   Stack trace: ${stackTrace.toString().split('\n').take(5).join('\n')}',
+      );
       if (sessionId != null) {
         print('   Session ID: $sessionId');
       }
@@ -815,9 +840,7 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
   Future<void> _scanAnotherRoom() async {
     // Navigate to ScanningScreen to start new scan
     final result = await Navigator.of(context).push<ScanData>(
-      MaterialPageRoute(
-        builder: (context) => const ScanningScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const ScanningScreen()),
     );
 
     if (result != null && mounted) {

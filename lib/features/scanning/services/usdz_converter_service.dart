@@ -9,7 +9,9 @@ import 'package:path_provider/path_provider.dart';
 /// 2. Exports it to GLB (glTF 2.0 binary) format
 /// 3. Returns the path to the converted GLB file
 class UsdzConverterService {
-  static const MethodChannel _channel = MethodChannel('com.vron.mobile/usdz_converter');
+  static const MethodChannel _channel = MethodChannel(
+    'com.vron.mobile/usdz_converter',
+  );
 
   /// Convert USDZ file to GLB format
   ///
@@ -42,10 +44,7 @@ class UsdzConverterService {
       // Call native iOS conversion method
       final result = await _channel.invokeMethod<Map<Object?, Object?>>(
         'convertUsdzToGlb',
-        {
-          'usdzPath': usdzPath,
-          'glbPath': glbPath,
-        },
+        {'usdzPath': usdzPath, 'glbPath': glbPath},
       );
 
       if (result == null) {
@@ -59,10 +58,7 @@ class UsdzConverterService {
       final message = result['message'] as String? ?? 'Unknown result';
 
       if (!success) {
-        throw PlatformException(
-          code: 'CONVERSION_FAILED',
-          message: message,
-        );
+        throw PlatformException(code: 'CONVERSION_FAILED', message: message);
       }
 
       final outputPath = result['glbPath'] as String? ?? glbPath;
@@ -71,10 +67,7 @@ class UsdzConverterService {
       // Verify output file exists
       final glbFile = File(outputPath);
       if (!await glbFile.exists()) {
-        throw FileSystemException(
-          'GLB file was not created',
-          outputPath,
-        );
+        throw FileSystemException('GLB file was not created', outputPath);
       }
 
       final fileSize = await glbFile.length();
@@ -94,7 +87,10 @@ class UsdzConverterService {
   ///
   /// Places GLB files in the same directory as the USDZ file
   /// or in app documents directory if custom filename provided
-  Future<String> _generateGlbPath(String usdzPath, String? customFileName) async {
+  Future<String> _generateGlbPath(
+    String usdzPath,
+    String? customFileName,
+  ) async {
     if (customFileName != null) {
       // Use custom filename in documents directory
       final docDir = await getApplicationDocumentsDirectory();

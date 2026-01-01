@@ -16,11 +16,7 @@ class FileInfo {
   @JsonKey(name: 'modified_at')
   final DateTime? modifiedAt;
 
-  FileInfo({
-    required this.name,
-    required this.sizeBytes,
-    this.modifiedAt,
-  });
+  FileInfo({required this.name, required this.sizeBytes, this.modifiedAt});
 
   /// Human-readable file size (e.g., "1.5 KB", "2.0 MB")
   String get sizeHumanReadable {
@@ -74,10 +70,7 @@ class WorkspaceFilesInfo {
   @JsonKey(name: 'root_files')
   final List<FileInfo> rootFiles;
 
-  WorkspaceFilesInfo({
-    required this.directories,
-    required this.rootFiles,
-  });
+  WorkspaceFilesInfo({required this.directories, required this.rootFiles});
 
   factory WorkspaceFilesInfo.fromJson(Map<String, dynamic> json) =>
       _$WorkspaceFilesInfoFromJson(json);

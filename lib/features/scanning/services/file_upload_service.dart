@@ -27,7 +27,7 @@ class FileUploadService {
 
   /// Constructor with optional FilePicker injection for testing
   FileUploadService({FilePicker? filePicker})
-      : _filePicker = filePicker ?? FilePicker.platform;
+    : _filePicker = filePicker ?? FilePicker.platform;
 
   /// Pick and validate a GLB file from device storage
   ///
@@ -102,7 +102,10 @@ class FileUploadService {
   /// Copy file to app Documents/scans directory
   ///
   /// Returns the new file path
-  Future<String> _copyFileToDocuments(String sourcePath, String filename) async {
+  Future<String> _copyFileToDocuments(
+    String sourcePath,
+    String filename,
+  ) async {
     // Get Documents directory
     final Directory appDocDir = await getApplicationDocumentsDirectory();
 

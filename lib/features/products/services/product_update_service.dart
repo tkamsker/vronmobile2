@@ -6,7 +6,7 @@ class ProductUpdateService {
   final GraphQLService _graphqlService;
 
   ProductUpdateService({GraphQLService? graphqlService})
-      : _graphqlService = graphqlService ?? GraphQLService();
+    : _graphqlService = graphqlService ?? GraphQLService();
 
   /// GraphQL mutation to update product
   static const String _updateProductMutation = '''
@@ -60,7 +60,9 @@ class ProductUpdateService {
       if (result.hasException) {
         final exception = result.exception;
         if (kDebugMode) {
-          print('❌ [PRODUCT UPDATE] GraphQL exception: ${exception.toString()}');
+          print(
+            '❌ [PRODUCT UPDATE] GraphQL exception: ${exception.toString()}',
+          );
         }
 
         if (exception?.graphqlErrors.isNotEmpty ?? false) {

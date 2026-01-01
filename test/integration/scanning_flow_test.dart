@@ -95,7 +95,9 @@ void main() {
       // expect(find.byType(ScanProgress), findsNothing);
     });
 
-    testWidgets('scan workflow handles unsupported device gracefully', (tester) async {
+    testWidgets('scan workflow handles unsupported device gracefully', (
+      tester,
+    ) async {
       // Mock: Android device (no LiDAR)
       // await tester.pumpWidget(
       //   MaterialApp(
@@ -138,7 +140,9 @@ void main() {
       // expect(find.text(AppStrings.continueScanButton), findsOneWidget);
     });
 
-    testWidgets('user can save partial scan after interruption', (tester) async {
+    testWidgets('user can save partial scan after interruption', (
+      tester,
+    ) async {
       // Start scan and trigger interruption
       // ... (setup code) ...
 

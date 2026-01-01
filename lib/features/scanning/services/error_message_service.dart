@@ -8,7 +8,7 @@ class ErrorMessageService {
   final I18nService _i18n;
 
   ErrorMessageService({I18nService? i18nService})
-      : _i18n = i18nService ?? I18nService();
+    : _i18n = i18nService ?? I18nService();
 
   /// Error code to i18n key mapping
   static const Map<String, String> _errorCodeMap = {

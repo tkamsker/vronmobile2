@@ -11,7 +11,8 @@ class SessionInvestigationException implements Exception {
   SessionInvestigationException(this.message, {this.statusCode});
 
   @override
-  String toString() => 'SessionInvestigationException: $message (status: $statusCode)';
+  String toString() =>
+      'SessionInvestigationException: $message (status: $statusCode)';
 }
 
 /// Service for investigating BlenderAPI session state
@@ -26,8 +27,9 @@ class SessionInvestigationService {
   late final String _baseUrl;
 
   SessionInvestigationService({http.Client? client, String? baseUrl})
-      : _client = client ?? http.Client() {
-    _baseUrl = baseUrl ??
+    : _client = client ?? http.Client() {
+    _baseUrl =
+        baseUrl ??
         dotenv.env['BLENDER_API_BASE_URL'] ??
         'https://api.example.com'; // Fallback for tests
   }
@@ -68,16 +70,12 @@ class SessionInvestigationService {
         );
       }
     } on http.ClientException catch (e) {
-      throw SessionInvestigationException(
-        'Network error: ${e.message}',
-      );
+      throw SessionInvestigationException('Network error: ${e.message}');
     } catch (e) {
       if (e is SessionInvestigationException) {
         rethrow;
       }
-      throw SessionInvestigationException(
-        'Unexpected error: $e',
-      );
+      throw SessionInvestigationException('Unexpected error: $e');
     }
   }
 

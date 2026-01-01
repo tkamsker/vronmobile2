@@ -96,14 +96,18 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
               hint: 'Launch native RoomPlan UI to capture 3D room scan',
               button: true,
               child: FloatingActionButton.extended(
-                onPressed: _isScanning ? null : () => _navigateToScanning(context),
+                onPressed: _isScanning
+                    ? null
+                    : () => _navigateToScanning(context),
                 icon: _isScanning
                     ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : const Icon(Icons.threed_rotation),
@@ -127,7 +131,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(capability.unsupportedReason ?? 'LiDAR scanning not supported'),
+            content: Text(
+              capability.unsupportedReason ?? 'LiDAR scanning not supported',
+            ),
             backgroundColor: Colors.orange,
             duration: const Duration(seconds: 5),
           ),
@@ -158,7 +164,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Scan completed! File saved: ${scanData.fileSizeBytes} bytes'),
+            content: Text(
+              'Scan completed! File saved: ${scanData.fileSizeBytes} bytes',
+            ),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 3),
           ),
@@ -185,9 +193,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (_errorMessage != null) {
@@ -197,18 +203,11 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
               const Text(
                 'Error',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
@@ -228,9 +227,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     }
 
     if (_project == null) {
-      return const Center(
-        child: Text('Project not found'),
-      );
+      return const Center(child: Text('Project not found'));
     }
 
     return Column(

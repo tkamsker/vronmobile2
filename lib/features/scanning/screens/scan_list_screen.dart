@@ -13,10 +13,7 @@ import 'file_upload_screen.dart';
 class ScanListScreen extends StatefulWidget {
   final String? projectName;
 
-  const ScanListScreen({
-    super.key,
-    this.projectName,
-  });
+  const ScanListScreen({super.key, this.projectName});
 
   @override
   State<ScanListScreen> createState() => _ScanListScreenState();
@@ -159,10 +156,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                          color: Colors.blue.shade600,
-                          width: 2,
-                        ),
+                        side: BorderSide(color: Colors.blue.shade600, width: 2),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(28),
                         ),
@@ -176,7 +170,9 @@ class _ScanListScreenState extends State<ScanListScreen> {
                     width: double.infinity,
                     height: 56,
                     child: OutlinedButton.icon(
-                      onPressed: scans.length >= 2 ? () => _roomStitching() : null,
+                      onPressed: scans.length >= 2
+                          ? () => _roomStitching()
+                          : null,
                       icon: Icon(
                         Icons.auto_awesome_mosaic,
                         size: 24,
@@ -283,7 +279,10 @@ class _ScanListScreenState extends State<ScanListScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text('USDZ'),
+                  child: const Text(
+                    'USDZ View',
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
@@ -298,7 +297,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text('GLBView'),
+                  child: const Text('GLB View', style: TextStyle(fontSize: 12)),
                 ),
               ),
               const SizedBox(width: 8),
@@ -308,7 +307,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
                 child: OutlinedButton.icon(
                   onPressed: () => _confirmDeleteScan(scan),
                   icon: const Icon(Icons.delete_outline, size: 18),
-                  label: const Text('Delete'),
+                  label: const Text('Delete', style: TextStyle(fontSize: 12)),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red.shade700,
                     side: BorderSide(color: Colors.red.shade200),
@@ -330,11 +329,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.threed_rotation,
-            size: 80,
-            color: Colors.grey.shade300,
-          ),
+          Icon(Icons.threed_rotation, size: 80, color: Colors.grey.shade300),
           const SizedBox(height: 16),
           Text(
             'No scans yet',
@@ -347,10 +342,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
           const SizedBox(height: 8),
           Text(
             'Start scanning to create your first 3D room',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade500,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
           ),
         ],
       ),
@@ -385,21 +377,9 @@ class _ScanListScreenState extends State<ScanListScreen> {
     }
   }
 
-  String _formatFileSize(int bytes) {
-    if (bytes < 1024) {
-      return '$bytes B';
-    } else if (bytes < 1024 * 1024) {
-      return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    } else {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-    }
-  }
-
   Future<void> _scanAnotherRoom() async {
     final result = await Navigator.of(context).push<ScanData>(
-      MaterialPageRoute(
-        builder: (context) => const ScanningScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const ScanningScreen()),
     );
 
     if (result != null) {
@@ -419,11 +399,9 @@ class _ScanListScreenState extends State<ScanListScreen> {
   }
 
   Future<void> _uploadGlbFile() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const FileUploadScreen(),
-      ),
-    );
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const FileUploadScreen()));
 
     // Refresh UI to show the uploaded file if any
     setState(() {});
@@ -445,7 +423,8 @@ class _ScanListScreenState extends State<ScanListScreen> {
 
   Future<void> _viewGlbPreview(ScanData scan) async {
     // Check if GLB file exists
-    final glbPath = scan.glbLocalPath ??
+    final glbPath =
+        scan.glbLocalPath ??
         (scan.format == ScanFormat.glb ? scan.localPath : null);
 
     if (glbPath != null && await File(glbPath).exists()) {
@@ -532,9 +511,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
     final snackBar = SnackBar(
       content: Row(
         children: [
-          const Expanded(
-            child: Text('Scan deleted'),
-          ),
+          const Expanded(child: Text('Scan deleted')),
           TextButton(
             onPressed: () {
               // Restore scan

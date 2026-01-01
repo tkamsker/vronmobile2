@@ -17,14 +17,13 @@ void main() {
     });
 
     Widget createTestWidget() {
-      return MaterialApp(
-        home: FileUploadScreen(uploadService: mockService),
-      );
+      return MaterialApp(home: FileUploadScreen(uploadService: mockService));
     }
 
     // T046: File picker UI test
-    testWidgets('should display upload button and instructions',
-        (WidgetTester tester) async {
+    testWidgets('should display upload button and instructions', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       await tester.pumpWidget(createTestWidget());
 
@@ -34,10 +33,11 @@ void main() {
       expect(find.byIcon(Icons.upload_file), findsOneWidget);
     });
 
-    testWidgets('should show file picker when upload button is tapped',
-        (WidgetTester tester) async {
+    testWidgets('should show file picker when upload button is tapped', (
+      WidgetTester tester,
+    ) async {
       // Arrange
-      when(mockService.pickAndValidateGLB()).thenAnswer((_) async => null);
+      when(() => mockService.pickAndValidateGLB()).thenAnswer((_) async => null);
       await tester.pumpWidget(createTestWidget());
 
       // Act
@@ -45,17 +45,19 @@ void main() {
       await tester.pump();
 
       // Assert
-      verify(mockService.pickAndValidateGLB()).called(1);
+      verify(() => mockService.pickAndValidateGLB()).called(1);
     });
 
     // T047: Error message display test
-    testWidgets('should display error message for invalid file extension',
-        (WidgetTester tester) async {
+    testWidgets('should display error message for invalid file extension', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       const errorMessage = 'Only GLB format is supported';
-      when(mockService.pickAndValidateGLB()).thenAnswer((_) async => null);
-      when(mockService.getErrorMessage(FileUploadError.invalidExtension))
-          .thenReturn(errorMessage);
+      when(() => mockService.pickAndValidateGLB()).thenAnswer((_) async => null);
+      when(
+        () => mockService.getErrorMessage(FileUploadError.invalidExtension),
+      ).thenReturn(errorMessage);
 
       await tester.pumpWidget(createTestWidget());
 
@@ -68,13 +70,15 @@ void main() {
       // Note: This test assumes the screen shows the error after failed pick
     });
 
-    testWidgets('should display error message for file too large',
-        (WidgetTester tester) async {
+    testWidgets('should display error message for file too large', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       const errorMessage = 'File size exceeds 250 MB limit';
-      when(mockService.pickAndValidateGLB()).thenAnswer((_) async => null);
-      when(mockService.getErrorMessage(FileUploadError.fileTooLarge))
-          .thenReturn(errorMessage);
+      when(() => mockService.pickAndValidateGLB()).thenAnswer((_) async => null);
+      when(
+        () => mockService.getErrorMessage(FileUploadError.fileTooLarge),
+      ).thenReturn(errorMessage);
 
       await tester.pumpWidget(createTestWidget());
 
@@ -85,40 +89,42 @@ void main() {
       // Note: Error display logic to be implemented in screen
     });
 
-    testWidgets('should display success message and file details after upload',
-        (WidgetTester tester) async {
+    testWidgets(
+      'should display success message and file details after upload',
+      (WidgetTester tester) async {
+        // Arrange
+        final mockScanData = ScanData(
+          id: 'test-123',
+          format: ScanFormat.glb,
+          localPath: '/app/documents/test_scan.glb',
+          fileSizeBytes: 50 * 1024 * 1024,
+          capturedAt: DateTime.now(),
+          status: ScanStatus.completed,
+        );
+
+        when(
+          () => mockService.pickAndValidateGLB(),
+        ).thenAnswer((_) async => mockScanData);
+
+        await tester.pumpWidget(createTestWidget());
+
+        // Act
+        await tester.tap(find.byType(ElevatedButton).first);
+        await tester.pumpAndSettle();
+
+        // Assert - Should show success state
+        // File name and size should be displayed
+        expect(find.text('test_scan.glb'), findsOneWidget);
+      },
+    );
+
+    testWidgets('should show loading indicator during file processing', (
+      WidgetTester tester,
+    ) async {
       // Arrange
-      final mockScanData = ScanData(
-        id: 'test-123',
-        format: ScanFormat.glb,
-        localPath: '/app/documents/test_scan.glb',
-        fileSizeBytes: 50 * 1024 * 1024,
-        capturedAt: DateTime.now(),
-        status: ScanStatus.completed,
+      when(() => mockService.pickAndValidateGLB()).thenAnswer(
+        (_) async => Future.delayed(const Duration(seconds: 1), () => null),
       );
-
-      when(mockService.pickAndValidateGLB())
-          .thenAnswer((_) async => mockScanData);
-
-      await tester.pumpWidget(createTestWidget());
-
-      // Act
-      await tester.tap(find.byType(ElevatedButton).first);
-      await tester.pumpAndSettle();
-
-      // Assert - Should show success state
-      // File name and size should be displayed
-      expect(find.text('test_scan.glb'), findsOneWidget);
-    });
-
-    testWidgets('should show loading indicator during file processing',
-        (WidgetTester tester) async {
-      // Arrange
-      when(mockService.pickAndValidateGLB())
-          .thenAnswer((_) async => Future.delayed(
-                const Duration(seconds: 1),
-                () => null,
-              ));
 
       await tester.pumpWidget(createTestWidget());
 

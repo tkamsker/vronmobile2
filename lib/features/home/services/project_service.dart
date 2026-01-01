@@ -225,7 +225,9 @@ class ProjectService {
   Future<Project> getProjectDetail(String projectId) async {
     try {
       if (kDebugMode) {
-        print('📦 [PROJECTS] Fetching VR project detail for ID: $projectId (language: $_language)...');
+        print(
+          '📦 [PROJECTS] Fetching VR project detail for ID: $projectId (language: $_language)...',
+        );
       }
 
       // Use getVRProject query for detailed project data
@@ -251,7 +253,9 @@ class ProjectService {
           throw Exception('Failed to fetch project detail: ${error.message}');
         }
 
-        throw Exception('Failed to fetch project detail: ${exception.toString()}');
+        throw Exception(
+          'Failed to fetch project detail: ${exception.toString()}',
+        );
       }
 
       if (result.data == null || result.data!['getVRProject'] == null) {
@@ -275,14 +279,17 @@ class ProjectService {
       });
 
       if (kDebugMode) {
-        print('✅ [PROJECTS] Fetched VR project detail: ${project.name} (${project.id})');
+        print(
+          '✅ [PROJECTS] Fetched VR project detail: ${project.name} (${project.id})',
+        );
         print('  - Status: ${project.statusLabel}');
         print('  - Description: ${project.description}');
       }
 
       return project;
     } catch (e) {
-      if (kDebugMode) print('❌ [PROJECTS] Error fetching project detail: ${e.toString()}');
+      if (kDebugMode)
+        print('❌ [PROJECTS] Error fetching project detail: ${e.toString()}');
       rethrow;
     }
   }
@@ -298,7 +305,9 @@ class ProjectService {
   }) async {
     try {
       if (kDebugMode) {
-        print('📝 [PROJECTS] Updating project $projectId (language: $_language)...');
+        print(
+          '📝 [PROJECTS] Updating project $projectId (language: $_language)...',
+        );
         print('  - Name: $name');
         print('  - Slug: $slug');
         print('  - Description: $description');
@@ -334,19 +343,24 @@ class ProjectService {
       }
 
       if (kDebugMode) {
-        print('✅ [PROJECTS] Update mutation successful, refreshing project data...');
+        print(
+          '✅ [PROJECTS] Update mutation successful, refreshing project data...',
+        );
       }
 
       // Mutation returns just a success indicator, need to refetch the project
       final updatedProject = await getProjectDetail(projectId);
 
       if (kDebugMode) {
-        print('✅ [PROJECTS] Project updated successfully: ${updatedProject.name}');
+        print(
+          '✅ [PROJECTS] Project updated successfully: ${updatedProject.name}',
+        );
       }
 
       return updatedProject;
     } catch (e) {
-      if (kDebugMode) print('❌ [PROJECTS] Error updating project: ${e.toString()}');
+      if (kDebugMode)
+        print('❌ [PROJECTS] Error updating project: ${e.toString()}');
       rethrow;
     }
   }
@@ -395,8 +409,9 @@ class ProjectService {
         }
 
         // Handle duplicate slug error
-        if (exception?.graphqlErrors.any((e) =>
-                e.extensions?['code'] == 'DUPLICATE_SLUG') ??
+        if (exception?.graphqlErrors.any(
+              (e) => e.extensions?['code'] == 'DUPLICATE_SLUG',
+            ) ??
             false) {
           if (kDebugMode) {
             print('❌ [PROJECTS] Duplicate slug error');
@@ -405,8 +420,9 @@ class ProjectService {
         }
 
         // Handle validation errors
-        if (exception?.graphqlErrors.any((e) =>
-                e.extensions?['code'] == 'VALIDATION_ERROR') ??
+        if (exception?.graphqlErrors.any(
+              (e) => e.extensions?['code'] == 'VALIDATION_ERROR',
+            ) ??
             false) {
           final errorMessage = exception!.graphqlErrors.first.message;
           if (kDebugMode) {
@@ -428,7 +444,8 @@ class ProjectService {
       }
 
       if (result.data == null || result.data!['createProject'] == null) {
-        if (kDebugMode) print('⚠️ [PROJECTS] No createProject data in response');
+        if (kDebugMode)
+          print('⚠️ [PROJECTS] No createProject data in response');
         throw Exception('Failed to create project: No data returned');
       }
 
@@ -436,12 +453,15 @@ class ProjectService {
       final project = Project.fromJson(projectData);
 
       if (kDebugMode) {
-        print('✅ [PROJECTS] Project created successfully: ${project.name} (${project.id})');
+        print(
+          '✅ [PROJECTS] Project created successfully: ${project.name} (${project.id})',
+        );
       }
 
       return project;
     } catch (e) {
-      if (kDebugMode) print('❌ [PROJECTS] Error creating project: ${e.toString()}');
+      if (kDebugMode)
+        print('❌ [PROJECTS] Error creating project: ${e.toString()}');
       rethrow;
     }
   }
@@ -450,12 +470,14 @@ class ProjectService {
   void _sortProjects(List<Project> projects, ProjectSortOption sortBy) {
     switch (sortBy) {
       case ProjectSortOption.nameAscending:
-        projects.sort((a, b) =>
-            a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        projects.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
         break;
       case ProjectSortOption.nameDescending:
-        projects.sort((a, b) =>
-            b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+        projects.sort(
+          (a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()),
+        );
         break;
       case ProjectSortOption.dateNewest:
         // Sort by liveDate (most recent first), treating null as oldest

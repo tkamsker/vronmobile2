@@ -15,11 +15,7 @@ void main() {
         status: ScanStatus.completed,
         projectId: 'project-456',
         remoteUrl: 'https://api.example.com/scans/test-uuid-123.usdz',
-        metadata: {
-          'wallCount': 4,
-          'doorCount': 1,
-          'windowCount': 2,
-        },
+        metadata: {'wallCount': 4, 'doorCount': 1, 'windowCount': 2},
       );
 
       final json = scanData.toJson();
@@ -31,7 +27,10 @@ void main() {
       expect(json['capturedAt'], '2025-12-25T10:30:00.000Z');
       expect(json['status'], 'completed');
       expect(json['projectId'], 'project-456');
-      expect(json['remoteUrl'], 'https://api.example.com/scans/test-uuid-123.usdz');
+      expect(
+        json['remoteUrl'],
+        'https://api.example.com/scans/test-uuid-123.usdz',
+      );
       expect(json['metadata'], isA<Map<String, dynamic>>());
       expect(json['metadata']['wallCount'], 4);
     });
@@ -46,10 +45,7 @@ void main() {
         'status': 'uploaded',
         'projectId': 'project-999',
         'remoteUrl': 'https://api.example.com/scans/test-uuid-789.glb',
-        'metadata': {
-          'roomType': 'bedroom',
-          'objectCount': 12,
-        },
+        'metadata': {'roomType': 'bedroom', 'objectCount': 12},
       };
 
       final scanData = ScanData.fromJson(json);
@@ -61,7 +57,10 @@ void main() {
       expect(scanData.capturedAt, DateTime.parse('2025-12-25T11:45:00.000Z'));
       expect(scanData.status, ScanStatus.uploaded);
       expect(scanData.projectId, 'project-999');
-      expect(scanData.remoteUrl, 'https://api.example.com/scans/test-uuid-789.glb');
+      expect(
+        scanData.remoteUrl,
+        'https://api.example.com/scans/test-uuid-789.glb',
+      );
       expect(scanData.metadata, isNotNull);
       expect(scanData.metadata!['roomType'], 'bedroom');
       expect(scanData.metadata!['objectCount'], 12);

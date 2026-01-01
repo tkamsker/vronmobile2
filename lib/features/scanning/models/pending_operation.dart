@@ -44,13 +44,13 @@ class PendingOperation {
 
   /// Creates new PendingOperation with incremented retry count and updated error context
   PendingOperation withRetry() => PendingOperation(
-        id: id,
-        operationType: operationType,
-        sessionId: sessionId,
-        errorContext: errorContext.withRetry(),
-        queuedAt: queuedAt, // Preserve original queue time
-        retryCount: retryCount + 1,
-      );
+    id: id,
+    operationType: operationType,
+    sessionId: sessionId,
+    errorContext: errorContext.withRetry(),
+    queuedAt: queuedAt, // Preserve original queue time
+    retryCount: retryCount + 1,
+  );
 
   factory PendingOperation.fromJson(Map<String, dynamic> json) =>
       _$PendingOperationFromJson(json);

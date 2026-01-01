@@ -167,8 +167,14 @@ void main() {
 
       // Assert
       expect(retried.retryCount, 2);
-      expect(retried.errorContext.retryCount, 1); // ErrorContext retry count incremented
-      expect(retried.errorContext.timestamp.isAfter(original.errorContext.timestamp), true);
+      expect(
+        retried.errorContext.retryCount,
+        1,
+      ); // ErrorContext retry count incremented
+      expect(
+        retried.errorContext.timestamp.isAfter(original.errorContext.timestamp),
+        true,
+      );
       expect(retried.id, original.id); // ID preserved
       expect(retried.operationType, original.operationType);
       expect(retried.sessionId, original.sessionId);
@@ -209,9 +215,18 @@ void main() {
       expect(deserialized.sessionId, original.sessionId);
       expect(deserialized.queuedAt, original.queuedAt);
       expect(deserialized.retryCount, original.retryCount);
-      expect(deserialized.errorContext.sessionId, original.errorContext.sessionId);
-      expect(deserialized.errorContext.httpStatus, original.errorContext.httpStatus);
-      expect(deserialized.errorContext.errorCode, original.errorContext.errorCode);
+      expect(
+        deserialized.errorContext.sessionId,
+        original.errorContext.sessionId,
+      );
+      expect(
+        deserialized.errorContext.httpStatus,
+        original.errorContext.httpStatus,
+      );
+      expect(
+        deserialized.errorContext.errorCode,
+        original.errorContext.errorCode,
+      );
     });
   });
 }

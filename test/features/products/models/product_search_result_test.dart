@@ -102,7 +102,10 @@ void main() {
         totalCount: 0,
         appliedFilter: filter,
       );
-      expect(result.hasNoResults, false); // Not "no results", just initial/empty state
+      expect(
+        result.hasNoResults,
+        false,
+      ); // Not "no results", just initial/empty state
       expect(result.isInitialState, true);
     });
 

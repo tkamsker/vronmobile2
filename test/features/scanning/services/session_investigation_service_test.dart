@@ -44,7 +44,7 @@ void main() {
                   'name': 'scan.glb',
                   'size_bytes': 2345678,
                   'modified_at': '2025-12-30T12:05:00Z',
-                }
+                },
               ],
             },
           },
@@ -58,12 +58,12 @@ void main() {
         'investigation_timestamp': '2025-12-30T12:30:00Z',
       };
 
-      when(() => mockClient.get(
-            Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
-            headers: any(named: 'headers'),
-          )).thenAnswer(
-        (_) async => http.Response(json.encode(responseJson), 200),
-      );
+      when(
+        () => mockClient.get(
+          Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
+          headers: any(named: 'headers'),
+        ),
+      ).thenAnswer((_) async => http.Response(json.encode(responseJson), 200));
 
       // Act
       final result = await service.investigate(sessionId);
@@ -97,19 +97,17 @@ void main() {
           'processing_stage': 'upload_validation',
           'failed_at': '2025-12-30T11:03:00Z',
           'blender_exit_code': 1,
-          'last_error_logs': [
-            'ERROR: Invalid geometry data',
-          ],
+          'last_error_logs': ['ERROR: Invalid geometry data'],
         },
         'investigation_timestamp': '2025-12-30T11:10:00Z',
       };
 
-      when(() => mockClient.get(
-            Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
-            headers: any(named: 'headers'),
-          )).thenAnswer(
-        (_) async => http.Response(json.encode(responseJson), 200),
-      );
+      when(
+        () => mockClient.get(
+          Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
+          headers: any(named: 'headers'),
+        ),
+      ).thenAnswer((_) async => http.Response(json.encode(responseJson), 200));
 
       // Act
       final result = await service.investigate(sessionId);
@@ -141,24 +139,26 @@ void main() {
         'investigation_timestamp': '2025-12-30T12:00:00Z',
       };
 
-      when(() => mockClient.get(
-            Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
-            headers: any(named: 'headers'),
-          )).thenAnswer(
-        (_) async => http.Response(json.encode(responseJson), 200),
-      );
+      when(
+        () => mockClient.get(
+          Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
+          headers: any(named: 'headers'),
+        ),
+      ).thenAnswer((_) async => http.Response(json.encode(responseJson), 200));
 
       // Act
       await service.investigate(sessionId, authToken: token);
 
       // Assert
-      verify(() => mockClient.get(
-            any(),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-          )).called(1);
+      verify(
+        () => mockClient.get(
+          any(),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      ).called(1);
     });
   });
 
@@ -166,24 +166,26 @@ void main() {
     test('should throw exception for 404 Not Found', () async {
       // Arrange
       const sessionId = 'sess_NOTFOUND';
-      when(() => mockClient.get(
-            Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
-            headers: any(named: 'headers'),
-          )).thenAnswer(
-        (_) async => http.Response(
-          json.encode({'error': 'Session not found'}),
-          404,
+      when(
+        () => mockClient.get(
+          Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
+          headers: any(named: 'headers'),
         ),
+      ).thenAnswer(
+        (_) async =>
+            http.Response(json.encode({'error': 'Session not found'}), 404),
       );
 
       // Act & Assert
       expect(
         () => service.investigate(sessionId),
         throwsA(
-          predicate((e) =>
-              e is SessionInvestigationException &&
-              e.statusCode == 404 &&
-              e.message.contains('not found')),
+          predicate(
+            (e) =>
+                e is SessionInvestigationException &&
+                e.statusCode == 404 &&
+                e.message.contains('not found'),
+          ),
         ),
       );
     });
@@ -191,24 +193,25 @@ void main() {
     test('should throw exception for 401 Unauthorized', () async {
       // Arrange
       const sessionId = 'sess_UNAUTH';
-      when(() => mockClient.get(
-            Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
-            headers: any(named: 'headers'),
-          )).thenAnswer(
-        (_) async => http.Response(
-          json.encode({'error': 'Unauthorized'}),
-          401,
+      when(
+        () => mockClient.get(
+          Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
+          headers: any(named: 'headers'),
         ),
+      ).thenAnswer(
+        (_) async => http.Response(json.encode({'error': 'Unauthorized'}), 401),
       );
 
       // Act & Assert
       expect(
         () => service.investigate(sessionId),
         throwsA(
-          predicate((e) =>
-              e is SessionInvestigationException &&
-              e.statusCode == 401 &&
-              e.message.contains('Unauthorized')),
+          predicate(
+            (e) =>
+                e is SessionInvestigationException &&
+                e.statusCode == 401 &&
+                e.message.contains('Unauthorized'),
+          ),
         ),
       );
     });
@@ -216,24 +219,26 @@ void main() {
     test('should throw exception for 429 Rate Limit', () async {
       // Arrange
       const sessionId = 'sess_RATELIMIT';
-      when(() => mockClient.get(
-            Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
-            headers: any(named: 'headers'),
-          )).thenAnswer(
-        (_) async => http.Response(
-          json.encode({'error': 'Rate limit exceeded'}),
-          429,
+      when(
+        () => mockClient.get(
+          Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
+          headers: any(named: 'headers'),
         ),
+      ).thenAnswer(
+        (_) async =>
+            http.Response(json.encode({'error': 'Rate limit exceeded'}), 429),
       );
 
       // Act & Assert
       expect(
         () => service.investigate(sessionId),
         throwsA(
-          predicate((e) =>
-              e is SessionInvestigationException &&
-              e.statusCode == 429 &&
-              e.message.contains('Rate limit')),
+          predicate(
+            (e) =>
+                e is SessionInvestigationException &&
+                e.statusCode == 429 &&
+                e.message.contains('Rate limit'),
+          ),
         ),
       );
     });
@@ -241,24 +246,26 @@ void main() {
     test('should throw exception for 500 Server Error', () async {
       // Arrange
       const sessionId = 'sess_ERROR';
-      when(() => mockClient.get(
-            Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
-            headers: any(named: 'headers'),
-          )).thenAnswer(
-        (_) async => http.Response(
-          json.encode({'error': 'Internal server error'}),
-          500,
+      when(
+        () => mockClient.get(
+          Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
+          headers: any(named: 'headers'),
         ),
+      ).thenAnswer(
+        (_) async =>
+            http.Response(json.encode({'error': 'Internal server error'}), 500),
       );
 
       // Act & Assert
       expect(
         () => service.investigate(sessionId),
         throwsA(
-          predicate((e) =>
-              e is SessionInvestigationException &&
-              e.statusCode == 500 &&
-              e.message.contains('Server error')),
+          predicate(
+            (e) =>
+                e is SessionInvestigationException &&
+                e.statusCode == 500 &&
+                e.message.contains('Server error'),
+          ),
         ),
       );
     });
@@ -266,10 +273,12 @@ void main() {
     test('should throw exception for network timeout', () async {
       // Arrange
       const sessionId = 'sess_TIMEOUT';
-      when(() => mockClient.get(
-            Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
-            headers: any(named: 'headers'),
-          )).thenAnswer(
+      when(
+        () => mockClient.get(
+          Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
+          headers: any(named: 'headers'),
+        ),
+      ).thenAnswer(
         (_) => Future.error(http.ClientException('Connection timeout')),
       );
 
@@ -277,9 +286,11 @@ void main() {
       expect(
         () => service.investigate(sessionId),
         throwsA(
-          predicate((e) =>
-              e is SessionInvestigationException &&
-              e.message.contains('timeout')),
+          predicate(
+            (e) =>
+                e is SessionInvestigationException &&
+                e.message.contains('timeout'),
+          ),
         ),
       );
     });
@@ -287,20 +298,22 @@ void main() {
     test('should throw exception for invalid JSON response', () async {
       // Arrange
       const sessionId = 'sess_BADJSON';
-      when(() => mockClient.get(
-            Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
-            headers: any(named: 'headers'),
-          )).thenAnswer(
-        (_) async => http.Response('Invalid JSON {', 200),
-      );
+      when(
+        () => mockClient.get(
+          Uri.parse('https://api.example.com/sessions/$sessionId/investigate'),
+          headers: any(named: 'headers'),
+        ),
+      ).thenAnswer((_) async => http.Response('Invalid JSON {', 200));
 
       // Act & Assert
       expect(
         () => service.investigate(sessionId),
         throwsA(
-          predicate((e) =>
-              e is SessionInvestigationException &&
-              e.message.contains('Invalid response')),
+          predicate(
+            (e) =>
+                e is SessionInvestigationException &&
+                e.message.contains('Invalid response'),
+          ),
         ),
       );
     });

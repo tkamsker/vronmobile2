@@ -6,7 +6,9 @@ import 'package:vronmobile2/core/constants/app_strings.dart';
 void main() {
   group('ScanProgress Widget', () {
     // T028: Test progress indicator during active scan
-    testWidgets('displays progress indicator with correct value', (tester) async {
+    testWidgets('displays progress indicator with correct value', (
+      tester,
+    ) async {
       // Note: This will fail until ScanProgress is implemented
 
       // await tester.pumpWidget(
@@ -87,7 +89,9 @@ void main() {
       // }
     });
 
-    testWidgets('shows indeterminate progress when value is null', (tester) async {
+    testWidgets('shows indeterminate progress when value is null', (
+      tester,
+    ) async {
       // await tester.pumpWidget(
       //   MaterialApp(
       //     home: Scaffold(
@@ -154,7 +158,9 @@ void main() {
       // expect(announcement.label, contains('75%'));
     });
 
-    testWidgets('shows completion message when progress reaches 100%', (tester) async {
+    testWidgets('shows completion message when progress reaches 100%', (
+      tester,
+    ) async {
       // await tester.pumpWidget(
       //   MaterialApp(
       //     home: Scaffold(
@@ -184,7 +190,9 @@ void main() {
       // expect(find.text(AppStrings.stopScanButton), findsNothing);
     });
 
-    testWidgets('maintains 30fps animation requirement (SC-002)', (tester) async {
+    testWidgets('maintains 30fps animation requirement (SC-002)', (
+      tester,
+    ) async {
       // Monitor frame rendering during progress updates
       // This is a performance test
 

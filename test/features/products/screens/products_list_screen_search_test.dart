@@ -98,7 +98,9 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('shows empty state message when no matches found', (tester) async {
+    testWidgets('shows empty state message when no matches found', (
+      tester,
+    ) async {
       // T013: Write widget test for empty results - verify empty state message when no matches
       await tester.pumpWidget(
         MaterialApp(
@@ -121,13 +123,12 @@ void main() {
       await tester.pumpAndSettle();
 
       // Should show empty state message
-      expect(
-        find.textContaining('No products found'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('No products found'), findsOneWidget);
     });
 
-    testWidgets('shows clear button and clears search when clicked', (tester) async {
+    testWidgets('shows clear button and clears search when clicked', (
+      tester,
+    ) async {
       // T014: Write widget test for clear search - verify clear button clears search query
       await tester.pumpWidget(
         MaterialApp(

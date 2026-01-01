@@ -83,25 +83,16 @@ class ScanButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.orange.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8.0),
-        border: Border.all(
-          color: Colors.orange.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.info_outline,
-            color: Colors.orange,
-            size: 20.0,
-          ),
+          Icon(Icons.info_outline, color: Colors.orange, size: 20.0),
           const SizedBox(width: 8.0),
           Expanded(
             child: Text(
               message,
-              style: TextStyle(
-                color: Colors.orange.shade800,
-                fontSize: 14.0,
-              ),
+              style: TextStyle(color: Colors.orange.shade800, fontSize: 14.0),
             ),
           ),
         ],

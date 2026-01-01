@@ -43,8 +43,9 @@ void main() {
   }
 
   group('ProjectDataTab', () {
-    testWidgets('T019: displays project name and description fields',
-        (WidgetTester tester) async {
+    testWidgets('T019: displays project name and description fields', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final project = createTestProject(
         name: 'Marketing Analytics',
@@ -54,9 +55,7 @@ void main() {
       // Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectDataTab(project: project),
-          ),
+          home: Scaffold(body: ProjectDataTab(project: project)),
         ),
       );
 
@@ -67,17 +66,16 @@ void main() {
       expect(find.text('Description'), findsOneWidget);
     });
 
-    testWidgets('T019: displays slug as read-only field',
-        (WidgetTester tester) async {
+    testWidgets('T019: displays slug as read-only field', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final project = createTestProject(slug: 'marketing-analytics');
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectDataTab(project: project),
-          ),
+          home: Scaffold(body: ProjectDataTab(project: project)),
         ),
       );
 
@@ -91,17 +89,16 @@ void main() {
       expect(slugField.enabled, false);
     });
 
-    testWidgets('T019: name and description fields are editable',
-        (WidgetTester tester) async {
+    testWidgets('T019: name and description fields are editable', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final project = createTestProject();
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectDataTab(project: project),
-          ),
+          home: Scaffold(body: ProjectDataTab(project: project)),
         ),
       );
 
@@ -117,17 +114,14 @@ void main() {
       expect(descField.enabled, true);
     });
 
-    testWidgets('T019: displays save button',
-        (WidgetTester tester) async {
+    testWidgets('T019: displays save button', (WidgetTester tester) async {
       // Arrange
       final project = createTestProject();
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectDataTab(project: project),
-          ),
+          home: Scaffold(body: ProjectDataTab(project: project)),
         ),
       );
 
@@ -136,17 +130,14 @@ void main() {
       expect(find.byType(ElevatedButton), findsOneWidget);
     });
 
-    testWidgets('T019: validates required fields',
-        (WidgetTester tester) async {
+    testWidgets('T019: validates required fields', (WidgetTester tester) async {
       // Arrange
       final project = createTestProject();
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectDataTab(project: project),
-          ),
+          home: Scaffold(body: ProjectDataTab(project: project)),
         ),
       );
 
@@ -165,8 +156,9 @@ void main() {
       expect(find.text('Name is required'), findsOneWidget);
     });
 
-    testWidgets('T019: calls onSave callback with updated data',
-        (WidgetTester tester) async {
+    testWidgets('T019: calls onSave callback with updated data', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final project = createTestProject();
       String? savedName;
@@ -203,35 +195,35 @@ void main() {
       expect(savedDescription, 'Test description');
     });
 
-    testWidgets('T019: shows warning dialog when navigating with unsaved changes',
-        (WidgetTester tester) async {
-      // Arrange
-      final project = createTestProject();
+    testWidgets(
+      'T019: shows warning dialog when navigating with unsaved changes',
+      (WidgetTester tester) async {
+        // Arrange
+        final project = createTestProject();
 
-      // Act
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: ProjectDataTab(project: project),
+        // Act
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(body: ProjectDataTab(project: project)),
           ),
-        ),
-      );
+        );
 
-      // Edit the name field (make form dirty)
-      await tester.enterText(
-        find.widgetWithText(TextFormField, 'Test Project'),
-        'Modified Name',
-      );
-      await tester.pumpAndSettle();
+        // Edit the name field (make form dirty)
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Test Project'),
+          'Modified Name',
+        );
+        await tester.pumpAndSettle();
 
-      // Simulate back button press
-      final NavigatorState navigator = tester.state(find.byType(Navigator));
-      navigator.maybePop();
-      await tester.pumpAndSettle();
+        // Simulate back button press
+        final NavigatorState navigator = tester.state(find.byType(Navigator));
+        navigator.maybePop();
+        await tester.pumpAndSettle();
 
-      // Assert - Should show warning dialog
-      expect(find.text('Discard Changes'), findsOneWidget);
-      expect(find.text('Keep Editing'), findsOneWidget);
-    });
+        // Assert - Should show warning dialog
+        expect(find.text('Discard Changes'), findsOneWidget);
+        expect(find.text('Keep Editing'), findsOneWidget);
+      },
+    );
   });
 }

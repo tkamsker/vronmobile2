@@ -19,10 +19,7 @@ class BlenderApiSession {
   @JsonKey(name: 'expires_at')
   final DateTime expiresAt;
 
-  BlenderApiSession({
-    required this.sessionId,
-    required this.expiresAt,
-  });
+  BlenderApiSession({required this.sessionId, required this.expiresAt});
 
   factory BlenderApiSession.fromJson(Map<String, dynamic> json) =>
       _$BlenderApiSessionFromJson(json);
@@ -30,7 +27,8 @@ class BlenderApiSession {
   Map<String, dynamic> toJson() => _$BlenderApiSessionToJson(this);
 
   @override
-  String toString() => 'BlenderApiSession(sessionId: $sessionId, expiresAt: $expiresAt)';
+  String toString() =>
+      'BlenderApiSession(sessionId: $sessionId, expiresAt: $expiresAt)';
 }
 
 /// Upload response from POST /sessions/{id}/upload
@@ -242,11 +240,7 @@ class BlenderApiError {
 
   final Map<String, dynamic>? details;
 
-  BlenderApiError({
-    this.errorCode,
-    required this.message,
-    this.details,
-  });
+  BlenderApiError({this.errorCode, required this.message, this.details});
 
   factory BlenderApiError.fromJson(Map<String, dynamic> json) =>
       _$BlenderApiErrorFromJson(json);
@@ -359,7 +353,10 @@ class BlenderApiException implements Exception {
       }
     }
 
-    return errorMessageService.getRecommendedAction(mappedErrorCode, statusCode);
+    return errorMessageService.getRecommendedAction(
+      mappedErrorCode,
+      statusCode,
+    );
   }
 
   /// Check if error is recoverable (user can retry)
@@ -369,12 +366,15 @@ class BlenderApiException implements Exception {
         statusCode == 408 || // Request timeout
         statusCode == 429 || // Too many requests
         statusCode == 503 || // Service unavailable
-        statusCode == 504) { // Gateway timeout
+        statusCode == 504) {
+      // Gateway timeout
       return true;
     }
 
     // Timeout error codes are recoverable
-    if (errorCode == 'TIMEOUT' || errorCode == 'PROCESSING_TIMEOUT' || errorCode == 'NETWORK_ERROR') {
+    if (errorCode == 'TIMEOUT' ||
+        errorCode == 'PROCESSING_TIMEOUT' ||
+        errorCode == 'NETWORK_ERROR') {
       return true;
     }
 

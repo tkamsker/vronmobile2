@@ -45,7 +45,8 @@ class I18nService extends ChangeNotifier {
     // Load translations for current language
     await _loadTranslations(_currentLanguage);
 
-    if (kDebugMode) print('✅ [I18N] Initialized with language: $_currentLanguage');
+    if (kDebugMode)
+      print('✅ [I18N] Initialized with language: $_currentLanguage');
   }
 
   /// Load translations from JSON file
@@ -55,8 +56,9 @@ class I18nService extends ChangeNotifier {
         print('🌍 [I18N] Loading translations for: $languageCode');
       }
 
-      final String jsonString =
-          await rootBundle.loadString('lib/core/i18n/$languageCode.json');
+      final String jsonString = await rootBundle.loadString(
+        'lib/core/i18n/$languageCode.json',
+      );
       _translations = json.decode(jsonString) as Map<String, dynamic>;
 
       if (kDebugMode) {
@@ -92,7 +94,9 @@ class I18nService extends ChangeNotifier {
     }
 
     if (kDebugMode) {
-      print('🌍 [I18N] Changing language from $_currentLanguage to $languageCode');
+      print(
+        '🌍 [I18N] Changing language from $_currentLanguage to $languageCode',
+      );
     }
 
     _currentLanguage = languageCode;

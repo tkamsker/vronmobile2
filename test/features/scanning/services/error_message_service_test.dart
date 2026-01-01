@@ -62,10 +62,13 @@ void main() {
       expect(message, isNot(contains('Server error')));
     });
 
-    test('should return generic fallback for unknown error code and status', () {
-      final message = service.getUserMessage('unknown_error', 999);
-      expect(message, contains('Something went wrong'));
-    });
+    test(
+      'should return generic fallback for unknown error code and status',
+      () {
+        final message = service.getUserMessage('unknown_error', 999);
+        expect(message, contains('Something went wrong'));
+      },
+    );
 
     test('should return generic fallback when both parameters are null', () {
       final message = service.getUserMessage(null, null);

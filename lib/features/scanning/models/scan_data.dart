@@ -2,28 +2,29 @@ import 'dart:io';
 
 enum ScanFormat {
   usdz, // Apple RoomPlan native output
-  glb,  // glTF binary format
+  glb, // glTF binary format
 }
 
 enum ScanStatus {
-  capturing,    // Scan in progress
-  completed,    // Scan finished, stored locally
-  uploading,    // Upload to backend in progress
-  uploaded,     // Successfully uploaded to backend
-  failed,       // Scan or upload failed
+  capturing, // Scan in progress
+  completed, // Scan finished, stored locally
+  uploading, // Upload to backend in progress
+  uploaded, // Successfully uploaded to backend
+  failed, // Scan or upload failed
 }
 
 class ScanData {
-  final String id;              // Unique identifier (UUID)
-  final ScanFormat format;      // USDZ or GLB
-  final String localPath;       // Local filesystem path (USDZ file)
-  final String? glbLocalPath;   // Local GLB file path (null if not converted yet)
-  final int fileSizeBytes;      // File size in bytes
-  final DateTime capturedAt;    // Timestamp of scan completion
-  final ScanStatus status;      // Current status
-  final String? projectId;      // Associated project (null for guest scans)
-  final String? remoteUrl;      // Backend URL after upload (null if not uploaded)
-  final Map<String, dynamic>? metadata; // Additional metadata (room dimensions, object count, etc.)
+  final String id; // Unique identifier (UUID)
+  final ScanFormat format; // USDZ or GLB
+  final String localPath; // Local filesystem path (USDZ file)
+  final String? glbLocalPath; // Local GLB file path (null if not converted yet)
+  final int fileSizeBytes; // File size in bytes
+  final DateTime capturedAt; // Timestamp of scan completion
+  final ScanStatus status; // Current status
+  final String? projectId; // Associated project (null for guest scans)
+  final String? remoteUrl; // Backend URL after upload (null if not uploaded)
+  final Map<String, dynamic>?
+  metadata; // Additional metadata (room dimensions, object count, etc.)
 
   ScanData({
     required this.id,

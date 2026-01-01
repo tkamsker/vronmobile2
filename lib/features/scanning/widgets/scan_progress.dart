@@ -6,12 +6,7 @@ class ScanProgress extends StatelessWidget {
   final VoidCallback? onStop;
   final Duration? elapsedTime;
 
-  const ScanProgress({
-    super.key,
-    this.progress,
-    this.onStop,
-    this.elapsedTime,
-  });
+  const ScanProgress({super.key, this.progress, this.onStop, this.elapsedTime});
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +28,12 @@ class ScanProgress extends StatelessWidget {
             children: [
               // Title
               Text(
-                isComplete ? AppStrings.scanComplete : AppStrings.scanInProgress,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                isComplete
+                    ? AppStrings.scanComplete
+                    : AppStrings.scanInProgress,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16.0),
 
