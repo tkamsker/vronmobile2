@@ -1,9 +1,13 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:file_picker/file_picker.dart';
 import '../models/scan_data.dart';
 import '../services/scan_session_manager.dart';
 import '../../home/models/project.dart';
 import '../../home/services/project_service.dart';
+import '../../home/services/byo_project_service.dart';
 import 'scanning_screen.dart';
 import 'usdz_preview_screen.dart';
 
@@ -24,6 +28,7 @@ class ScanListScreen extends StatefulWidget {
 class _ScanListScreenState extends State<ScanListScreen> {
   final ScanSessionManager _sessionManager = ScanSessionManager();
   final ProjectService _projectService = ProjectService();
+  final BYOProjectService _byoProjectService = BYOProjectService();
 
   List<Project> _projects = [];
   Project? _selectedProject;
@@ -416,6 +421,8 @@ class _ScanListScreenState extends State<ScanListScreen> {
     final slugController = TextEditingController();
     final descriptionController = TextEditingController();
     bool autoGenerateSlug = true;
+    File? worldFile;
+    File? meshFile;
 
     // Auto-generate slug from name
     nameController.addListener(() {
@@ -426,174 +433,330 @@ class _ScanListScreenState extends State<ScanListScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey.shade900,
-        title: Row(
-          children: [
-            Icon(Icons.add_circle, color: Colors.blue.shade400),
-            const SizedBox(width: 12),
-            const Text('Create New Project', style: TextStyle(color: Colors.white)),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Colors.grey.shade900,
+          title: Row(
             children: [
-              // Project Name
-              Text(
-                'Project Name *',
-                style: TextStyle(
-                  color: Colors.grey.shade400,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: nameController,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Enter project name',
-                  hintStyle: TextStyle(color: Colors.grey.shade600),
-                  filled: true,
-                  fillColor: Colors.grey.shade800,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Project Slug
-              Text(
-                'Project Slug *',
-                style: TextStyle(
-                  color: Colors.grey.shade400,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: slugController,
-                style: const TextStyle(color: Colors.white),
-                onChanged: (value) {
-                  autoGenerateSlug = false;
-                },
-                decoration: InputDecoration(
-                  hintText: 'project-slug',
-                  hintStyle: TextStyle(color: Colors.grey.shade600),
-                  filled: true,
-                  fillColor: Colors.grey.shade800,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  helperText: 'URL-friendly identifier (auto-generated)',
-                  helperStyle: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Description
-              Text(
-                'Description (Optional)',
-                style: TextStyle(
-                  color: Colors.grey.shade400,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: descriptionController,
-                style: const TextStyle(color: Colors.white),
-                maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: 'Enter project description',
-                  hintStyle: TextStyle(color: Colors.grey.shade600),
-                  filled: true,
-                  fillColor: Colors.grey.shade800,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Info text
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade900.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue.shade700.withValues(alpha: 0.5)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, color: Colors.blue.shade400, size: 20),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'This will create a BYO (Bring Your Own) project for uploading your scans.',
-                        style: TextStyle(
-                          color: Colors.blue.shade200,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              Icon(Icons.add_circle, color: Colors.blue.shade400),
+              const SizedBox(width: 12),
+              const Text('Create New Project', style: TextStyle(color: Colors.white)),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text('Cancel', style: TextStyle(color: Colors.grey.shade400)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final name = nameController.text.trim();
-              final slug = slugController.text.trim();
-              final description = descriptionController.text.trim();
-
-              if (name.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter a project name'),
-                    backgroundColor: Colors.red,
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Project Name
+                Text(
+                  'Project Name *',
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                   ),
-                );
-                return;
-              }
-
-              if (slug.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Please enter a project slug'),
-                    backgroundColor: Colors.red,
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: nameController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: 'Enter project name',
+                    hintStyle: TextStyle(color: Colors.grey.shade600),
+                    filled: true,
+                    fillColor: Colors.grey.shade800,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
-                );
-                return;
-              }
+                ),
+                const SizedBox(height: 16),
 
-              Navigator.of(context).pop();
-              await _createNewProject(name, slug, description.isEmpty ? null : description);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue.shade600,
-              foregroundColor: Colors.white,
+                // Project Slug
+                Text(
+                  'Project Slug *',
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: slugController,
+                  style: const TextStyle(color: Colors.white),
+                  onChanged: (value) {
+                    autoGenerateSlug = false;
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'project-slug',
+                    hintStyle: TextStyle(color: Colors.grey.shade600),
+                    filled: true,
+                    fillColor: Colors.grey.shade800,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                    helperText: 'URL-friendly identifier (auto-generated)',
+                    helperStyle: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Description
+                Text(
+                  'Description (Optional)',
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: descriptionController,
+                  style: const TextStyle(color: Colors.white),
+                  maxLines: 3,
+                  decoration: InputDecoration(
+                    hintText: 'Enter project description',
+                    hintStyle: TextStyle(color: Colors.grey.shade600),
+                    filled: true,
+                    fillColor: Colors.grey.shade800,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // World File Picker
+                Text(
+                  'World File (GLB) *',
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () async {
+                    final result = await FilePicker.platform.pickFiles(
+                      type: FileType.custom,
+                      allowedExtensions: ['glb'],
+                      withData: false,
+                      withReadStream: true,
+                    );
+
+                    if (result != null && result.files.single.path != null) {
+                      setDialogState(() {
+                        worldFile = File(result.files.single.path!);
+                      });
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade800,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: worldFile != null
+                          ? Colors.green.shade600
+                          : Colors.grey.shade700,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          worldFile != null ? Icons.check_circle : Icons.upload_file,
+                          color: worldFile != null
+                            ? Colors.green.shade400
+                            : Colors.grey.shade500,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            worldFile != null
+                              ? worldFile!.path.split('/').last
+                              : 'Select world GLB file',
+                            style: TextStyle(
+                              color: worldFile != null
+                                ? Colors.white
+                                : Colors.grey.shade500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Mesh File Picker
+                Text(
+                  'Mesh File (GLB) *',
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () async {
+                    final result = await FilePicker.platform.pickFiles(
+                      type: FileType.custom,
+                      allowedExtensions: ['glb'],
+                      withData: false,
+                      withReadStream: true,
+                    );
+
+                    if (result != null && result.files.single.path != null) {
+                      setDialogState(() {
+                        meshFile = File(result.files.single.path!);
+                      });
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade800,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: meshFile != null
+                          ? Colors.green.shade600
+                          : Colors.grey.shade700,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          meshFile != null ? Icons.check_circle : Icons.upload_file,
+                          color: meshFile != null
+                            ? Colors.green.shade400
+                            : Colors.grey.shade500,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            meshFile != null
+                              ? meshFile!.path.split('/').last
+                              : 'Select mesh GLB file',
+                            style: TextStyle(
+                              color: meshFile != null
+                                ? Colors.white
+                                : Colors.grey.shade500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Info text
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade900.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade700.withValues(alpha: 0.5)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.blue.shade400, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'This will create a BYO (Bring Your Own) project with your GLB files.',
+                          style: TextStyle(
+                            color: Colors.blue.shade200,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            child: const Text('Create Project'),
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel', style: TextStyle(color: Colors.grey.shade400)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final name = nameController.text.trim();
+                final slug = slugController.text.trim();
+                final description = descriptionController.text.trim();
+
+                if (name.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a project name'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                if (slug.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a project slug'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                if (worldFile == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please select a world GLB file'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                if (meshFile == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please select a mesh GLB file'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                Navigator.of(context).pop();
+                await _createNewProject(
+                  name,
+                  slug,
+                  description.isEmpty ? null : description,
+                  worldFile!,
+                  meshFile!,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue.shade600,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Create Project'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -606,7 +769,13 @@ class _ScanListScreenState extends State<ScanListScreen> {
         .replaceAll(RegExp(r'^-|-$'), '');
   }
 
-  Future<void> _createNewProject(String name, String slug, String? description) async {
+  Future<void> _createNewProject(
+    String name,
+    String slug,
+    String? description,
+    File worldFile,
+    File meshFile,
+  ) async {
     try {
       // Show loading indicator
       showDialog(
@@ -625,8 +794,13 @@ class _ScanListScreenState extends State<ScanListScreen> {
                 const CircularProgressIndicator(),
                 const SizedBox(height: 16),
                 Text(
-                  'Creating project...',
+                  'Creating BYO project...',
                   style: TextStyle(color: Colors.grey.shade300),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Uploading GLB files',
+                  style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                 ),
               ],
             ),
@@ -634,27 +808,43 @@ class _ScanListScreenState extends State<ScanListScreen> {
         ),
       );
 
-      print('📦 [SCAN_LIST] Creating new project: $name ($slug)');
+      if (kDebugMode) {
+        print('📦 [SCAN_LIST] Creating new BYO project: $name ($slug)');
+        print('📦 [SCAN_LIST] World file: ${worldFile.path}');
+        print('📦 [SCAN_LIST] Mesh file: ${meshFile.path}');
+      }
 
-      // Create the project using ProjectService
-      final project = await _projectService.createProject(
-        name: name,
+      // Create the project using BYOProjectService
+      final result = await _byoProjectService.createProjectFromOwnWorld(
         slug: slug,
+        name: name,
         description: description,
+        worldFile: worldFile,
+        meshFile: meshFile,
       );
 
-      print('✅ [SCAN_LIST] Project created: ${project.id}');
+      if (kDebugMode) {
+        print('✅ [SCAN_LIST] BYO Project created: ${result.projectId}');
+        print('✅ [SCAN_LIST] World ID: ${result.worldId}');
+      }
 
       // Close loading dialog
       if (mounted) {
         Navigator.of(context).pop();
       }
 
-      // Set as selected project and refresh
+      // Refresh project list to get the newly created project
+      await _loadProjects();
+
+      // Find and select the newly created project
       if (mounted) {
+        final newProject = _projects.firstWhere(
+          (p) => p.id == result.projectId,
+          orElse: () => _projects.first,
+        );
+
         setState(() {
-          _projects.add(project);
-          _selectedProject = project;
+          _selectedProject = newProject;
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -664,7 +854,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
                 Icon(Icons.check_circle, color: Colors.green.shade400),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text('Project "${project.name}" created successfully!'),
+                  child: Text('BYO project "$name" created successfully!'),
                 ),
               ],
             ),
@@ -674,7 +864,9 @@ class _ScanListScreenState extends State<ScanListScreen> {
         );
       }
     } catch (e) {
-      print('❌ [SCAN_LIST] Error creating project: $e');
+      if (kDebugMode) {
+        print('❌ [SCAN_LIST] Error creating BYO project: $e');
+      }
 
       // Close loading dialog
       if (mounted) {
@@ -682,25 +874,54 @@ class _ScanListScreenState extends State<ScanListScreen> {
       }
 
       if (mounted) {
-        // Check for duplicate slug error
         final errorMessage = e.toString();
-        String displayMessage = 'Failed to create project: $e';
+        String displayMessage = 'Failed to create BYO project';
+        String? actionMessage;
 
-        if (errorMessage.contains('already exists') || errorMessage.contains('DUPLICATE_SLUG')) {
-          displayMessage = 'A project with this slug already exists. Please choose a different name.';
+        // Check if mutation doesn't exist on backend
+        if (errorMessage.contains('VRonCreateProjectFromOwnWorld mutation not implemented')) {
+          displayMessage = 'Backend not ready for BYO project creation';
+          actionMessage = 'Please create projects via the web UI for now';
+        } else if (errorMessage.contains('already exists') ||
+                   errorMessage.contains('DUPLICATE_SLUG') ||
+                   errorMessage.contains('duplicate')) {
+          displayMessage = 'A project with this slug already exists';
+          actionMessage = 'Please choose a different name';
+        } else if (errorMessage.contains('Not authenticated') ||
+                   errorMessage.contains('401')) {
+          displayMessage = 'Authentication failed';
+          actionMessage = 'Please log in again';
+        } else {
+          displayMessage = 'Failed to create project: ${errorMessage.length > 100 ? errorMessage.substring(0, 100) + '...' : errorMessage}';
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Row(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.error_outline, color: Colors.red.shade400),
-                const SizedBox(width: 12),
-                Expanded(child: Text(displayMessage)),
+                Row(
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red.shade400),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text(displayMessage)),
+                  ],
+                ),
+                if (actionMessage != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    actionMessage,
+                    style: TextStyle(
+                      color: Colors.red.shade200,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ],
             ),
             backgroundColor: Colors.red.shade700,
-            duration: const Duration(seconds: 5),
+            duration: const Duration(seconds: 6),
           ),
         );
       }
