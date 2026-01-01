@@ -112,7 +112,7 @@ echo "=== Step 2: Creating BYO Project (Single Combined Mutation) ==="
 
 # GraphQL mutation for VRonCreateProjectFromOwnWorld
 # Backend input type: VRonCreateProjectFromOwnWorldInput { world, mesh }
-MUTATION='mutation VRonCreateProjectFromOwnWorld($input: VRonCreateProjectFromOwnWorldInput!) { VRonCreateProjectFromOwnWorld(input: $input) { projectId worldId } }'
+MUTATION='mutation VRonCreateProjectFromOwnWorld($input: VRonCreateProjectFromOwnWorldInput!) { VRonCreateProjectFromOwnWorld(input: $input) { projectId } }'
 
 # Prepare the operations field (GraphQL query + variables)
 OPERATIONS=$(cat <<EOF
