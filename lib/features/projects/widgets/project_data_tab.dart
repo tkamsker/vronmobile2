@@ -7,11 +7,7 @@ class ProjectDataTab extends StatefulWidget {
   final Project project;
   final void Function(String name, String description)? onSave;
 
-  const ProjectDataTab({
-    super.key,
-    required this.project,
-    this.onSave,
-  });
+  const ProjectDataTab({super.key, required this.project, this.onSave});
 
   @override
   State<ProjectDataTab> createState() => _ProjectDataTabState();
@@ -29,7 +25,9 @@ class _ProjectDataTabState extends State<ProjectDataTab> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.project.name);
-    _descriptionController = TextEditingController(text: widget.project.description);
+    _descriptionController = TextEditingController(
+      text: widget.project.description,
+    );
     _slugController = TextEditingController(text: widget.project.slug);
 
     // Track changes to mark form as dirty
@@ -38,7 +36,8 @@ class _ProjectDataTabState extends State<ProjectDataTab> {
   }
 
   void _onFieldChanged() {
-    final isDirty = _nameController.text != widget.project.name ||
+    final isDirty =
+        _nameController.text != widget.project.name ||
         _descriptionController.text != widget.project.description;
 
     if (isDirty != _isDirty) {
@@ -95,10 +94,7 @@ class _ProjectDataTabState extends State<ProjectDataTab> {
 
     try {
       if (widget.onSave != null) {
-        widget.onSave!(
-          _nameController.text,
-          _descriptionController.text,
-        );
+        widget.onSave!(_nameController.text, _descriptionController.text);
       }
 
       setState(() {
@@ -191,7 +187,9 @@ class _ProjectDataTabState extends State<ProjectDataTab> {
               // Save button
               Semantics(
                 button: true,
-                label: _isSaving ? 'Saving project changes' : 'Save project changes',
+                label: _isSaving
+                    ? 'Saving project changes'
+                    : 'Save project changes',
                 hint: _isSaving ? 'Please wait...' : 'Double tap to save',
                 enabled: !_isSaving,
                 child: ElevatedButton(
@@ -205,10 +203,7 @@ class _ProjectDataTabState extends State<ProjectDataTab> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text(
-                          'Save',
-                          style: TextStyle(fontSize: 16),
-                        ),
+                      : const Text('Save', style: TextStyle(fontSize: 16)),
                 ),
               ),
             ],

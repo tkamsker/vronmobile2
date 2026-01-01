@@ -40,15 +40,18 @@ class ProductDetail {
       description: _extractText(json['description']),
       thumbnail: json['thumbnail'] as String?,
       status: json['status'] as String? ?? 'DRAFT',
-      category: json['categoryId'] as String? ??
-                (json['category'] != null ? _extractText(json['category']) : null),
+      category:
+          json['categoryId'] as String? ??
+          (json['category'] != null ? _extractText(json['category']) : null),
       tags: _parseTags(json['tags']),
       tracksInventory: json['tracksInventory'] as bool? ?? false,
-      mediaFiles: (json['mediaFiles'] as List?)
+      mediaFiles:
+          (json['mediaFiles'] as List?)
               ?.map((m) => MediaFile.fromJson(m as Map<String, dynamic>))
               .toList() ??
           [],
-      variants: (json['variants'] as List?)
+      variants:
+          (json['variants'] as List?)
               ?.map((v) => ProductVariant.fromJson(v as Map<String, dynamic>))
               .toList() ??
           [],
@@ -77,7 +80,11 @@ class ProductDetail {
     if (tags is List) return tags.cast<String>();
     if (tags is String) {
       if (tags.isEmpty) return [];
-      return tags.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).toList();
+      return tags
+          .split(',')
+          .map((t) => t.trim())
+          .where((t) => t.isNotEmpty)
+          .toList();
     }
     return [];
   }

@@ -13,7 +13,9 @@ void main() {
       mockProductService = MockProductService();
     });
 
-    testWidgets('shows status filter chips (All, Draft, Active)', (tester) async {
+    testWidgets('shows status filter chips (All, Draft, Active)', (
+      tester,
+    ) async {
       // T029: Write widget test for status filter chips - verify All, Draft, Active chips exist
       await tester.pumpWidget(
         MaterialApp(
@@ -27,7 +29,9 @@ void main() {
       expect(find.byType(ChoiceChip), findsNWidgets(3));
     });
 
-    testWidgets('selecting Draft status filters to show only draft products', (tester) async {
+    testWidgets('selecting Draft status filters to show only draft products', (
+      tester,
+    ) async {
       // T030: Write widget test for status selection - verify selecting Draft shows only draft products
       await tester.pumpWidget(
         MaterialApp(
@@ -80,7 +84,9 @@ void main() {
       expect(find.byType(ProductCard), findsNWidgets(5));
     });
 
-    testWidgets('combining search and status filter works correctly', (tester) async {
+    testWidgets('combining search and status filter works correctly', (
+      tester,
+    ) async {
       // T031: Write widget test for combined filters - verify search + status work together
       await tester.pumpWidget(
         MaterialApp(
@@ -113,29 +119,32 @@ void main() {
       expect(find.textContaining('No products found'), findsWidgets);
     });
 
-    testWidgets('selecting Active status filters to show only active products', (tester) async {
-      // Additional test: Verify Active filter works
-      await tester.pumpWidget(
-        MaterialApp(
-          home: ProductsListScreen(productService: mockProductService),
-        ),
-      );
+    testWidgets(
+      'selecting Active status filters to show only active products',
+      (tester) async {
+        // Additional test: Verify Active filter works
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ProductsListScreen(productService: mockProductService),
+          ),
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      // Find and tap the Active chip (index 2)
-      final chips = find.byType(ChoiceChip);
-      final chipList = tester.widgetList<ChoiceChip>(chips).toList();
-      await tester.tap(find.byWidget(chipList[2]));
-      await tester.pumpAndSettle();
+        // Find and tap the Active chip (index 2)
+        final chips = find.byType(ChoiceChip);
+        final chipList = tester.widgetList<ChoiceChip>(chips).toList();
+        await tester.tap(find.byWidget(chipList[2]));
+        await tester.pumpAndSettle();
 
-      // Active chip should be selected
-      final updatedChips = tester.widgetList<ChoiceChip>(chips).toList();
-      expect(updatedChips[2].selected, true);
+        // Active chip should be selected
+        final updatedChips = tester.widgetList<ChoiceChip>(chips).toList();
+        expect(updatedChips[2].selected, true);
 
-      // Should show only active products from mock data (3 active products)
-      expect(find.byType(ProductCard), findsNWidgets(3));
-    });
+        // Should show only active products from mock data (3 active products)
+        expect(find.byType(ProductCard), findsNWidgets(3));
+      },
+    );
 
     testWidgets('status filter has proper semantics labels', (tester) async {
       // Accessibility test: Verify semantic labels exist
@@ -197,7 +206,9 @@ void main() {
       expect(find.byType(ProductCard), findsNWidgets(3));
     });
 
-    testWidgets('combining search, status, and category filters works correctly', (tester) async {
+    testWidgets('combining search, status, and category filters works correctly', (
+      tester,
+    ) async {
       // T042: Write widget test for combined filters - verify search + status + category work together
       await tester.pumpWidget(
         MaterialApp(

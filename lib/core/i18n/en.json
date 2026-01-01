@@ -107,5 +107,30 @@
     "loading": "Loading...",
     "error": "Error",
     "success": "Success"
+  },
+  "errors": {
+    "network": {
+      "timeout": "Connection timed out. Please try again.",
+      "connection_failed": "Unable to connect. Check your internet connection.",
+      "offline": "You're offline. Changes will sync when you reconnect."
+    },
+    "http": {
+      "429": "Too many requests. Please wait a moment and try again.",
+      "503": "Service temporarily unavailable. Please try again shortly.",
+      "500": "Server error occurred. Our team has been notified.",
+      "404": "Resource not found. It may have been removed.",
+      "400": "Invalid request. Please check your input."
+    },
+    "blender_api": {
+      "invalid_file": "File format not supported. Please use USDZ or GLB files.",
+      "malformed_usdz": "File appears corrupted. Try exporting it again.",
+      "file_too_large": "File exceeds 250 MB limit. Please reduce file size.",
+      "invalid_session": "Session not found. Please start a new conversion.",
+      "session_expired": "Session expired after 1 hour. Please upload again."
+    },
+    "fallback": {
+      "generic": "Something went wrong. Please try again.",
+      "retry_exceeded": "Maximum retry attempts reached. Please try again later."
+    }
   }
 }

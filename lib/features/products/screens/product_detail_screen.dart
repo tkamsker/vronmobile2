@@ -125,7 +125,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update product: ${e.toString().replaceAll('Exception: ', '')}'),
+            content: Text(
+              'Failed to update product: ${e.toString().replaceAll('Exception: ', '')}',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -141,7 +143,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Discard changes?'),
-          content: const Text('You have unsaved changes. Do you want to discard them?'),
+          content: const Text(
+            'You have unsaved changes. Do you want to discard them?',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -175,15 +179,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             children: [
               Text(
                 _product == null ? 'Loading...' : 'Edit Product',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               Text(
                 'Basic details',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               ),
             ],
           ),
@@ -251,11 +255,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red[300],
-              ),
+              Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
               const SizedBox(height: 16),
               Text(
                 _errorMessage ?? 'Unknown error',
@@ -348,27 +348,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             const SizedBox(height: 8),
             Text(
               'e.g. "Modern 2BR in Berlin"',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
             ),
             const SizedBox(height: 24),
 
             // Short text / Description field
             Text(
               'Short text',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 4),
             Text(
               'Optional, a few key highlights',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
             Semantics(
@@ -413,10 +407,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             const SizedBox(height: 4),
             Text(
               'Add one or more pictures',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
             ),
             const SizedBox(height: 16),
 
@@ -431,10 +422,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             // Helper text
             Text(
               'Upload a few key rooms and the exterior. AI will create a clean product listing for you.',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
 
@@ -462,7 +450,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : const Text(
@@ -485,18 +475,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.blue[700],
-          ),
+        fontWeight: FontWeight.bold,
+        color: Colors.blue[700],
+      ),
     );
   }
 
   Widget _buildRequiredLabel(String label) {
     return RichText(
       text: TextSpan(
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         children: [
           const TextSpan(
             text: '* ',

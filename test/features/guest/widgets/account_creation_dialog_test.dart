@@ -5,7 +5,9 @@ import 'package:vronmobile2/features/guest/widgets/account_creation_dialog.dart'
 void main() {
   group('AccountCreationDialog Widget', () {
     // T026: Test account creation dialog
-    testWidgets('displays dialog with correct title and message', (WidgetTester tester) async {
+    testWidgets('displays dialog with correct title and message', (
+      WidgetTester tester,
+    ) async {
       // Arrange & Act
       await tester.pumpWidget(
         MaterialApp(
@@ -31,7 +33,9 @@ void main() {
       // Assert
       expect(find.text('Create an Account?'), findsOneWidget);
       expect(
-        find.text('Create an account to save your scans to the cloud and access them from any device.'),
+        find.text(
+          'Create an account to save your scans to the cloud and access them from any device.',
+        ),
         findsOneWidget,
       );
     });
@@ -60,7 +64,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Assert
-      expect(find.widgetWithText(TextButton, 'Continue as Guest'), findsOneWidget);
+      expect(
+        find.widgetWithText(TextButton, 'Continue as Guest'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('has Sign Up button', (WidgetTester tester) async {
@@ -90,7 +97,9 @@ void main() {
       expect(find.widgetWithText(ElevatedButton, 'Sign Up'), findsOneWidget);
     });
 
-    testWidgets('Continue as Guest button closes dialog', (WidgetTester tester) async {
+    testWidgets('Continue as Guest button closes dialog', (
+      WidgetTester tester,
+    ) async {
       bool dialogClosed = false;
 
       // Arrange
@@ -125,7 +134,9 @@ void main() {
       expect(find.text('Create an Account?'), findsNothing);
     });
 
-    testWidgets('Sign Up button triggers navigation callback', (WidgetTester tester) async {
+    testWidgets('Sign Up button triggers navigation callback', (
+      WidgetTester tester,
+    ) async {
       bool signUpPressed = false;
 
       // Arrange
@@ -162,7 +173,9 @@ void main() {
       expect(signUpPressed, true);
     });
 
-    testWidgets('has proper semantic labels for accessibility', (WidgetTester tester) async {
+    testWidgets('has proper semantic labels for accessibility', (
+      WidgetTester tester,
+    ) async {
       // Arrange & Act
       await tester.pumpWidget(
         MaterialApp(
@@ -186,14 +199,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Assert - verify semantic labels exist
-      expect(
-        find.bySemanticsLabel('Continue as Guest button'),
-        findsOneWidget,
-      );
-      expect(
-        find.bySemanticsLabel('Sign Up button'),
-        findsOneWidget,
-      );
+      expect(find.bySemanticsLabel('Continue as Guest button'), findsOneWidget);
+      expect(find.bySemanticsLabel('Sign Up button'), findsOneWidget);
     });
   });
 }

@@ -20,6 +20,7 @@ void main() {
           id: '1',
           name: 'Marketing Website',
           slug: 'marketing-website',
+          description: '',
           imageUrl: '',
           isLive: true,
           liveDate: null,
@@ -42,6 +43,7 @@ void main() {
           id: '2',
           name: 'E-commerce Platform',
           slug: 'ecommerce-platform',
+          description: '',
           imageUrl: '',
           isLive: true,
           liveDate: null,
@@ -64,6 +66,7 @@ void main() {
           id: '3',
           name: 'Blog Application',
           slug: 'blog-application',
+          description: '',
           imageUrl: '',
           isLive: false,
           liveDate: null,
@@ -86,6 +89,7 @@ void main() {
           id: '4',
           name: 'Mobile App',
           slug: 'mobile-app',
+          description: '',
           imageUrl: '',
           isLive: true,
           liveDate: null,
@@ -118,7 +122,8 @@ void main() {
       // Simulate search logic (case-insensitive filter)
       final results = projects
           .where(
-            (project) => project.name.toLowerCase().contains(query.toLowerCase()),
+            (project) =>
+                project.name.toLowerCase().contains(query.toLowerCase()),
           )
           .toList();
 
@@ -132,7 +137,8 @@ void main() {
 
       final results = projects
           .where(
-            (project) => project.name.toLowerCase().contains(query.toLowerCase()),
+            (project) =>
+                project.name.toLowerCase().contains(query.toLowerCase()),
           )
           .toList();
 
@@ -182,7 +188,8 @@ void main() {
 
       final results = projects
           .where(
-            (project) => project.name.toLowerCase().contains(query.toLowerCase()),
+            (project) =>
+                project.name.toLowerCase().contains(query.toLowerCase()),
           )
           .toList();
 
@@ -195,19 +202,14 @@ void main() {
 
       final results = projects
           .where(
-            (project) => project.name.toLowerCase().contains(query.toLowerCase()),
+            (project) =>
+                project.name.toLowerCase().contains(query.toLowerCase()),
           )
           .toList();
 
       expect(results.length, equals(2));
-      expect(
-        results.any((p) => p.name == 'Mobile App'),
-        isTrue,
-      );
-      expect(
-        results.any((p) => p.name == 'Blog Application'),
-        isTrue,
-      );
+      expect(results.any((p) => p.name == 'Mobile App'), isTrue);
+      expect(results.any((p) => p.name == 'Blog Application'), isTrue);
     });
 
     test('handles special characters in search query', () {
@@ -217,6 +219,7 @@ void main() {
           id: '5',
           name: 'Project@2024',
           slug: 'project-2024',
+          description: '',
           imageUrl: '',
           isLive: true,
           liveDate: null,
@@ -241,7 +244,8 @@ void main() {
 
       final results = projects
           .where(
-            (project) => project.name.toLowerCase().contains(query.toLowerCase()),
+            (project) =>
+                project.name.toLowerCase().contains(query.toLowerCase()),
           )
           .toList();
 
@@ -256,6 +260,7 @@ void main() {
           id: '6',
           name: 'Проект Website',
           slug: 'project-website',
+          description: '',
           imageUrl: '',
           isLive: true,
           liveDate: null,
@@ -280,7 +285,8 @@ void main() {
 
       final results = projects
           .where(
-            (project) => project.name.toLowerCase().contains(query.toLowerCase()),
+            (project) =>
+                project.name.toLowerCase().contains(query.toLowerCase()),
           )
           .toList();
 
@@ -294,7 +300,8 @@ void main() {
 
       final results = projects
           .where(
-            (project) => project.name.toLowerCase().contains(longQuery.toLowerCase()),
+            (project) =>
+                project.name.toLowerCase().contains(longQuery.toLowerCase()),
           )
           .toList();
 
@@ -312,6 +319,7 @@ void main() {
               ? 'Marketing Project $index'
               : 'Development Project $index',
           slug: 'project-$index',
+          description: '',
           imageUrl: '',
           isLive: true,
           liveDate: null,
@@ -339,7 +347,8 @@ void main() {
 
       final results = largeProjectList
           .where(
-            (project) => project.name.toLowerCase().contains(query.toLowerCase()),
+            (project) =>
+                project.name.toLowerCase().contains(query.toLowerCase()),
           )
           .toList();
 
@@ -362,15 +371,17 @@ void main() {
 
       final results = projects
           .where(
-            (project) => project.name.toLowerCase().contains(query.toLowerCase()),
+            (project) =>
+                project.name.toLowerCase().contains(query.toLowerCase()),
           )
           .toList();
 
       expect(results.length, equals(1));
 
       final foundProject = results.first;
-      final originalProject =
-          projects.firstWhere((p) => p.id == foundProject.id);
+      final originalProject = projects.firstWhere(
+        (p) => p.id == foundProject.id,
+      );
 
       // Verify all properties are preserved
       expect(foundProject.id, equals(originalProject.id));
@@ -418,6 +429,7 @@ void main() {
           id: '7',
           name: 'My Test Project',
           slug: 'my-test-project',
+          description: '',
           imageUrl: '',
           isLive: true,
           liveDate: null,
@@ -443,7 +455,8 @@ void main() {
 
       final results = projects
           .where(
-            (project) => project.name.toLowerCase().contains(query.toLowerCase()),
+            (project) =>
+                project.name.toLowerCase().contains(query.toLowerCase()),
           )
           .toList();
 

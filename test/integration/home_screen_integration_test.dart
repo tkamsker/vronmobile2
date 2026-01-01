@@ -238,16 +238,16 @@ void main() {
         await tester.tap(find.text('Active'));
         await tester.pumpAndSettle();
 
-        final activeCount =
-            tester.widgetList(find.byType(ProjectCard)).length;
+        final activeCount = tester.widgetList(find.byType(ProjectCard)).length;
 
         // Then apply search on top of Active filter
         await tester.enterText(find.byType(TextField), 'project');
         await tester.pump(const Duration(milliseconds: 350)); // Debounce
         await tester.pumpAndSettle();
 
-        final filteredCount =
-            tester.widgetList(find.byType(ProjectCard)).length;
+        final filteredCount = tester
+            .widgetList(find.byType(ProjectCard))
+            .length;
 
         // Filtered count should be <= active count
         expect(
@@ -296,19 +296,18 @@ void main() {
         await tester.pumpAndSettle();
 
         // Get filtered count
-        final filteredCount =
-            tester.widgetList(find.byType(ProjectCard)).length;
+        final filteredCount = tester
+            .widgetList(find.byType(ProjectCard))
+            .length;
 
         // Perform pull-to-refresh
-        await tester.drag(
-          find.byType(RefreshIndicator),
-          const Offset(0, 300),
-        );
+        await tester.drag(find.byType(RefreshIndicator), const Offset(0, 300));
         await tester.pumpAndSettle(const Duration(seconds: 5));
 
         // Search should still be applied after refresh
-        final postRefreshCount =
-            tester.widgetList(find.byType(ProjectCard)).length;
+        final postRefreshCount = tester
+            .widgetList(find.byType(ProjectCard))
+            .length;
 
         expect(
           postRefreshCount,
@@ -362,8 +361,7 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 5));
 
       if (tester.any(find.byType(ProjectCard))) {
-        final initialCount =
-            tester.widgetList(find.byType(ProjectCard)).length;
+        final initialCount = tester.widgetList(find.byType(ProjectCard)).length;
 
         // Apply search
         await tester.enterText(find.byType(TextField), 'test');
@@ -377,8 +375,7 @@ void main() {
           await tester.pumpAndSettle();
 
           // Should show all projects again
-          final finalCount =
-              tester.widgetList(find.byType(ProjectCard)).length;
+          final finalCount = tester.widgetList(find.byType(ProjectCard)).length;
           expect(
             finalCount,
             equals(initialCount),

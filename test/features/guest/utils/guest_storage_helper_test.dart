@@ -21,40 +21,49 @@ void main() {
   });
 
   group('GuestStorageHelper', () {
-    test('getGuestStoragePath creates and returns guest_scans directory', () async {
-      // Act
-      final storagePath = await storageHelper.getGuestStoragePath();
+    test(
+      'getGuestStoragePath creates and returns guest_scans directory',
+      () async {
+        // Act
+        final storagePath = await storageHelper.getGuestStoragePath();
 
-      // Assert
-      expect(storagePath, isNotEmpty);
-      expect(storagePath, contains('guest_scans'));
+        // Assert
+        expect(storagePath, isNotEmpty);
+        expect(storagePath, contains('guest_scans'));
 
-      // Verify directory exists
-      final directory = Directory(storagePath);
-      expect(await directory.exists(), true);
-    });
+        // Verify directory exists
+        final directory = Directory(storagePath);
+        expect(await directory.exists(), true);
+      },
+    );
 
-    test('saveGuestScan saves file with timestamp name when no name provided', () async {
-      // Arrange
-      final scanData = List<int>.generate(100, (i) => i % 256); // 100 bytes of test data
+    test(
+      'saveGuestScan saves file with timestamp name when no name provided',
+      () async {
+        // Arrange
+        final scanData = List<int>.generate(
+          100,
+          (i) => i % 256,
+        ); // 100 bytes of test data
 
-      // Act
-      final filePath = await storageHelper.saveGuestScan(scanData);
+        // Act
+        final filePath = await storageHelper.saveGuestScan(scanData);
 
-      // Assert
-      expect(filePath, isNotEmpty);
-      expect(filePath, contains('guest_scan_'));
-      expect(filePath, endsWith('.glb'));
+        // Assert
+        expect(filePath, isNotEmpty);
+        expect(filePath, contains('guest_scan_'));
+        expect(filePath, endsWith('.glb'));
 
-      // Verify file exists and has correct content
-      final file = File(filePath);
-      expect(await file.exists(), true);
-      final fileContent = await file.readAsBytes();
-      expect(fileContent.length, scanData.length);
+        // Verify file exists and has correct content
+        final file = File(filePath);
+        expect(await file.exists(), true);
+        final fileContent = await file.readAsBytes();
+        expect(fileContent.length, scanData.length);
 
-      // Cleanup
-      await file.delete();
-    });
+        // Cleanup
+        await file.delete();
+      },
+    );
 
     test('saveGuestScan saves file with custom name when provided', () async {
       // Arrange
@@ -62,7 +71,10 @@ void main() {
       final customName = 'my_custom_scan.glb';
 
       // Act
-      final filePath = await storageHelper.saveGuestScan(scanData, fileName: customName);
+      final filePath = await storageHelper.saveGuestScan(
+        scanData,
+        fileName: customName,
+      );
 
       // Assert
       expect(filePath, contains(customName));
@@ -80,8 +92,14 @@ void main() {
       final scanData1 = List<int>.generate(100, (i) => i % 256);
       final scanData2 = List<int>.generate(200, (i) => (i * 2) % 256);
 
-      final filePath1 = await storageHelper.saveGuestScan(scanData1, fileName: 'test1.glb');
-      final filePath2 = await storageHelper.saveGuestScan(scanData2, fileName: 'test2.glb');
+      final filePath1 = await storageHelper.saveGuestScan(
+        scanData1,
+        fileName: 'test1.glb',
+      );
+      final filePath2 = await storageHelper.saveGuestScan(
+        scanData2,
+        fileName: 'test2.glb',
+      );
 
       // Act
       final files = await storageHelper.listGuestScans();
@@ -110,7 +128,10 @@ void main() {
     test('deleteGuestScan removes specific file', () async {
       // Arrange
       final scanData = List<int>.generate(100, (i) => i % 256);
-      final filePath = await storageHelper.saveGuestScan(scanData, fileName: 'test_delete.glb');
+      final filePath = await storageHelper.saveGuestScan(
+        scanData,
+        fileName: 'test_delete.glb',
+      );
 
       // Verify file exists
       expect(await File(filePath).exists(), true);
@@ -161,7 +182,10 @@ void main() {
       final largeData = List<int>.generate(1024 * 1024, (i) => i % 256);
 
       // Act
-      final filePath = await storageHelper.saveGuestScan(largeData, fileName: 'large_scan.glb');
+      final filePath = await storageHelper.saveGuestScan(
+        largeData,
+        fileName: 'large_scan.glb',
+      );
 
       // Assert
       expect(await File(filePath).exists(), true);

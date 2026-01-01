@@ -8,8 +8,8 @@ class ProductDetailService {
   final String _language;
 
   ProductDetailService({GraphQLService? graphqlService, String language = 'EN'})
-      : _graphqlService = graphqlService ?? GraphQLService(),
-        _language = language;
+    : _graphqlService = graphqlService ?? GraphQLService(),
+      _language = language;
 
   /// GraphQL query to fetch single product detail
   static const String _getProductQuery = '''
@@ -42,7 +42,9 @@ class ProductDetailService {
   Future<ProductDetail> getProductDetail(String productId) async {
     try {
       if (kDebugMode) {
-        print('📦 [PRODUCT DETAIL] Fetching product $productId (language: $_language)...');
+        print(
+          '📦 [PRODUCT DETAIL] Fetching product $productId (language: $_language)...',
+        );
       }
 
       final result = await _graphqlService.query(
@@ -56,7 +58,9 @@ class ProductDetailService {
       if (result.hasException) {
         final exception = result.exception;
         if (kDebugMode) {
-          print('❌ [PRODUCT DETAIL] GraphQL exception: ${exception.toString()}');
+          print(
+            '❌ [PRODUCT DETAIL] GraphQL exception: ${exception.toString()}',
+          );
         }
 
         if (exception?.graphqlErrors.isNotEmpty ?? false) {
@@ -67,19 +71,25 @@ class ProductDetailService {
           throw Exception('Failed to fetch product detail: ${error.message}');
         }
 
-        throw Exception('Failed to fetch product detail: ${exception.toString()}');
+        throw Exception(
+          'Failed to fetch product detail: ${exception.toString()}',
+        );
       }
 
       if (result.data == null || result.data!['VRonGetProduct'] == null) {
-        if (kDebugMode) print('⚠️ [PRODUCT DETAIL] No product data in response');
+        if (kDebugMode)
+          print('⚠️ [PRODUCT DETAIL] No product data in response');
         throw Exception('Product not found: $productId');
       }
 
-      final productData = result.data!['VRonGetProduct'] as Map<String, dynamic>;
+      final productData =
+          result.data!['VRonGetProduct'] as Map<String, dynamic>;
       final product = ProductDetail.fromJson(productData);
 
       if (kDebugMode) {
-        print('✅ [PRODUCT DETAIL] Fetched product: ${product.title} (${product.id})');
+        print(
+          '✅ [PRODUCT DETAIL] Fetched product: ${product.title} (${product.id})',
+        );
         print('  - Status: ${product.statusLabel}');
         print('  - Media files: ${product.mediaFiles.length}');
         print('  - Variants: ${product.variants.length}');

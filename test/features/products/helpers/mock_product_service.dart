@@ -14,10 +14,10 @@ class MockProductService implements ProductService {
     Duration delay = const Duration(milliseconds: 100),
     bool shouldThrowError = false,
     String? errorMessage,
-  })  : _mockProducts = mockProducts ?? _defaultMockProducts(),
-        _delay = delay,
-        _shouldThrowError = shouldThrowError,
-        _errorMessage = errorMessage;
+  }) : _mockProducts = mockProducts ?? _defaultMockProducts(),
+       _delay = delay,
+       _shouldThrowError = shouldThrowError,
+       _errorMessage = errorMessage;
 
   @override
   Future<List<Product>> fetchProducts({

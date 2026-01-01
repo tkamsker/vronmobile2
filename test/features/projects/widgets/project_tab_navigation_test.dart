@@ -4,15 +4,12 @@ import 'package:vronmobile2/features/projects/widgets/project_tab_navigation.dar
 
 void main() {
   group('ProjectTabNavigation', () {
-    testWidgets('T021: displays three tabs (Viewer, Project data, Products)',
-        (WidgetTester tester) async {
+    testWidgets('T021: displays three tabs (Viewer, Project data, Products)', (
+      WidgetTester tester,
+    ) async {
       // Act
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ProjectTabNavigation(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ProjectTabNavigation())),
       );
 
       // Assert
@@ -21,15 +18,12 @@ void main() {
       expect(find.text('Products'), findsOneWidget);
     });
 
-    testWidgets('T021: initially displays Viewer tab as selected',
-        (WidgetTester tester) async {
+    testWidgets('T021: initially displays Viewer tab as selected', (
+      WidgetTester tester,
+    ) async {
       // Act
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ProjectTabNavigation(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ProjectTabNavigation())),
       );
 
       // Assert - Viewer should be the default/first tab
@@ -37,15 +31,12 @@ void main() {
       expect(tabBar.controller?.index, 0);
     });
 
-    testWidgets('T021: switches to Project data tab when tapped',
-        (WidgetTester tester) async {
+    testWidgets('T021: switches to Project data tab when tapped', (
+      WidgetTester tester,
+    ) async {
       // Act
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ProjectTabNavigation(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ProjectTabNavigation())),
       );
 
       // Tap on "Project data" tab
@@ -57,15 +48,12 @@ void main() {
       expect(tabBar.controller?.index, 1);
     });
 
-    testWidgets('T021: switches to Products tab when tapped',
-        (WidgetTester tester) async {
+    testWidgets('T021: switches to Products tab when tapped', (
+      WidgetTester tester,
+    ) async {
       // Act
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ProjectTabNavigation(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ProjectTabNavigation())),
       );
 
       // Tap on "Products" tab
@@ -77,15 +65,12 @@ void main() {
       expect(tabBar.controller?.index, 2);
     });
 
-    testWidgets('T021: tabs maintain state when switching between them',
-        (WidgetTester tester) async {
+    testWidgets('T021: tabs maintain state when switching between them', (
+      WidgetTester tester,
+    ) async {
       // Act
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ProjectTabNavigation(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ProjectTabNavigation())),
       );
 
       // Tap on "Project data" tab
@@ -101,23 +86,21 @@ void main() {
       expect(tabBar.controller?.index, 0);
     });
 
-    testWidgets('T021: uses TabBarView for tab content',
-        (WidgetTester tester) async {
+    testWidgets('T021: uses TabBarView for tab content', (
+      WidgetTester tester,
+    ) async {
       // Act
       await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: ProjectTabNavigation(),
-          ),
-        ),
+        const MaterialApp(home: Scaffold(body: ProjectTabNavigation())),
       );
 
       // Assert - Should have TabBarView to display tab content
       expect(find.byType(TabBarView), findsOneWidget);
     });
 
-    testWidgets('T021: calls onTabChanged callback when tab switches',
-        (WidgetTester tester) async {
+    testWidgets('T021: calls onTabChanged callback when tab switches', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       int? selectedTabIndex;
 
