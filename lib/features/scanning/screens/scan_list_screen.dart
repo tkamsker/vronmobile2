@@ -417,19 +417,8 @@ class _ScanListScreenState extends State<ScanListScreen> {
   }
 
   void _showAddProjectDialog() {
-    final nameController = TextEditingController();
-    final slugController = TextEditingController();
-    final descriptionController = TextEditingController();
-    bool autoGenerateSlug = true;
     File? worldFile;
     File? meshFile;
-
-    // Auto-generate slug from name
-    nameController.addListener(() {
-      if (autoGenerateSlug) {
-        slugController.text = _generateSlug(nameController.text);
-      }
-    });
 
     showDialog(
       context: context,
@@ -440,7 +429,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
             children: [
               Icon(Icons.add_circle, color: Colors.blue.shade400),
               const SizedBox(width: 12),
-              const Text('Create New Project', style: TextStyle(color: Colors.white)),
+              const Text('Create BYO Project', style: TextStyle(color: Colors.white)),
             ],
           ),
           content: SingleChildScrollView(
@@ -448,89 +437,31 @@ class _ScanListScreenState extends State<ScanListScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Project Name
-                Text(
-                  'Project Name *',
-                  style: TextStyle(
-                    color: Colors.grey.shade400,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                // Info text about auto-generation
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade900.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.shade700.withValues(alpha: 0.5)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.blue.shade400, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Project name will be auto-generated from your uploaded GLB files.',
+                          style: TextStyle(
+                            color: Colors.blue.shade200,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: nameController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    hintText: 'Enter project name',
-                    hintStyle: TextStyle(color: Colors.grey.shade600),
-                    filled: true,
-                    fillColor: Colors.grey.shade800,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Project Slug
-                Text(
-                  'Project Slug *',
-                  style: TextStyle(
-                    color: Colors.grey.shade400,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: slugController,
-                  style: const TextStyle(color: Colors.white),
-                  onChanged: (value) {
-                    autoGenerateSlug = false;
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'project-slug',
-                    hintStyle: TextStyle(color: Colors.grey.shade600),
-                    filled: true,
-                    fillColor: Colors.grey.shade800,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    helperText: 'URL-friendly identifier (auto-generated)',
-                    helperStyle: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Description
-                Text(
-                  'Description (Optional)',
-                  style: TextStyle(
-                    color: Colors.grey.shade400,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: descriptionController,
-                  style: const TextStyle(color: Colors.white),
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    hintText: 'Enter project description',
-                    hintStyle: TextStyle(color: Colors.grey.shade600),
-                    filled: true,
-                    fillColor: Colors.grey.shade800,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 // World File Picker
                 Text(
@@ -696,30 +627,6 @@ class _ScanListScreenState extends State<ScanListScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
-                final name = nameController.text.trim();
-                final slug = slugController.text.trim();
-                final description = descriptionController.text.trim();
-
-                if (name.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please enter a project name'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
-
-                if (slug.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please enter a project slug'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                  return;
-                }
-
                 if (worldFile == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -741,13 +648,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
                 }
 
                 Navigator.of(context).pop();
-                await _createNewProject(
-                  name,
-                  slug,
-                  description.isEmpty ? null : description,
-                  worldFile!,
-                  meshFile!,
-                );
+                await _createNewProject(worldFile!, meshFile!);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue.shade600,
@@ -770,9 +671,6 @@ class _ScanListScreenState extends State<ScanListScreen> {
   }
 
   Future<void> _createNewProject(
-    String name,
-    String slug,
-    String? description,
     File worldFile,
     File meshFile,
   ) async {
@@ -809,16 +707,13 @@ class _ScanListScreenState extends State<ScanListScreen> {
       );
 
       if (kDebugMode) {
-        print('📦 [SCAN_LIST] Creating new BYO project: $name ($slug)');
+        print('📦 [SCAN_LIST] Creating new BYO project');
         print('📦 [SCAN_LIST] World file: ${worldFile.path}');
         print('📦 [SCAN_LIST] Mesh file: ${meshFile.path}');
       }
 
       // Create the project using BYOProjectService
       final result = await _byoProjectService.createProjectFromOwnWorld(
-        slug: slug,
-        name: name,
-        description: description,
         worldFile: worldFile,
         meshFile: meshFile,
       );
@@ -854,7 +749,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
                 Icon(Icons.check_circle, color: Colors.green.shade400),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text('BYO project "$name" created successfully!'),
+                  child: Text('BYO project created successfully!'),
                 ),
               ],
             ),
