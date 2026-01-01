@@ -4,59 +4,53 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'dart:convert';
 import 'package:vronmobile2/core/config/env_config.dart';
-import 'package:vronmobile2/core/services/auth_service.dart';
+import 'package:vronmobile2/core/services/token_storage.dart';
 
 /// Service for creating BYO (Bring Your Own) projects
 /// Uses VRonCreateProjectFromOwnWorld mutation to create project with GLB files
 class BYOProjectService {
-  final AuthService _authService;
+  final TokenStorage _tokenStorage;
   final String _graphqlEndpoint;
 
   BYOProjectService({
-    AuthService? authService,
+    TokenStorage? tokenStorage,
     String? graphqlEndpoint,
-  })  : _authService = authService ?? AuthService(),
-        _graphqlEndpoint = graphqlEndpoint ?? EnvConfig.graphqlApiUrl;
+  })  : _tokenStorage = tokenStorage ?? TokenStorage(),
+        _graphqlEndpoint = graphqlEndpoint ?? EnvConfig.graphqlEndpoint;
 
   /// Creates a BYO project with world and mesh GLB files
   ///
-  /// [slug] - URL-friendly identifier (must be unique)
-  /// [name] - Project name
-  /// [description] - Optional project description
   /// [worldFile] - GLB file for the 3D world model
   /// [meshFile] - GLB file for navigation mesh
-  /// [imageFile] - Optional thumbnail image
   ///
-  /// Returns the created project ID
+  /// Returns the created project ID and world ID
   ///
   /// Throws Exception if creation fails
+  ///
+  /// Note: Backend auto-generates project name from uploaded files
   Future<BYOProjectResult> createProjectFromOwnWorld({
-    required String slug,
-    required String name,
-    String? description,
     required File worldFile,
     required File meshFile,
-    File? imageFile,
   }) async {
     try {
       if (kDebugMode) {
-        print('📦 [BYO] Creating BYO project: $name ($slug)');
+        print('📦 [BYO] Creating BYO project from GLB files');
         print('📦 [BYO] World file: ${worldFile.path} (${await worldFile.length()} bytes)');
         print('📦 [BYO] Mesh file: ${meshFile.path} (${await meshFile.length()} bytes)');
       }
 
-      // Get auth token
-      final authToken = await _authService.getAuthToken();
-      if (authToken == null) {
+      // Get auth code (base64 encoded auth payload)
+      final authCode = await _tokenStorage.getAuthCode();
+      if (authCode == null || authCode.isEmpty) {
         throw Exception('Not authenticated');
       }
 
       final uri = Uri.parse(_graphqlEndpoint);
       final request = http.MultipartRequest('POST', uri);
 
-      // GraphQL mutation
+      // GraphQL mutation - matches backend VRonCreateProjectFromOwnWorldInput
       const mutation = '''
-        mutation VRonCreateProjectFromOwnWorld(\$input: CreateProjectFromOwnWorldInput!) {
+        mutation VRonCreateProjectFromOwnWorld(\$input: VRonCreateProjectFromOwnWorldInput!) {
           VRonCreateProjectFromOwnWorld(input: \$input) {
             projectId
             worldId
@@ -64,15 +58,11 @@ class BYOProjectService {
         }
       ''';
 
-      // Variables
+      // Variables - backend only expects world and mesh files
       final variables = {
         'input': {
-          'slug': slug,
-          'name': name,
-          if (description != null && description.isNotEmpty) 'description': description,
-          'worldFile': null,
-          'meshFile': null,
-          if (imageFile != null) 'image': null,
+          'world': null,
+          'mesh': null,
         }
       };
 
@@ -84,15 +74,14 @@ class BYOProjectService {
 
       // Map field (maps files to variables)
       final map = {
-        'worldFile': ['variables.input.worldFile'],
-        'meshFile': ['variables.input.meshFile'],
-        if (imageFile != null) 'image': ['variables.input.image'],
+        'world': ['variables.input.world'],
+        'mesh': ['variables.input.mesh'],
       };
       request.fields['map'] = json.encode(map);
 
       // Add world file
       request.files.add(http.MultipartFile(
-        'worldFile',
+        'world',
         worldFile.readAsBytes().asStream(),
         await worldFile.length(),
         filename: worldFile.path.split('/').last,
@@ -101,30 +90,15 @@ class BYOProjectService {
 
       // Add mesh file
       request.files.add(http.MultipartFile(
-        'meshFile',
+        'mesh',
         meshFile.readAsBytes().asStream(),
         await meshFile.length(),
         filename: meshFile.path.split('/').last,
         contentType: MediaType('model', 'gltf-binary'),
       ));
 
-      // Add image file if provided
-      if (imageFile != null) {
-        final mimeType = imageFile.path.toLowerCase().endsWith('.png')
-            ? MediaType('image', 'png')
-            : MediaType('image', 'jpeg');
-
-        request.files.add(http.MultipartFile(
-          'image',
-          imageFile.readAsBytes().asStream(),
-          await imageFile.length(),
-          filename: imageFile.path.split('/').last,
-          contentType: mimeType,
-        ));
-      }
-
       // Add headers
-      request.headers['Authorization'] = 'Bearer $authToken';
+      request.headers['Authorization'] = 'Bearer $authCode';
       request.headers['X-VRon-Platform'] = 'merchants';
       request.headers['apollo-require-preflight'] = 'true';
 

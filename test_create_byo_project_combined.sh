@@ -111,7 +111,8 @@ echo ""
 echo "=== Step 2: Creating BYO Project (Single Combined Mutation) ==="
 
 # GraphQL mutation for VRonCreateProjectFromOwnWorld
-MUTATION='mutation VRonCreateProjectFromOwnWorld($input: CreateProjectFromOwnWorldInput!) { VRonCreateProjectFromOwnWorld(input: $input) { projectId worldId } }'
+# Backend input type: VRonCreateProjectFromOwnWorldInput { world, mesh }
+MUTATION='mutation VRonCreateProjectFromOwnWorld($input: VRonCreateProjectFromOwnWorldInput!) { VRonCreateProjectFromOwnWorld(input: $input) { projectId worldId } }'
 
 # Prepare the operations field (GraphQL query + variables)
 OPERATIONS=$(cat <<EOF
@@ -119,12 +120,8 @@ OPERATIONS=$(cat <<EOF
   "query": "$MUTATION",
   "variables": {
     "input": {
-      "slug": "$WORLD_SLUG",
-      "name": "$PROJECT_NAME",
-      "description": "BYO Project from LiDAR scan",
-      "worldFile": null,
-      "meshFile": null,
-      "image": null
+      "world": null,
+      "mesh": null
     }
   }
 }
@@ -134,9 +131,8 @@ EOF
 # Prepare the map field (maps files to variables)
 MAP=$(cat <<EOF
 {
-  "worldFile": ["variables.input.worldFile"],
-  "meshFile": ["variables.input.meshFile"],
-  "image": ["variables.input.image"]
+  "world": ["variables.input.world"],
+  "mesh": ["variables.input.mesh"]
 }
 EOF
 )
@@ -144,7 +140,8 @@ EOF
 echo "Uploading files and creating project..."
 echo "  World file: $(basename "$GLB_FILE")"
 echo "  Mesh file: $(basename "$MESH_FILE")"
-echo "  Image file: $(basename "$IMAGE_FILE")"
+echo ""
+echo "Note: Project name will be auto-generated from uploaded files"
 
 # Make multipart request with file uploads
 # Note: apollo-require-preflight header is needed for CSRF protection
@@ -155,9 +152,8 @@ CREATE_RESPONSE=$(curl -s \
   -H "apollo-require-preflight: true" \
   -F "operations=$OPERATIONS" \
   -F "map=$MAP" \
-  -F "worldFile=@$GLB_FILE;type=model/gltf-binary" \
-  -F "meshFile=@$MESH_FILE;type=model/gltf-binary" \
-  -F "image=@$IMAGE_FILE;type=image/png" \
+  -F "world=@$GLB_FILE;type=model/gltf-binary" \
+  -F "mesh=@$MESH_FILE;type=model/gltf-binary" \
   "$GRAPHQL_ENDPOINT")
 
 if [ $? -ne 0 ]; then
