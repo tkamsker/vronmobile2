@@ -143,8 +143,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Text(
                 'profile.title'.tr(),
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(width: 12),
               Container(
@@ -167,16 +167,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 8),
           Text(
             'profile.subtitle'.tr(),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
           ),
           const SizedBox(height: 8),
           Text(
             'profile.lastSynced'.tr(params: {'time': '2 min'}),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[500],
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
           ),
         ],
       ),
@@ -191,16 +191,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Text(
             'profile.account'.tr(),
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Text(
             'profile.accountDescription'.tr(),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
           ),
           const SizedBox(height: 16),
           Row(
@@ -218,15 +218,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Text(
                       _userEmail?.split('@')[0].toUpperCase() ?? 'User',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       _userEmail ?? 'user@example.com',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[600],
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                     ),
                   ],
                 ),
@@ -250,9 +250,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onTap: () {
               // TODO: Navigate to change password screen
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Change password - Coming soon'),
-                ),
+                const SnackBar(content: Text('Change password - Coming soon')),
               );
             },
           ),
@@ -291,16 +289,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Text(
             'profile.appPreferences'.tr(),
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           Text(
             'profile.appPreferencesDescription'.tr(),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
           ),
           const SizedBox(height: 16),
           _buildSwitchTile(
@@ -314,9 +312,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               });
               // TODO: Implement dark mode
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Dark mode - Coming soon'),
-                ),
+                const SnackBar(content: Text('Dark mode - Coming soon')),
               );
             },
           ),
@@ -332,9 +328,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               });
               // TODO: Implement notifications
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Notifications - Coming soon'),
-                ),
+                const SnackBar(content: Text('Notifications - Coming soon')),
               );
             },
           ),
@@ -345,9 +339,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             subtitle: 'profile.languageSettingDescription'.tr(),
             trailing: Text(
               _i18nService.getLanguageName(_i18nService.currentLanguage),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
             onTap: () {
               Navigator.pushNamed(context, AppRoutes.language);
@@ -393,15 +387,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -448,16 +442,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                 ),
               ],
             ),
@@ -482,10 +476,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-        ),
+        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -515,10 +506,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           child: Text(
             'profile.logOut'.tr(),
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
         ),
       ),
@@ -530,9 +518,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
       child: Text(
         'profile.logOutMessage'.tr(),
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[600],
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
         textAlign: TextAlign.center,
       ),
     );

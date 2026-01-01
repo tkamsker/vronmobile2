@@ -22,7 +22,7 @@ void main() {
               'filename': 'chair_front.jpg',
               'mimeType': 'image/jpeg',
               'size': 245678,
-            }
+            },
           ],
           'variants': [
             {
@@ -32,7 +32,7 @@ void main() {
               'compareAtPrice': 129.99,
               'inventoryPolicy': 'DENY',
               'inventoryQuantity': 15,
-            }
+            },
           ],
           'createdAt': '2025-01-15T10:30:00Z',
           'updatedAt': '2025-12-20T14:20:00Z',
@@ -120,8 +120,16 @@ void main() {
           'tags': [],
           'tracksInventory': false,
           'mediaFiles': [
-            {'id': 'm1', 'url': 'http://example.com/1.jpg', 'filename': '1.jpg'},
-            {'id': 'm2', 'url': 'http://example.com/2.jpg', 'filename': '2.jpg'},
+            {
+              'id': 'm1',
+              'url': 'http://example.com/1.jpg',
+              'filename': '1.jpg',
+            },
+            {
+              'id': 'm2',
+              'url': 'http://example.com/2.jpg',
+              'filename': '2.jpg',
+            },
           ],
           'variants': [],
         };

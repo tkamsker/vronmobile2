@@ -99,7 +99,8 @@ void main() {
               'id': 'proj_123',
               'slug': 'marketing-analytics',
               'name': {'text': 'Marketing Analytics'},
-              'imageUrl': 'https://cdn.vron.one/projects/proj_123/thumbnail.jpg',
+              'imageUrl':
+                  'https://cdn.vron.one/projects/proj_123/thumbnail.jpg',
               'isLive': true,
               'liveDate': '2025-12-20T10:30:00Z',
               'subscription': {
@@ -108,14 +109,19 @@ void main() {
                 'status': 'ACTIVE',
                 'canChoosePlan': false,
                 'hasExpired': false,
-                'prices': {'currency': 'EUR', 'monthly': 29.99, 'yearly': 299.99},
+                'prices': {
+                  'currency': 'EUR',
+                  'monthly': 29.99,
+                  'yearly': 299.99,
+                },
               },
             },
             {
               'id': 'proj_456',
               'slug': 'product-roadmap',
               'name': {'text': 'Product Roadmap'},
-              'imageUrl': 'https://cdn.vron.one/projects/proj_456/thumbnail.jpg',
+              'imageUrl':
+                  'https://cdn.vron.one/projects/proj_456/thumbnail.jpg',
               'isLive': false,
               'subscription': {
                 'isActive': false,
@@ -123,7 +129,11 @@ void main() {
                 'status': 'TRIAL_EXPIRED',
                 'canChoosePlan': true,
                 'hasExpired': true,
-                'prices': {'currency': 'EUR', 'monthly': 29.99, 'yearly': 299.99},
+                'prices': {
+                  'currency': 'EUR',
+                  'monthly': 29.99,
+                  'yearly': 299.99,
+                },
               },
             },
           ],
@@ -310,7 +320,9 @@ void main() {
         );
 
         // Act
-        final projects = await projectService.fetchProjectsBySubscriptionStatus('ACTIVE');
+        final projects = await projectService.fetchProjectsBySubscriptionStatus(
+          'ACTIVE',
+        );
 
         // Assert
         expect(projects.length, 1);
@@ -319,63 +331,66 @@ void main() {
     });
 
     group('fetchActiveProjects', () {
-      test('filters projects that are live and have active subscription', () async {
-        // Arrange
-        final mockData = {
-          'getProjects': [
-            {
-              'id': 'proj_123',
-              'slug': 'project-1',
-              'name': {'text': 'Project 1'},
-              'imageUrl': '',
-              'isLive': true,
-              'subscription': {
-                'isActive': true,
-                'status': 'ACTIVE',
-                'prices': {},
+      test(
+        'filters projects that are live and have active subscription',
+        () async {
+          // Arrange
+          final mockData = {
+            'getProjects': [
+              {
+                'id': 'proj_123',
+                'slug': 'project-1',
+                'name': {'text': 'Project 1'},
+                'imageUrl': '',
+                'isLive': true,
+                'subscription': {
+                  'isActive': true,
+                  'status': 'ACTIVE',
+                  'prices': {},
+                },
               },
-            },
-            {
-              'id': 'proj_456',
-              'slug': 'project-2',
-              'name': {'text': 'Project 2'},
-              'imageUrl': '',
-              'isLive': true,
-              'subscription': {
-                'isActive': false,
-                'status': 'TRIAL_EXPIRED',
-                'prices': {},
+              {
+                'id': 'proj_456',
+                'slug': 'project-2',
+                'name': {'text': 'Project 2'},
+                'imageUrl': '',
+                'isLive': true,
+                'subscription': {
+                  'isActive': false,
+                  'status': 'TRIAL_EXPIRED',
+                  'prices': {},
+                },
               },
-            },
-            {
-              'id': 'proj_789',
-              'slug': 'project-3',
-              'name': {'text': 'Project 3'},
-              'imageUrl': '',
-              'isLive': false,
-              'subscription': {
-                'isActive': true,
-                'status': 'ACTIVE',
-                'prices': {},
+              {
+                'id': 'proj_789',
+                'slug': 'project-3',
+                'name': {'text': 'Project 3'},
+                'imageUrl': '',
+                'isLive': false,
+                'subscription': {
+                  'isActive': true,
+                  'status': 'ACTIVE',
+                  'prices': {},
+                },
               },
-            },
-          ],
-        };
+            ],
+          };
 
-        mockGraphQLService.mockResult = QueryResult(
-          data: mockData,
-          source: QueryResultSource.network,
-          options: QueryOptions(document: mockDocument),
-        );
+          mockGraphQLService.mockResult = QueryResult(
+            data: mockData,
+            source: QueryResultSource.network,
+            options: QueryOptions(document: mockDocument),
+          );
 
-        // Act
-        final projects = await projectService.fetchActiveProjects();
+          // Act
+          final projects = await projectService.fetchActiveProjects();
 
-        // Assert
-        expect(projects.length, 1);
-        expect(projects[0].isLive, true);
-        expect(projects[0].subscription.isActive, true);
-      });
+          // Assert
+          expect(projects.length, 1);
+          expect(projects[0].isLive, true);
+          expect(projects[0].subscription.isActive, true);
+        },
+      );
     });
 
     group('searchProjects', () {
@@ -389,7 +404,11 @@ void main() {
               'name': {'text': 'Marketing Analytics'},
               'imageUrl': '',
               'isLive': true,
-              'subscription': {'isActive': true, 'status': 'ACTIVE', 'prices': {}},
+              'subscription': {
+                'isActive': true,
+                'status': 'ACTIVE',
+                'prices': {},
+              },
             },
             {
               'id': 'proj_456',
@@ -397,7 +416,11 @@ void main() {
               'name': {'text': 'Product Roadmap'},
               'imageUrl': '',
               'isLive': true,
-              'subscription': {'isActive': true, 'status': 'ACTIVE', 'prices': {}},
+              'subscription': {
+                'isActive': true,
+                'status': 'ACTIVE',
+                'prices': {},
+              },
             },
             {
               'id': 'proj_789',
@@ -405,7 +428,11 @@ void main() {
               'name': {'text': 'Mobile Marketing'},
               'imageUrl': '',
               'isLive': true,
-              'subscription': {'isActive': true, 'status': 'ACTIVE', 'prices': {}},
+              'subscription': {
+                'isActive': true,
+                'status': 'ACTIVE',
+                'prices': {},
+              },
             },
           ],
         };
@@ -435,7 +462,11 @@ void main() {
               'name': {'text': 'Marketing Analytics'},
               'imageUrl': '',
               'isLive': true,
-              'subscription': {'isActive': true, 'status': 'ACTIVE', 'prices': {}},
+              'subscription': {
+                'isActive': true,
+                'status': 'ACTIVE',
+                'prices': {},
+              },
             },
           ],
         };
@@ -463,7 +494,10 @@ void main() {
             'id': 'proj_123',
             'slug': 'marketing-analytics',
             'name': {'text': 'Marketing Analytics'},
-            'description': {'text': 'Comprehensive analytics dashboard for marketing campaigns'},
+            'description': {
+              'text':
+                  'Comprehensive analytics dashboard for marketing campaigns',
+            },
             'liveDate': '2025-12-20T10:30:00Z',
             'isOwner': true,
             'subscription': {
@@ -489,7 +523,10 @@ void main() {
         expect(project.id, 'proj_123');
         expect(project.slug, 'marketing-analytics');
         expect(project.name, 'Marketing Analytics');
-        expect(project.description, 'Comprehensive analytics dashboard for marketing campaigns');
+        expect(
+          project.description,
+          'Comprehensive analytics dashboard for marketing campaigns',
+        );
         expect(project.isLive, true); // Inferred from liveDate
         expect(project.subscription.status, 'ACTIVE');
       });
@@ -629,9 +666,11 @@ void main() {
             name: 'Test Project',
             slug: 'duplicate-slug',
           ),
-          throwsA(predicate((e) =>
-              e is Exception &&
-              e.toString().contains('already exists'))),
+          throwsA(
+            predicate(
+              (e) => e is Exception && e.toString().contains('already exists'),
+            ),
+          ),
         );
       });
 
@@ -657,9 +696,11 @@ void main() {
             name: 'AB', // Too short
             slug: 'valid-slug',
           ),
-          throwsA(predicate((e) =>
-              e is Exception &&
-              e.toString().contains('must be between'))),
+          throwsA(
+            predicate(
+              (e) => e is Exception && e.toString().contains('must be between'),
+            ),
+          ),
         );
       });
 
@@ -672,7 +713,8 @@ void main() {
           exception: OperationException(
             graphqlErrors: [
               GraphQLError(
-                message: 'Slug must contain only lowercase letters, numbers, and hyphens',
+                message:
+                    'Slug must contain only lowercase letters, numbers, and hyphens',
                 extensions: {'code': 'VALIDATION_ERROR'},
               ),
             ],
@@ -685,15 +727,19 @@ void main() {
             name: 'Valid Name',
             slug: 'Invalid Slug!',
           ),
-          throwsA(predicate((e) =>
-              e is Exception &&
-              e.toString().contains('lowercase'))),
+          throwsA(
+            predicate(
+              (e) => e is Exception && e.toString().contains('lowercase'),
+            ),
+          ),
         );
       });
 
       test('T010: throws exception on network error', () async {
         // Arrange
-        mockGraphQLService.mockException = Exception('Network connection failed');
+        mockGraphQLService.mockException = Exception(
+          'Network connection failed',
+        );
 
         // Act & Assert
         expect(
@@ -719,72 +765,80 @@ void main() {
             name: 'Test Project',
             slug: 'test-project',
           ),
-          throwsA(predicate((e) =>
-              e is Exception &&
-              e.toString().contains('No data returned'))),
+          throwsA(
+            predicate(
+              (e) =>
+                  e is Exception && e.toString().contains('No data returned'),
+            ),
+          ),
         );
       });
     });
 
     // T048-T050: Tests for updateProject mutation (TDD - these should FAIL initially)
     group('updateProject', () {
-      test('T048: updates project successfully and returns updated project', () async {
-        // Arrange
-        const projectId = 'proj_123';
-        const updatedName = 'Updated Project Name';
-        const updatedDescription = 'Updated description';
+      test(
+        'T048: updates project successfully and returns updated project',
+        () async {
+          // Arrange
+          const projectId = 'proj_123';
+          const updatedName = 'Updated Project Name';
+          const updatedDescription = 'Updated description';
 
-        // First call: mutation response (updateProjectDetails returns true)
-        final mutationResponse = {
-          'updateProjectDetails': true,
-        };
+          // First call: mutation response (updateProjectDetails returns true)
+          final mutationResponse = {'updateProjectDetails': true};
 
-        // Second call: getProjectDetail refresh response
-        final refreshResponse = {
-          'getVRProject': {
-            'id': projectId,
-            'slug': 'marketing-analytics',
-            'name': {'text': updatedName},
-            'description': {'text': updatedDescription},
-            'liveDate': '2025-12-20T10:30:00Z',
-            'isOwner': true,
-            'subscription': {
-              'isTrial': false,
-              'status': 'ACTIVE',
-              'canChoosePlan': false,
-              'renewalInterval': 'MONTHLY',
-              'prices': {'currency': 'EUR', 'monthly': 29.99, 'yearly': 299.99},
+          // Second call: getProjectDetail refresh response
+          final refreshResponse = {
+            'getVRProject': {
+              'id': projectId,
+              'slug': 'marketing-analytics',
+              'name': {'text': updatedName},
+              'description': {'text': updatedDescription},
+              'liveDate': '2025-12-20T10:30:00Z',
+              'isOwner': true,
+              'subscription': {
+                'isTrial': false,
+                'status': 'ACTIVE',
+                'canChoosePlan': false,
+                'renewalInterval': 'MONTHLY',
+                'prices': {
+                  'currency': 'EUR',
+                  'monthly': 29.99,
+                  'yearly': 299.99,
+                },
+              },
             },
-          },
-        };
+          };
 
-        // Mock sequential responses: mutation then refresh
-        mockGraphQLService.mockResults = [
-          QueryResult(
-            data: mutationResponse,
-            source: QueryResultSource.network,
-            options: QueryOptions(document: mockDocument),
-          ),
-          QueryResult(
-            data: refreshResponse,
-            source: QueryResultSource.network,
-            options: QueryOptions(document: mockDocument),
-          ),
-        ];
+          // Mock sequential responses: mutation then refresh
+          mockGraphQLService.mockResults = [
+            QueryResult(
+              data: mutationResponse,
+              source: QueryResultSource.network,
+              options: QueryOptions(document: mockDocument),
+            ),
+            QueryResult(
+              data: refreshResponse,
+              source: QueryResultSource.network,
+              options: QueryOptions(document: mockDocument),
+            ),
+          ];
 
-        // Act
-        final updatedProject = await projectService.updateProject(
-          projectId: projectId,
-          name: updatedName,
-          slug: 'test-project',
-          description: updatedDescription,
-        );
+          // Act
+          final updatedProject = await projectService.updateProject(
+            projectId: projectId,
+            name: updatedName,
+            slug: 'test-project',
+            description: updatedDescription,
+          );
 
-        // Assert
-        expect(updatedProject.id, projectId);
-        expect(updatedProject.name, updatedName);
-        expect(updatedProject.description, updatedDescription);
-      });
+          // Assert
+          expect(updatedProject.id, projectId);
+          expect(updatedProject.name, updatedName);
+          expect(updatedProject.description, updatedDescription);
+        },
+      );
 
       test('T049: throws exception on validation error', () async {
         // Arrange

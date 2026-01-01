@@ -293,10 +293,7 @@ void main() {
         subscription: createTestSubscription(),
       );
 
-      final updated = original.copyWith(
-        name: 'Updated Title',
-        isLive: true,
-      );
+      final updated = original.copyWith(name: 'Updated Title', isLive: true);
 
       expect(updated.id, 'proj_001');
       expect(updated.name, 'Updated Title');

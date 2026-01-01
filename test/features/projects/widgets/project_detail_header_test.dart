@@ -43,17 +43,16 @@ void main() {
   }
 
   group('ProjectDetailHeader', () {
-    testWidgets('T017: displays project name and status',
-        (WidgetTester tester) async {
+    testWidgets('T017: displays project name and status', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final testProject = createTestProject(name: 'Marketing Dashboard');
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectDetailHeader(project: testProject),
-          ),
+          home: Scaffold(body: ProjectDetailHeader(project: testProject)),
         ),
       );
 
@@ -62,17 +61,16 @@ void main() {
       expect(find.text(testProject.statusLabel), findsOneWidget);
     });
 
-    testWidgets('T017: displays back button and menu button',
-        (WidgetTester tester) async {
+    testWidgets('T017: displays back button and menu button', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final testProject = createTestProject();
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectDetailHeader(project: testProject),
-          ),
+          home: Scaffold(body: ProjectDetailHeader(project: testProject)),
         ),
       );
 
@@ -81,8 +79,9 @@ void main() {
       expect(find.byIcon(Icons.more_vert), findsOneWidget);
     });
 
-    testWidgets('T017: back button navigates back',
-        (WidgetTester tester) async {
+    testWidgets('T017: back button navigates back', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final testProject = createTestProject();
       bool navigatedBack = false;
@@ -108,17 +107,16 @@ void main() {
       expect(navigatedBack, true);
     });
 
-    testWidgets('T017: displays correct status color',
-        (WidgetTester tester) async {
+    testWidgets('T017: displays correct status color', (
+      WidgetTester tester,
+    ) async {
       // Arrange
       final liveProject = createTestProject(isLive: true);
 
       // Act
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: ProjectDetailHeader(project: liveProject),
-          ),
+          home: Scaffold(body: ProjectDetailHeader(project: liveProject)),
         ),
       );
 

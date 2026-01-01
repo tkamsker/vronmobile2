@@ -10,10 +10,7 @@ import 'package:vronmobile2/features/guest/widgets/account_creation_dialog.dart'
 class ScanningScreen extends StatefulWidget {
   final GuestSessionManager guestSessionManager;
 
-  const ScanningScreen({
-    super.key,
-    required this.guestSessionManager,
-  });
+  const ScanningScreen({super.key, required this.guestSessionManager});
 
   @override
   State<ScanningScreen> createState() => _ScanningScreenState();
@@ -34,9 +31,7 @@ class _ScanningScreenState extends State<ScanningScreen> {
   void _promptAccountCreation() {
     showDialog(
       context: context,
-      builder: (context) => AccountCreationDialog(
-        onSignUp: _handleSignUp,
-      ),
+      builder: (context) => AccountCreationDialog(onSignUp: _handleSignUp),
     );
   }
 
@@ -71,9 +66,9 @@ class _ScanningScreenState extends State<ScanningScreen> {
   void _handleExportGLB() {
     if (kDebugMode) print('📦 [SCANNING] Export GLB pressed');
     // TODO: Implement GLB export (Phase 5)
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('GLB export coming soon')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('GLB export coming soon')));
   }
 
   void _handleSaveToProject() {
@@ -87,15 +82,14 @@ class _ScanningScreenState extends State<ScanningScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('3D Scanning'),
-      ),
+      appBar: AppBar(title: const Text('3D Scanning')),
       body: Column(
         children: [
           // T032: Show guest mode banner conditionally
           if (_isGuestMode)
             GuestModeBanner(
-              onSignUpPressed: _promptAccountCreation, // T035: Wire Sign Up button
+              onSignUpPressed:
+                  _promptAccountCreation, // T035: Wire Sign Up button
             ),
 
           // Main scanning area
@@ -120,8 +114,8 @@ class _ScanningScreenState extends State<ScanningScreen> {
                         ? 'Guest Mode - Scans saved locally'
                         : 'Scan and save to cloud',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey.shade600,
-                        ),
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                 ],
               ),

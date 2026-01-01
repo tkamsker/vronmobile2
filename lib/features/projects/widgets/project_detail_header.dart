@@ -43,7 +43,8 @@ class ProjectDetailHeader extends StatelessWidget {
                   hint: 'Navigate back to projects list',
                   child: IconButton(
                     icon: const Icon(Icons.arrow_back),
-                    onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
+                    onPressed:
+                        onBackPressed ?? () => Navigator.of(context).pop(),
                   ),
                 ),
                 Semantics(
@@ -65,8 +66,8 @@ class ProjectDetailHeader extends StatelessWidget {
               child: Text(
                 project.name,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -74,7 +75,10 @@ class ProjectDetailHeader extends StatelessWidget {
             Semantics(
               label: 'Project status: ${project.statusLabel}',
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: _getStatusColor(),
                   borderRadius: BorderRadius.circular(16),

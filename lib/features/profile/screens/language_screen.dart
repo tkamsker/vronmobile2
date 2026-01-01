@@ -90,16 +90,16 @@ class _LanguageScreenState extends State<LanguageScreen> {
         children: [
           Text(
             'language.title'.tr(),
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             'language.subtitle'.tr(),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
           ),
         ],
       ),
@@ -122,8 +122,10 @@ class _LanguageScreenState extends State<LanguageScreen> {
             Row(
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.blue[600],
                     borderRadius: BorderRadius.circular(4),
@@ -142,9 +144,9 @@ class _LanguageScreenState extends State<LanguageScreen> {
             const SizedBox(height: 12),
             Text(
               'language.appLanguageDescription'.tr(),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[700],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[700]),
             ),
           ],
         ),
@@ -162,16 +164,16 @@ class _LanguageScreenState extends State<LanguageScreen> {
             children: [
               Text(
                 'language.preferredLanguage'.tr(),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 8),
               Text(
                 'language.preferredLanguageDescription'.tr(),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               ),
               const SizedBox(height: 16),
               _buildLanguageOption(
@@ -278,9 +280,10 @@ class _LanguageScreenState extends State<LanguageScreen> {
                       Text(
                         name,
                         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight:
-                                  isSelected ? FontWeight.w600 : FontWeight.w500,
-                            ),
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                        ),
                       ),
                       if (isCurrent) ...[
                         const SizedBox(width: 8),
@@ -308,18 +311,18 @@ class _LanguageScreenState extends State<LanguageScreen> {
                   const SizedBox(height: 4),
                   Text(
                     description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                   ),
                   if (isRecommended) ...[
                     const SizedBox(height: 4),
                     Text(
                       'language.recommended'.tr(),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.blue[700],
-                            fontWeight: FontWeight.w500,
-                          ),
+                        color: Colors.blue[700],
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ],
@@ -373,9 +376,9 @@ class _LanguageScreenState extends State<LanguageScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
       child: Text(
         'language.changesNote'.tr(),
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.grey[600],
-            ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
         textAlign: TextAlign.center,
       ),
     );

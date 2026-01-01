@@ -45,9 +45,8 @@ class ProductCard extends StatelessWidget {
                         header: true,
                         child: Text(
                           product.title,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -55,14 +54,14 @@ class ProductCard extends StatelessWidget {
                       const SizedBox(height: 4),
 
                       // Category
-                      if (product.category != null && product.category!.isNotEmpty)
+                      if (product.category != null &&
+                          product.category!.isNotEmpty)
                         Semantics(
                           label: 'Category: ${product.category}',
                           child: Text(
                             product.category!,
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Colors.grey[600],
-                                ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.grey[600]),
                           ),
                         ),
                       const SizedBox(height: 8),
@@ -95,7 +94,8 @@ class ProductCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               'Created\n${_formatDate(DateTime.now())}',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
                                     color: Colors.grey[600],
                                     height: 1.3,
                                   ),
@@ -118,13 +118,21 @@ class ProductCard extends StatelessWidget {
                                       vertical: 8,
                                     ),
                                     decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                                      border: Border.all(
+                                        color: Colors.blue.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                      ),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: const Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.edit, size: 16, color: Colors.blue),
+                                        Icon(
+                                          Icons.edit,
+                                          size: 16,
+                                          color: Colors.blue,
+                                        ),
                                         SizedBox(width: 4),
                                         Text(
                                           'Edit',
@@ -157,13 +165,21 @@ class ProductCard extends StatelessWidget {
                                       vertical: 8,
                                     ),
                                     decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                                      border: Border.all(
+                                        color: Colors.red.withValues(
+                                          alpha: 0.3,
+                                        ),
+                                      ),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: const Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.delete_outline, size: 16, color: Colors.red),
+                                        Icon(
+                                          Icons.delete_outline,
+                                          size: 16,
+                                          color: Colors.red,
+                                        ),
                                         SizedBox(width: 4),
                                         Text(
                                           'Delete',
@@ -193,8 +209,18 @@ class ProductCard extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -227,11 +253,7 @@ class ProductCard extends StatelessWidget {
   }
 
   Widget _buildPlaceholderIcon() {
-    return Icon(
-      Icons.inventory_2_outlined,
-      size: 40,
-      color: Colors.grey[400],
-    );
+    return Icon(Icons.inventory_2_outlined, size: 40, color: Colors.grey[400]);
   }
 
   Widget _buildStatusChip(BuildContext context) {
@@ -280,18 +302,11 @@ class ProductCard extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 14,
-              color: Colors.grey[600],
-            ),
+            Icon(icon, size: 14, color: Colors.grey[600]),
             const SizedBox(width: 4),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[700],
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey[700]),
             ),
           ],
         ),

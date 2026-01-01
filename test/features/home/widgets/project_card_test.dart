@@ -81,9 +81,7 @@ void main() {
       expect(statusBadge, findsAtLeastNWidgets(1));
     });
 
-    testWidgets('displays status badge for Live+Trial project', (
-      tester,
-    ) async {
+    testWidgets('displays status badge for Live+Trial project', (tester) async {
       final trialProject = Project(
         id: 'proj_456',
         slug: 'trial-project',

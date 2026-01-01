@@ -40,9 +40,7 @@ void main() {
       // This test verifies the Sign In button exists and form fields are present
     });
 
-    testWidgets('T018: complete Google OAuth flow integration', (
-      tester,
-    ) async {
+    testWidgets('T018: complete Google OAuth flow integration', (tester) async {
       // This is a comprehensive integration test for the complete OAuth flow
       // It will FAIL initially (RED phase) until signInWithGoogle is implemented
 

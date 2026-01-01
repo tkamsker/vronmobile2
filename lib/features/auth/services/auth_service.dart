@@ -34,9 +34,9 @@ class AuthService {
     GraphQLService? graphqlService,
     TokenStorage? tokenStorage,
     GoogleSignIn? googleSignIn,
-  })  : _graphqlService = graphqlService ?? GraphQLService(),
-        _tokenStorage = tokenStorage ?? TokenStorage(),
-        _googleSignIn = googleSignIn ?? GoogleSignIn.instance;
+  }) : _graphqlService = graphqlService ?? GraphQLService(),
+       _tokenStorage = tokenStorage ?? TokenStorage(),
+       _googleSignIn = googleSignIn ?? GoogleSignIn.instance;
 
   /// OAuth scopes required for Google Sign-In (T012)
   static const List<String> _googleScopes = [
@@ -223,8 +223,8 @@ class AuthService {
       await _googleSignIn.initialize();
 
       // Attempt lightweight authentication (silent sign-in)
-      final GoogleSignInAccount? googleAccount =
-          await _googleSignIn.attemptLightweightAuthentication();
+      final GoogleSignInAccount? googleAccount = await _googleSignIn
+          .attemptLightweightAuthentication();
 
       if (googleAccount == null) {
         // No previous session found
@@ -310,10 +310,10 @@ class AuthService {
       if (kDebugMode) print('✅ [AUTH] Google Sign-In initialized');
 
       // Trigger Google OAuth flow (v7.0 API)
-      if (kDebugMode) print('🔐 [AUTH] Calling authenticate() with scopes: $_googleScopes');
-      final GoogleSignInAccount googleAccount = await _googleSignIn.authenticate(
-        scopeHint: _googleScopes,
-      );
+      if (kDebugMode)
+        print('🔐 [AUTH] Calling authenticate() with scopes: $_googleScopes');
+      final GoogleSignInAccount googleAccount = await _googleSignIn
+          .authenticate(scopeHint: _googleScopes);
 
       if (kDebugMode) {
         print('✅ [AUTH] Google account obtained: ${googleAccount.email}');
@@ -322,7 +322,8 @@ class AuthService {
       }
 
       // Get authentication tokens (v7.0: authentication is a getter, not async)
-      final GoogleSignInAuthentication googleAuth = googleAccount.authentication;
+      final GoogleSignInAuthentication googleAuth =
+          googleAccount.authentication;
 
       // T039: Handle null idToken scenario
       if (googleAuth.idToken == null || googleAuth.idToken!.isEmpty) {
@@ -380,7 +381,9 @@ class AuthService {
           if (kDebugMode) {
             print('🔌 Error Type: NETWORK/LINK ERROR');
             print('   Exception: ${exception!.linkException.toString()}');
-            print('   Original Exception: ${exception.linkException?.originalException}');
+            print(
+              '   Original Exception: ${exception.linkException?.originalException}',
+            );
             print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
           }
           return AuthResult.failure(
@@ -429,13 +432,16 @@ class AuthService {
           print('   result.data is null: ${result.data == null}');
           if (result.data != null) {
             print('   Available keys: ${result.data!.keys.toList()}');
-            print('   signInWithGoogle field: ${result.data!['signInWithGoogle']}');
+            print(
+              '   signInWithGoogle field: ${result.data!['signInWithGoogle']}',
+            );
           }
         }
         return AuthResult.failure('Invalid response from server');
       }
 
-      final loginData = result.data!['signInWithGoogle'] as Map<String, dynamic>;
+      final loginData =
+          result.data!['signInWithGoogle'] as Map<String, dynamic>;
 
       if (kDebugMode) {
         print('✅ [AUTH] Backend response structure valid');
@@ -497,7 +503,9 @@ class AuthService {
           final providers = (user['authProviders'] as List);
           print('🔗 Linked Authentication Providers:');
           for (var provider in providers) {
-            print('   - ${provider['provider']}: ${provider['enabled'] ? "✅ Enabled" : "❌ Disabled"}');
+            print(
+              '   - ${provider['provider']}: ${provider['enabled'] ? "✅ Enabled" : "❌ Disabled"}',
+            );
           }
         }
 
@@ -529,7 +537,9 @@ class AuthService {
       // Check if user cancelled (in v7.0, cancellation throws an exception)
       if (e.toString().toLowerCase().contains('cancel')) {
         if (kDebugMode) print('❌ [AUTH] User cancelled sign-in');
-        return AuthResult.failure(OAuthErrorMapper.getUserMessage(OAuthErrorCode.cancelled));
+        return AuthResult.failure(
+          OAuthErrorMapper.getUserMessage(OAuthErrorCode.cancelled),
+        );
       }
 
       // Map to user-friendly error message
@@ -539,7 +549,9 @@ class AuthService {
       }
 
       // Fallback for unknown errors
-      return AuthResult.failure(OAuthErrorMapper.getUserMessage(OAuthErrorCode.unknown));
+      return AuthResult.failure(
+        OAuthErrorMapper.getUserMessage(OAuthErrorCode.unknown),
+      );
     }
   }
 }

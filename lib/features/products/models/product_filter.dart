@@ -64,9 +64,9 @@ class ProductFilter {
 
   @override
   int get hashCode => Object.hash(
-        searchQuery,
-        selectedStatus,
-        selectedCategoryId,
-        Object.hashAll(selectedTags),
-      );
+    searchQuery,
+    selectedStatus,
+    selectedCategoryId,
+    Object.hashAll(selectedTags),
+  );
 }
