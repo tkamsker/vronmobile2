@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vronmobile2/features/scanning/models/scan_data.dart';
 import 'package:vronmobile2/features/scanning/models/room_stitch_request.dart';
+import 'package:vronmobile2/features/scanning/models/room_layout.dart';
 import 'package:vronmobile2/features/scanning/services/room_stitching_service.dart';
 import 'package:vronmobile2/features/scanning/screens/room_stitch_progress_screen.dart';
 
@@ -16,6 +17,7 @@ class RoomStitchingScreen extends StatefulWidget {
   final RoomStitchingService stitchingService;
   final String projectId;
   final bool isGuestMode;
+  final RoomLayout? roomLayout; // Optional: layout from canvas screen
 
   const RoomStitchingScreen({
     super.key,
@@ -23,6 +25,7 @@ class RoomStitchingScreen extends StatefulWidget {
     required this.stitchingService,
     required this.projectId,
     this.isGuestMode = false,
+    this.roomLayout,
   });
 
   @override

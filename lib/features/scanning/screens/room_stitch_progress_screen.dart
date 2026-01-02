@@ -118,7 +118,7 @@ class _RoomStitchProgressScreenState extends State<RoomStitchProgressScreen> {
       // Navigate to preview screen
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => StitchedModelPreviewScreen(model: model),
+          builder: (context) => StitchedModelPreviewScreen(stitchedModel: model),
         ),
       );
     } catch (e) {
