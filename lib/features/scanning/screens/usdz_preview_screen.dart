@@ -1,11 +1,17 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:native_ar_viewer/native_ar_viewer.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
 import '../models/scan_data.dart';
 import '../models/conversion_result.dart';
 import '../services/scan_upload_service.dart';
+import '../services/scan_session_manager.dart';
+import '../services/blender_api_service.dart';
 import 'scanning_screen.dart';
+import 'glb_preview_screen.dart';
 
 /// USDZ Preview Screen (Requirements/USDZ_Preview.jpg)
 ///
@@ -32,18 +38,39 @@ class UsdzPreviewScreen extends StatefulWidget {
 class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
   bool _isConverting = false;
   late final ScanUploadService _uploadService;
+  late final BlenderApiService _blenderApiService;
+  final ScanSessionManager _sessionManager = ScanSessionManager();
   ConversionResult? _conversionResult;
+  late ScanData _currentScanData;
+  String? _glbLocalPath;
+  double _conversionProgress = 0.0;
+  String _conversionStatus = '';
 
   @override
   void initState() {
     super.initState();
     _uploadService = widget.uploadService ?? ScanUploadService();
+    _blenderApiService = BlenderApiService();
+    _currentScanData = widget.scanData;
+    _glbLocalPath = widget.scanData.glbLocalPath;
+    _checkForExistingGlb();
+  }
+
+  Future<void> _checkForExistingGlb() async {
+    if (_currentScanData.glbLocalPath != null) {
+      final glbFile = File(_currentScanData.glbLocalPath!);
+      if (await glbFile.exists()) {
+        setState(() {
+          _glbLocalPath = _currentScanData.glbLocalPath;
+        });
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     // Extract dimensions from metadata if available
-    final metadata = widget.scanData.metadata;
+    final metadata = _currentScanData.metadata;
     final rawWidth = metadata?['width'] as double?;
     final rawHeight = metadata?['height'] as double?;
 
@@ -203,39 +230,106 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
               ),
             ),
 
-            // Convert to GLB button
+            // Button section - changes based on GLB availability
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton.icon(
-                      onPressed: _isConverting ? null : () => _convertToGLB(),
-                      icon: _isConverting
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Icon(Icons.transform, size: 24),
-                      label: Text(
-                        _isConverting ? 'Converting...' : 'Convert to GLB',
-                        style: const TextStyle(fontSize: 18),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue.shade600,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(28),
+                  if (_glbLocalPath == null || !File(_glbLocalPath!).existsSync()) ...[
+                    // Convert to GLB button (when GLB doesn't exist)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton.icon(
+                        onPressed: _isConverting ? null : () => _convertToGLB(),
+                        icon: _isConverting
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Icon(Icons.transform, size: 24),
+                        label: Text(
+                          _isConverting
+                              ? '$_conversionStatus ${(_conversionProgress * 100).toInt()}%'
+                              : 'Convert to GLB',
+                          style: const TextStyle(fontSize: 18),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue.shade600,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  ] else ...[
+                    // GLB exists - show navmesh, preview, and export buttons
+                    // Create Navmesh button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _createNavmesh(),
+                        icon: Icon(Icons.route, size: 24),
+                        label: const Text(
+                          'Create Navmesh',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade600,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Preview GLB button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _previewGLB(),
+                        icon: const Icon(Icons.view_in_ar, size: 20),
+                        label: const Text('Preview GLB'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.blue.shade400,
+                          side: BorderSide(color: Colors.blue.shade400),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Export GLB button (debug mode only)
+                    if (kDebugMode) ...[
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: OutlinedButton.icon(
+                          onPressed: () => _exportGLB(),
+                          icon: const Icon(Icons.file_download, size: 20),
+                          label: const Text('Export GLB (Debug)'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.grey.shade400,
+                            side: BorderSide(color: Colors.grey.shade400),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                   const SizedBox(height: 12),
 
                   // Scan Another Room button
@@ -268,24 +362,24 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
 
   Future<void> _viewInAR() async {
     try {
-      print('🔍 [USDZ] Opening AR viewer in object mode for: ${widget.scanData.localPath}');
+      print('🔍 [USDZ] Opening AR viewer in object mode for: ${_currentScanData.localPath}');
 
       if (Platform.isIOS) {
         // Use url_launcher with URL fragment to start in object mode
         // #allowsContentScaling=0 tells AR Quick Look to start in object viewing mode
-        final file = File(widget.scanData.localPath);
+        final file = File(_currentScanData.localPath);
         if (!await file.exists()) {
           throw Exception('USDZ file not found');
         }
 
         final uri = Uri.file(
-          widget.scanData.localPath,
+          _currentScanData.localPath,
           windows: false,
         ).replace(fragment: 'allowsContentScaling=0');
 
         if (!await canLaunchUrl(uri)) {
           // Fallback to native_ar_viewer if url_launcher doesn't work
-          await NativeArViewer.launchAR(widget.scanData.localPath);
+          await NativeArViewer.launchAR(_currentScanData.localPath);
         } else {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         }
@@ -293,7 +387,7 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
         print('✅ [USDZ] AR viewer launched successfully in object mode');
       } else {
         // Android fallback (though LiDAR is iOS-only)
-        await NativeArViewer.launchAR(widget.scanData.localPath);
+        await NativeArViewer.launchAR(_currentScanData.localPath);
       }
     } catch (e) {
       print('❌ [USDZ] Failed to launch AR viewer: $e');
@@ -309,67 +403,72 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
   }
 
   Future<void> _convertToGLB() async {
-    print('🔄 [USDZ] Starting backend GLB conversion');
+    print('🔄 [USDZ] Convert to GLB requested via Blender API');
 
-    // Check if projectId is available
-    if (widget.projectId == null || widget.projectId!.isEmpty) {
-      _showProjectRequiredDialog();
+    // Check if already converted
+    if (_glbLocalPath != null && await File(_glbLocalPath!).exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('GLB file already exists!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
       return;
     }
 
     setState(() {
       _isConverting = true;
+      _conversionProgress = 0.0;
+      _conversionStatus = 'Starting...';
     });
 
     try {
-      // Step 1: Upload USDZ to backend
-      print('📤 [USDZ] Uploading to backend for conversion...');
-      final uploadResult = await _uploadService.uploadScan(
-        scanData: widget.scanData,
-        projectId: widget.projectId!,
-        onProgress: (progress) {
-          print('📊 [USDZ] Upload progress: ${(progress * 100).toStringAsFixed(1)}%');
+      // Call Blender API to convert USDZ to GLB
+      final glbPath = await _blenderApiService.convertUsdzToGlb(
+        usdzPath: _currentScanData.localPath,
+        onProgress: (progress, status) {
+          if (mounted) {
+            setState(() {
+              _conversionProgress = progress;
+              _conversionStatus = status;
+            });
+          }
         },
       );
 
-      if (!uploadResult.success) {
-        throw Exception(uploadResult.message ?? 'Upload failed');
-      }
+      print('✅ [USDZ] Conversion successful: $glbPath');
 
-      final scanId = uploadResult.scanId;
-      if (scanId == null) {
-        throw Exception('No scan ID returned from upload');
-      }
-
-      print('✅ [USDZ] Upload complete. Scan ID: $scanId');
-      print('🔄 [USDZ] Polling conversion status...');
-
-      // Step 2: Poll for conversion status
-      final conversionResult = await _uploadService.pollConversionStatus(
-        scanId: scanId,
-        onStatusChange: (status) {
-          print('📊 [USDZ] Conversion status: ${status.name}');
-        },
-      );
+      // Update scan data with GLB path
+      _currentScanData = _currentScanData.copyWith(glbLocalPath: glbPath);
+      _sessionManager.updateScan(_currentScanData);
 
       setState(() {
-        _conversionResult = conversionResult;
+        _glbLocalPath = glbPath;
         _isConverting = false;
       });
 
-      if (!mounted) return;
-
-      // Step 3: Show result
-      if (conversionResult.isSuccess && conversionResult.glbUrl != null) {
-        _showConversionSuccessDialog(conversionResult.glbUrl!);
-      } else {
-        final errorMessage = conversionResult.error?.message ??
-                            conversionResult.message ??
-                            'Conversion failed';
-        throw Exception(errorMessage);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green.shade400),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text('GLB conversion completed successfully!'),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green.shade700,
+            duration: const Duration(seconds: 3),
+          ),
+        );
       }
     } catch (e) {
       print('❌ [USDZ] Conversion failed: $e');
+
       setState(() {
         _isConverting = false;
       });
@@ -380,47 +479,15 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
     }
   }
 
-  void _showProjectRequiredDialog() {
+  void _showConversionInfoDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Row(
           children: [
-            Icon(Icons.info_outline, color: Colors.orange, size: 28),
+            Icon(Icons.info_outline, color: Colors.blue, size: 28),
             SizedBox(width: 12),
-            Text('Project Required'),
-          ],
-        ),
-        content: const Text(
-          'To convert this USDZ file to GLB format, please save it to a project first. '
-          'The conversion will be processed on our servers.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _saveToProject();
-            },
-            child: const Text('Save to Project'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showConversionSuccessDialog(String glbUrl) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green, size: 28),
-            SizedBox(width: 12),
-            Text('Conversion Complete'),
+            Text('GLB Conversion'),
           ],
         ),
         content: Column(
@@ -428,44 +495,83 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Your USDZ file has been successfully converted to GLB format!',
+              'GLB conversion happens automatically when you save this scan to a project.',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.shade50,
+                color: Colors.blue.shade50,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green.shade200),
+                border: Border.all(color: Colors.blue.shade200),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'GLB file is ready',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green.shade700,
-                    ),
+                  Row(
+                    children: [
+                      Icon(Icons.cloud_upload, color: Colors.blue.shade700, size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Backend API Conversion',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue.shade700,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Text(
-                    'The GLB file is now available in your project and can be viewed in the web viewer.',
+                    'When you save this scan to a project, our backend will:\n'
+                    '1. Upload your USDZ file\n'
+                    '2. Convert it to GLB format\n'
+                    '3. Store GLB locally for preview and navmesh creation',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.green.shade700,
+                      color: Colors.blue.shade700,
                     ),
                   ),
                 ],
               ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Icon(Icons.tips_and_updates, color: Colors.amber.shade700, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Tip: Click "Ready to save" to proceed',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: const Text('Got it'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _saveToProject();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue.shade600,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Save to Project'),
           ),
         ],
       ),
@@ -525,9 +631,164 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
     );
   }
 
+  Future<void> _createNavmesh() async {
+    print('🗺️ [USDZ] Create Navmesh requested');
+
+    if (_glbLocalPath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('GLB file not found'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.route, color: Colors.green.shade600, size: 28),
+            const SizedBox(width: 12),
+            const Text('Create Navmesh'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'This will use the GLB file to create a navigation mesh for your project.',
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'GLB: ${_glbLocalPath!.split('/').last}',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _saveToProject();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green.shade600,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Proceed to Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _previewGLB() async {
+    print('👁️ [USDZ] Preview GLB requested');
+
+    if (_glbLocalPath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('GLB file not found'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Navigate to GLB preview screen
+    final glbScanData = _currentScanData.copyWith(
+      glbLocalPath: _glbLocalPath,
+    );
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => GlbPreviewScreen(scanData: glbScanData),
+      ),
+    );
+  }
+
+  Future<void> _exportGLB() async {
+    print('📤 [USDZ] Export GLB requested (Debug mode)');
+
+    if (_glbLocalPath == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('GLB file not found'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final glbFile = File(_glbLocalPath!);
+      if (!await glbFile.exists()) {
+        throw Exception('GLB file not found at path');
+      }
+
+      // Get Downloads directory (iOS: app documents, Android: Downloads)
+      final downloadsDir = await getApplicationDocumentsDirectory();
+      final fileName = 'exported_${_glbLocalPath!.split('/').last}';
+      final exportPath = '${downloadsDir.path}/$fileName';
+
+      // Copy file to exports location
+      await glbFile.copy(exportPath);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'GLB exported successfully!',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  exportPath,
+                  style: const TextStyle(fontSize: 11, fontFamily: 'monospace'),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green.shade700,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+
+      print('✅ [USDZ] GLB exported to: $exportPath');
+    } catch (e) {
+      print('❌ [USDZ] Export failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _saveToProject() {
     // Navigate to SaveToProjectScreen or return with "save" action
-    Navigator.of(context).pop({'action': 'save', 'scan': widget.scanData});
+    // Pass the updated scan data with glbLocalPath if available
+    final updatedScanData = _currentScanData.copyWith(
+      glbLocalPath: _glbLocalPath,
+    );
+    Navigator.of(context).pop({'action': 'save', 'scan': updatedScanData});
   }
 
   Future<void> _scanAnotherRoom() async {

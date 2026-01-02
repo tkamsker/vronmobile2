@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/scan_data.dart';
 import '../services/scan_session_manager.dart';
+import '../services/blender_api_service.dart';
 import '../../home/models/project.dart';
 import '../../home/services/project_service.dart';
 import '../../home/services/byo_project_service.dart';
@@ -29,6 +30,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
   final ScanSessionManager _sessionManager = ScanSessionManager();
   final ProjectService _projectService = ProjectService();
   final BYOProjectService _byoProjectService = BYOProjectService();
+  final BlenderApiService _blenderApiService = BlenderApiService();
 
   List<Project> _projects = [];
   Project? _selectedProject;
@@ -662,14 +664,6 @@ class _ScanListScreenState extends State<ScanListScreen> {
     );
   }
 
-  String _generateSlug(String name) {
-    return name
-        .toLowerCase()
-        .trim()
-        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
-        .replaceAll(RegExp(r'^-|-$'), '');
-  }
-
   Future<void> _createNewProject(
     File worldFile,
     File meshFile,
@@ -823,6 +817,195 @@ class _ScanListScreenState extends State<ScanListScreen> {
     }
   }
 
+  /// Create a new project from a USDZ scan
+  ///
+  /// This method:
+  /// 1. Checks if GLB already exists for this scan
+  /// 2. If not, converts USDZ to GLB using Blender API
+  /// 3. Creates a BYO project with both USDZ (world) and GLB (mesh)
+  Future<void> _createProjectFromScan(ScanData scan) async {
+    final usdzFile = File(scan.localPath);
+
+    if (!await usdzFile.exists()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('USDZ file not found.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (kDebugMode) {
+      print('📦 [SCAN_LIST] Creating project from USDZ scan');
+      print('📦 [SCAN_LIST] USDZ file: ${usdzFile.path}');
+    }
+
+    // Check if GLB already exists
+    File? glbFile;
+    if (scan.glbLocalPath != null) {
+      glbFile = File(scan.glbLocalPath!);
+      if (await glbFile.exists()) {
+        if (kDebugMode) {
+          print('✅ [SCAN_LIST] GLB already exists: ${scan.glbLocalPath}');
+        }
+        // GLB exists, proceed to create project
+        await _createNewProject(usdzFile, glbFile);
+        return;
+      }
+    }
+
+    // GLB doesn't exist, need to convert first
+    if (kDebugMode) {
+      print('🔄 [SCAN_LIST] GLB not found, converting USDZ to GLB...');
+    }
+
+    // Show conversion dialog with progress
+    await _showConversionDialog(scan, usdzFile);
+  }
+
+  /// Show conversion progress dialog and create project after completion
+  Future<void> _showConversionDialog(ScanData scan, File usdzFile) async {
+    // State for the dialog
+    final dialogState = _ConversionDialogState();
+
+    // Capture the setState callback for use in async operations
+    void Function(VoidCallback)? updateDialog;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          // Capture setDialogState for use in async callbacks
+          updateDialog = setDialogState;
+
+          return AlertDialog(
+            backgroundColor: Colors.grey.shade900,
+            title: Row(
+              children: [
+                Icon(
+                  dialogState.isConverting ? Icons.sync : (dialogState.errorMessage != null ? Icons.error : Icons.check_circle),
+                  color: dialogState.isConverting ? Colors.blue.shade400 : (dialogState.errorMessage != null ? Colors.red.shade400 : Colors.green.shade400),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    dialogState.isConverting ? 'Converting to GLB' : (dialogState.errorMessage != null ? 'Conversion Failed' : 'Conversion Complete'),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (dialogState.isConverting) ...[
+                  LinearProgressIndicator(
+                    value: dialogState.progress,
+                    backgroundColor: Colors.grey.shade800,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade400),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    '${(dialogState.progress * 100).toInt()}%',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    dialogState.statusText,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade400,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ] else if (dialogState.errorMessage != null) ...[
+                  Icon(Icons.error_outline, size: 48, color: Colors.red.shade400),
+                  const SizedBox(height: 16),
+                  Text(
+                    dialogState.errorMessage!,
+                    style: TextStyle(color: Colors.grey.shade300),
+                    textAlign: TextAlign.center,
+                  ),
+                ] else ...[
+                  Icon(Icons.check_circle, size: 48, color: Colors.green.shade400),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Creating project...',
+                    style: TextStyle(color: Colors.grey.shade300),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ],
+            ),
+            actions: dialogState.errorMessage != null ? [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text('Close', style: TextStyle(color: Colors.grey.shade400)),
+              ),
+            ] : [],
+          );
+        },
+      ),
+    );
+
+    try {
+      // Start conversion
+      final glbPath = await _blenderApiService.convertUsdzToGlb(
+        usdzPath: usdzFile.path,
+        onProgress: (p, status) {
+          updateDialog?.call(() {
+            dialogState.progress = p;
+            dialogState.statusText = status;
+          });
+        },
+      );
+
+      if (kDebugMode) {
+        print('✅ [SCAN_LIST] Conversion complete: $glbPath');
+      }
+
+      // Update scan data with GLB path
+      final updatedScan = scan.copyWith(glbLocalPath: glbPath);
+      _sessionManager.updateScan(updatedScan);
+
+      // Update dialog state to show completion
+      updateDialog?.call(() {
+        dialogState.isConverting = false;
+        dialogState.progress = 1.0;
+      });
+
+      // Small delay to show completion state
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Create project with both files
+      final glbFile = File(glbPath);
+      await _createNewProject(usdzFile, glbFile);
+
+      // Close dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ [SCAN_LIST] Conversion failed: $e');
+      }
+
+      // Update dialog to show error
+      updateDialog?.call(() {
+        dialogState.isConverting = false;
+        dialogState.errorMessage = e.toString();
+      });
+    }
+  }
+
   void _showProjectPicker() {
     showModalBottomSheet(
       context: context,
@@ -890,20 +1073,28 @@ class _ScanListScreenState extends State<ScanListScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // Create Project from Scan option (always available for USDZ scans)
+            ListTile(
+              leading: Icon(Icons.add_circle, color: Colors.green.shade400),
+              title: Text(
+                'Create Project from Scan',
+                style: TextStyle(color: Colors.green.shade400, fontWeight: FontWeight.w600),
+              ),
+              subtitle: const Text(
+                'Backend will convert USDZ → GLB automatically',
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _createProjectFromScan(scan);
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.visibility, color: Colors.white),
               title: const Text('View USDZ', style: TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.pop(context);
                 _viewUsdzPreview(scan);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.view_in_ar, color: Colors.white),
-              title: const Text('View GLB', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                _viewGlbPreview(scan);
               },
             ),
             ListTile(
@@ -1108,4 +1299,12 @@ class _ScanListScreenState extends State<ScanListScreen> {
       }
     });
   }
+}
+
+/// State holder for conversion dialog
+class _ConversionDialogState {
+  double progress = 0.0;
+  String statusText = 'Starting conversion...';
+  bool isConverting = true;
+  String? errorMessage;
 }
