@@ -11,6 +11,12 @@ import '../../home/services/project_service.dart';
 import '../../home/services/byo_project_service.dart';
 import 'scanning_screen.dart';
 import 'usdz_preview_screen.dart';
+import 'room_stitching_screen.dart';
+import 'room_layout_canvas_screen.dart';
+import '../services/room_stitching_service.dart';
+import '../services/retry_policy_service.dart';
+import '../../../core/services/graphql_service.dart';
+import '../models/room_layout.dart';
 
 /// Screen showing list of scans for current session
 /// Matches design from Requirements/ScanList2.jpg
@@ -1188,13 +1194,52 @@ class _ScanListScreenState extends State<ScanListScreen> {
     }
   }
 
-  void _roomStitching() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Room stitching feature coming soon!'),
-        duration: Duration(seconds: 2),
+  Future<void> _roomStitching() async {
+    final scans = _sessionManager.scans;
+
+    // Get projectId from scan metadata or use temporary session-based ID
+    final projectId = scans.isNotEmpty
+        ? (scans.first.metadata?['projectId'] as String? ?? 'temp-session-${DateTime.now().millisecondsSinceEpoch}')
+        : 'temp-session-${DateTime.now().millisecondsSinceEpoch}';
+
+    // Step 1: Show canvas layout screen for room arrangement
+    final RoomLayout? layout = await Navigator.of(context).push<RoomLayout>(
+      MaterialPageRoute(
+        builder: (context) => RoomLayoutCanvasScreen(
+          scans: scans,
+          projectId: projectId,
+        ),
       ),
     );
+
+    // If user canceled or went back, don't proceed to stitching
+    if (layout == null || !mounted) {
+      setState(() {});
+      return;
+    }
+
+    // Step 2: Proceed to stitching with layout configuration
+    final graphQLService = GraphQLService();
+    final retryPolicyService = RetryPolicyService();
+    final stitchingService = RoomStitchingService(
+      graphQLService: graphQLService,
+      retryPolicyService: retryPolicyService,
+    );
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => RoomStitchingScreen(
+          scans: scans,
+          stitchingService: stitchingService,
+          projectId: projectId,
+          isGuestMode: false, // TODO: Check actual auth status
+          roomLayout: layout, // Pass layout configuration
+        ),
+      ),
+    );
+
+    // Refresh the UI after returning from stitching screen
+    setState(() {});
   }
 
   Future<void> _viewUsdzPreview(ScanData scan) async {

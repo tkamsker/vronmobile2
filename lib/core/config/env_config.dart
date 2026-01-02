@@ -97,4 +97,33 @@ class EnvConfig {
     final interval = dotenv.env['BLENDER_API_POLL_INTERVAL_SECONDS'];
     return interval != null ? int.tryParse(interval) ?? 2 : 2;
   }
+
+  // Room Stitching Canvas Configuration
+  // PRD Reference: specs/017-room-stitching/spec.md
+
+  /// Room rotation increment in degrees (default: 45)
+  /// Used when user taps Rotate button on canvas
+  static int get roomRotationDegrees {
+    final degrees = dotenv.env['ROOM_ROTATION_DEGREES'];
+    final value = degrees != null ? int.tryParse(degrees) ?? 45 : 45;
+    // Validate: must be between 1 and 90 degrees
+    if (value < 1 || value > 90) {
+      return 45; // fallback to default
+    }
+    return value;
+  }
+
+  /// Door connection suggestion threshold in pixels (default: 50)
+  /// Doors within this distance will show connection suggestion
+  static int get doorConnectionThreshold {
+    final threshold = dotenv.env['DOOR_CONNECTION_THRESHOLD'];
+    return threshold != null ? int.tryParse(threshold) ?? 50 : 50;
+  }
+
+  /// Canvas grid size in pixels (default: 20, 0 = disabled)
+  /// Optional grid overlay for room positioning
+  static int get canvasGridSize {
+    final gridSize = dotenv.env['CANVAS_GRID_SIZE'];
+    return gridSize != null ? int.tryParse(gridSize) ?? 20 : 20;
+  }
 }
