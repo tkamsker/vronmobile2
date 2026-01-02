@@ -6,6 +6,7 @@ import 'package:vronmobile2/features/scanning/models/canvas_configuration.dart';
 import 'package:vronmobile2/features/scanning/models/canvas_interaction_mode.dart';
 import 'package:vronmobile2/features/scanning/widgets/room_layout_canvas.dart';
 import 'package:vronmobile2/features/scanning/models/scan_data.dart';
+import 'package:vronmobile2/features/scanning/services/room_outline_extraction_service.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:math';
 
@@ -33,6 +34,9 @@ class _RoomLayoutCanvasScreenState extends State<RoomLayoutCanvasScreen> {
   // For drag gesture tracking
   Offset? _lastPanPosition;
   final Uuid _uuid = const Uuid();
+  final RoomOutlineExtractionService _extractionService = RoomOutlineExtractionService();
+
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -40,39 +44,43 @@ class _RoomLayoutCanvasScreenState extends State<RoomLayoutCanvasScreen> {
     _initializeLayout();
   }
 
-  /// Initialize layout with placeholder room outlines
-  /// TODO: Replace with actual 3D→2D extraction
-  void _initializeLayout() {
-    final rooms = <RoomOutline>[];
-
-    // Create placeholder room outlines for each scan
-    for (int i = 0; i < widget.scans.length; i++) {
-      final scan = widget.scans[i];
-
-      // Create simple rectangular outline as placeholder
-      // Vertices are in local coordinates (relative to room center)
-      final vertices = [
-        const Offset(-50, -60),  // Top-left
-        const Offset(50, -60),   // Top-right
-        const Offset(50, 60),    // Bottom-right
-        const Offset(-50, 60),   // Bottom-left
-      ];
-
-      final room = RoomOutline(
-        scanId: scan.id,
-        roomName: 'Room ${i + 1}',
-        vertices: vertices,
-        positionOffset: Offset(150.0 + i * 150.0, 200.0), // Position on canvas
-        outlineColor: _getColorForIndex(i),
-      );
-
-      rooms.add(room);
-    }
-
-    _layout = RoomLayout.empty().copyWith(rooms: rooms);
+  /// Initialize layout by extracting 3D→2D outlines from scan files
+  Future<void> _initializeLayout() async {
+    setState(() {
+      _isLoading = true;
+    });
 
     // Get canvas configuration from .env
     _config = CanvasConfiguration.defaultConfig();
+
+    try {
+      // Extract real outlines from 3D models
+      print('🔄 Extracting outlines from ${widget.scans.length} scans...');
+      final outlines = await _extractionService.extractOutlines(widget.scans);
+
+      // Position rooms in a grid layout on the canvas
+      final positionedRooms = <RoomOutline>[];
+      for (int i = 0; i < outlines.length; i++) {
+        final outline = outlines[i];
+        final room = outline.copyWith(
+          positionOffset: Offset(150.0 + i * 150.0, 200.0),
+          outlineColor: _getColorForIndex(i),
+        );
+        positionedRooms.add(room);
+      }
+
+      setState(() {
+        _layout = RoomLayout.empty().copyWith(rooms: positionedRooms);
+        _isLoading = false;
+      });
+
+      print('✅ Canvas initialized with ${positionedRooms.length} room outlines');
+    } catch (e) {
+      print('❌ Error initializing layout: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   /// Get a distinct color for each room
@@ -307,12 +315,33 @@ class _RoomLayoutCanvasScreenState extends State<RoomLayoutCanvasScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
-            onPressed: _proceedToStitching,
+            onPressed: _isLoading ? null : _proceedToStitching,
             tooltip: 'Done - Proceed to Stitching',
           ),
         ],
       ),
-      body: Column(
+      body: _isLoading
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Extracting room outlines...',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Analyzing ${widget.scans.length} scan(s)',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                  ),
+                ],
+              ),
+            )
+          : Column(
         children: [
           // Mode indicator
           Container(

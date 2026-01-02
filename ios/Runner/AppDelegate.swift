@@ -32,6 +32,49 @@ import UIKit
       }
     }
 
+    // Setup method channel for room outline extraction
+    let outlineChannel = FlutterMethodChannel(
+      name: "com.vron.mobile/outline_extractor",
+      binaryMessenger: controller.binaryMessenger
+    )
+
+    let extractor = RoomOutlineExtractor()
+
+    outlineChannel.setMethodCallHandler { (call, result) in
+      if call.method == "extractOutline" {
+        guard let args = call.arguments as? [String: Any],
+              let filePath = args["filePath"] as? String else {
+          result(FlutterError(
+            code: "INVALID_ARGUMENTS",
+            message: "Missing filePath argument",
+            details: nil
+          ))
+          return
+        }
+
+        let fileUrl = URL(fileURLWithPath: filePath)
+
+        // Extract outline in background to avoid blocking UI
+        DispatchQueue.global(qos: .userInitiated).async {
+          if let outline = extractor.extractOutline(from: fileUrl) {
+            DispatchQueue.main.async {
+              result(outline)
+            }
+          } else {
+            DispatchQueue.main.async {
+              result(FlutterError(
+                code: "EXTRACTION_FAILED",
+                message: "Failed to extract outline from \(filePath)",
+                details: "Could not load 3D model or extract vertices"
+              ))
+            }
+          }
+        }
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    }
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }
