@@ -45,8 +45,9 @@ class I18nService extends ChangeNotifier {
     // Load translations for current language
     await _loadTranslations(_currentLanguage);
 
-    if (kDebugMode)
+    if (kDebugMode) {
       print('✅ [I18N] Initialized with language: $_currentLanguage');
+    }
   }
 
   /// Load translations from JSON file

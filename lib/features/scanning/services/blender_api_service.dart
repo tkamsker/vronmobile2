@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:path_provider/path_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:uuid/uuid.dart';
 
@@ -101,14 +100,21 @@ class BlenderApiService {
         sessionId,
         onProgress: (progress) {
           // Map poll progress to 50-90% of total
-          onProgress?.call(0.5 + (progress * 0.4), 'Converting... ${(progress * 100).toInt()}%');
+          onProgress?.call(
+            0.5 + (progress * 0.4),
+            'Converting... ${(progress * 100).toInt()}%',
+          );
         },
       );
       print('✅ [BLENDER_API] Conversion completed');
       onProgress?.call(0.9, 'Downloading result...');
 
       // Step 5: Download GLB file
-      final glbPath = await _downloadGlb(sessionId, result['filename'] as String, usdzPath);
+      final glbPath = await _downloadGlb(
+        sessionId,
+        result['filename'] as String,
+        usdzPath,
+      );
       print('✅ [BLENDER_API] GLB downloaded: $glbPath');
       onProgress?.call(1.0, 'Complete!');
 
@@ -134,7 +140,9 @@ class BlenderApiService {
 
     // API returns 201 (Created) for successful session creation
     if (response.statusCode != 201) {
-      throw Exception('Failed to create session: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to create session: ${response.statusCode} ${response.body}',
+      );
     }
 
     final data = json.decode(response.body);
@@ -159,7 +167,9 @@ class BlenderApiService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to upload file: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to upload file: ${response.statusCode} ${response.body}',
+      );
     }
   }
 
@@ -186,7 +196,9 @@ class BlenderApiService {
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to start conversion: ${response.statusCode} ${response.body}');
+      throw Exception(
+        'Failed to start conversion: ${response.statusCode} ${response.body}',
+      );
     }
   }
 
@@ -204,10 +216,7 @@ class BlenderApiService {
 
       final response = await http.get(
         Uri.parse('$apiUrl/sessions/$sessionId/status'),
-        headers: {
-          'X-API-Key': apiKey,
-          ...deviceHeaders,
-        },
+        headers: {'X-API-Key': apiKey, ...deviceHeaders},
       );
 
       if (response.statusCode != 200) {
@@ -236,19 +245,22 @@ class BlenderApiService {
       // Continue polling
     }
 
-    throw TimeoutException('Conversion timeout after ${maxAttempts * interval.inSeconds} seconds');
+    throw TimeoutException(
+      'Conversion timeout after ${maxAttempts * interval.inSeconds} seconds',
+    );
   }
 
   /// Download GLB file and save next to original USDZ
-  Future<String> _downloadGlb(String sessionId, String filename, String usdzPath) async {
+  Future<String> _downloadGlb(
+    String sessionId,
+    String filename,
+    String usdzPath,
+  ) async {
     final deviceHeaders = await _getDeviceHeaders();
 
     final response = await http.get(
       Uri.parse('$apiUrl/sessions/$sessionId/download/$filename'),
-      headers: {
-        'X-API-Key': apiKey,
-        ...deviceHeaders,
-      },
+      headers: {'X-API-Key': apiKey, ...deviceHeaders},
     );
 
     if (response.statusCode != 200) {
@@ -273,10 +285,7 @@ class BlenderApiService {
 
     final response = await http.get(
       Uri.parse('$apiUrl/sessions/$sessionId/status'),
-      headers: {
-        'X-API-Key': apiKey,
-        ...deviceHeaders,
-      },
+      headers: {'X-API-Key': apiKey, ...deviceHeaders},
     );
 
     if (response.statusCode != 200) {

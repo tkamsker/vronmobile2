@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:vector_math/vector_math_64.dart' as vm;
 
 part 'room_outline.g.dart';
 
@@ -17,20 +16,14 @@ class RoomOutline {
 
   /// 2D polygon vertices representing the room boundary (clockwise order)
   /// Coordinates are in canvas space (pixels)
-  @JsonKey(
-    fromJson: _pointsFromJson,
-    toJson: _pointsToJson,
-  )
+  @JsonKey(fromJson: _pointsFromJson, toJson: _pointsToJson)
   final List<Offset> vertices;
 
   /// Current rotation angle in degrees (clockwise from north)
   final double rotationDegrees;
 
   /// Current position offset from original extraction (for manual adjustment)
-  @JsonKey(
-    fromJson: _offsetFromJson,
-    toJson: _offsetToJson,
-  )
+  @JsonKey(fromJson: _offsetFromJson, toJson: _offsetToJson)
   final Offset positionOffset;
 
   /// Whether this room is currently selected on the canvas
@@ -42,10 +35,7 @@ class RoomOutline {
   final List<int> estimatedDoorIndices;
 
   /// Color for rendering this room outline (defaults to blue)
-  @JsonKey(
-    fromJson: _colorFromJson,
-    toJson: _colorToJson,
-  )
+  @JsonKey(fromJson: _colorFromJson, toJson: _colorToJson)
   final Color outlineColor;
 
   const RoomOutline({
@@ -172,8 +162,7 @@ class RoomOutline {
 
     if (point.dx < (v1.dx < v2.dx ? v1.dx : v2.dx)) return true;
 
-    final slope =
-        (v2.dx - v1.dx) / (v2.dy - v1.dy);
+    final slope = (v2.dx - v1.dx) / (v2.dy - v1.dy);
     final intersectionX = v1.dx + (point.dy - v1.dy) * slope;
     return point.dx < intersectionX;
   }
@@ -181,7 +170,10 @@ class RoomOutline {
   // JSON serialization helpers for complex types
   static List<Offset> _pointsFromJson(List<dynamic> json) {
     return json
-        .map((p) => Offset((p['dx'] as num).toDouble(), (p['dy'] as num).toDouble()))
+        .map(
+          (p) =>
+              Offset((p['dx'] as num).toDouble(), (p['dy'] as num).toDouble()),
+        )
         .toList();
   }
 

@@ -62,7 +62,9 @@ class _HomeScreenState extends State<HomeScreen> {
       final projects = await _projectService.fetchProjects();
 
       if (kDebugMode) {
-        print('✅ [HOME] Loaded ${projects.length} projects (all subscriptions)');
+        print(
+          '✅ [HOME] Loaded ${projects.length} projects (all subscriptions)',
+        );
       }
 
       setState(() {
@@ -108,9 +110,11 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'BYO':
         // Filter for Bring Your Own (MANAGED_BY_BRING_YOUR_OWN_WORLDS_TIER)
         filtered = filtered
-            .where((project) =>
-                project.subscription.status ==
-                'MANAGED_BY_BRING_YOUR_OWN_WORLDS_TIER')
+            .where(
+              (project) =>
+                  project.subscription.status ==
+                  'MANAGED_BY_BRING_YOUR_OWN_WORLDS_TIER',
+            )
             .toList();
         break;
       case 'All':
@@ -176,8 +180,9 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       if (await canLaunchUrl(url)) {
         await launchUrl(url, mode: LaunchMode.externalApplication);
-        if (kDebugMode)
+        if (kDebugMode) {
           print('🏠 [HOME] Opened projects page in browser: $url');
+        }
 
         // Refresh project list when user returns to app
         // (in case they created a project in the web app)

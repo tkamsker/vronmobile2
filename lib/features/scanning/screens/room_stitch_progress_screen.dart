@@ -68,7 +68,7 @@ class _RoomStitchProgressScreenState extends State<RoomStitchProgressScreen> {
       } else if (completedJob.status == RoomStitchJobStatus.failed) {
         _handleFailure(completedJob);
       }
-    } on TimeoutException catch (e) {
+    } on TimeoutException {
       if (!mounted) return;
       _showErrorDialog(
         'Stitching Timeout',
@@ -76,10 +76,7 @@ class _RoomStitchProgressScreenState extends State<RoomStitchProgressScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      _showErrorDialog(
-        'Stitching Failed',
-        e.toString(),
-      );
+      _showErrorDialog('Stitching Failed', e.toString());
     }
   }
 
@@ -118,7 +115,8 @@ class _RoomStitchProgressScreenState extends State<RoomStitchProgressScreen> {
       // Navigate to preview screen
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => StitchedModelPreviewScreen(stitchedModel: model),
+          builder: (context) =>
+              StitchedModelPreviewScreen(stitchedModel: model),
         ),
       );
     } catch (e) {
@@ -313,7 +311,9 @@ class _RoomStitchProgressScreenState extends State<RoomStitchProgressScreen> {
                     else
                       CircularProgressIndicator(
                         // Guard against NaN values that can cause CoreGraphics errors
-                        value: (_currentJob!.progress.isNaN || !_currentJob!.progress.isFinite)
+                        value:
+                            (_currentJob!.progress.isNaN ||
+                                !_currentJob!.progress.isFinite)
                             ? null
                             : _currentJob!.progress / 100,
                         strokeWidth: 8,
@@ -346,17 +346,16 @@ class _RoomStitchProgressScreenState extends State<RoomStitchProgressScreen> {
             if (_getEstimatedTimeRemaining() != null)
               Text(
                 _getEstimatedTimeRemaining()!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
               ),
 
             const Spacer(),
 
             // Cancel button
             if (!_isDownloading &&
-                (_currentJob == null ||
-                    !_currentJob!.isTerminal))
+                (_currentJob == null || !_currentJob!.isTerminal))
               TextButton(
                 onPressed: _showCancelDialog,
                 child: const Text('Cancel'),

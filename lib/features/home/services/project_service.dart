@@ -288,8 +288,9 @@ class ProjectService {
 
       return project;
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('❌ [PROJECTS] Error fetching project detail: ${e.toString()}');
+      }
       rethrow;
     }
   }
@@ -359,8 +360,9 @@ class ProjectService {
 
       return updatedProject;
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('❌ [PROJECTS] Error updating project: ${e.toString()}');
+      }
       rethrow;
     }
   }
@@ -444,8 +446,9 @@ class ProjectService {
       }
 
       if (result.data == null || result.data!['createProject'] == null) {
-        if (kDebugMode)
+        if (kDebugMode) {
           print('⚠️ [PROJECTS] No createProject data in response');
+        }
         throw Exception('Failed to create project: No data returned');
       }
 
@@ -460,8 +463,9 @@ class ProjectService {
 
       return project;
     } catch (e) {
-      if (kDebugMode)
+      if (kDebugMode) {
         print('❌ [PROJECTS] Error creating project: ${e.toString()}');
+      }
       rethrow;
     }
   }

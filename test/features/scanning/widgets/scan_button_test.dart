@@ -1,8 +1,4 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vronmobile2/features/scanning/widgets/scan_button.dart';
-import 'package:vronmobile2/features/scanning/models/lidar_capability.dart';
-import 'package:vronmobile2/core/constants/app_strings.dart';
 
 void main() {
   group('ScanButton Widget', () {
@@ -117,7 +113,9 @@ void main() {
       // expect(find.text(AppStrings.startScanButton), findsOneWidget);
     });
 
-    testWidgets('calls onPressed when tapped on supported device', (tester) async {
+    testWidgets('calls onPressed when tapped on supported device', (
+      tester,
+    ) async {
       // var wasPressed = false;
 
       // final supportedCapability = LidarCapability(
@@ -146,7 +144,9 @@ void main() {
       // expect(wasPressed, true);
     });
 
-    testWidgets('has correct semantics labels for accessibility', (tester) async {
+    testWidgets('has correct semantics labels for accessibility', (
+      tester,
+    ) async {
       // final supportedCapability = LidarCapability(
       //   support: LidarSupport.supported,
       //   deviceModel: 'iPhone 14 Pro',

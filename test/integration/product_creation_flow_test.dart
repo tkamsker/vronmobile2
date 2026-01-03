@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vronmobile2/features/home/models/project.dart';
 import 'package:vronmobile2/features/home/models/project_subscription.dart';
-import 'package:vronmobile2/features/projects/screens/project_detail_screen.dart';
 import 'package:vronmobile2/features/projects/widgets/project_products_tab.dart';
 import 'package:vronmobile2/core/navigation/routes.dart';
 import 'package:vronmobile2/core/config/env_config.dart';

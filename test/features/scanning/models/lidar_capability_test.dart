@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vronmobile2/features/scanning/models/lidar_capability.dart';
-import 'dart:io';
 
 void main() {
   group('LidarCapability', () {
@@ -43,7 +42,8 @@ void main() {
         deviceModel: 'Pixel 7',
         osVersion: 'Android 13',
         isMultiRoomSupported: false,
-        unsupportedReason: 'LiDAR scanning is not available on Android devices. You can upload GLB files instead.',
+        unsupportedReason:
+            'LiDAR scanning is not available on Android devices. You can upload GLB files instead.',
       );
 
       expect(capability.support, LidarSupport.notApplicable);
@@ -59,7 +59,8 @@ void main() {
         deviceModel: 'iPhone 11',
         osVersion: '16.5',
         isMultiRoomSupported: false,
-        unsupportedReason: 'Your device does not have a LiDAR scanner. LiDAR is available on iPhone 12 Pro and newer Pro models.',
+        unsupportedReason:
+            'Your device does not have a LiDAR scanner. LiDAR is available on iPhone 12 Pro and newer Pro models.',
       );
 
       expect(capability.support, LidarSupport.noLidar);
@@ -74,7 +75,8 @@ void main() {
         deviceModel: 'iPhone 12 Pro',
         osVersion: '15.7',
         isMultiRoomSupported: false,
-        unsupportedReason: 'LiDAR scanning requires iOS 16.0 or later. Please update your device.',
+        unsupportedReason:
+            'LiDAR scanning requires iOS 16.0 or later. Please update your device.',
       );
 
       expect(capability.support, LidarSupport.oldIOS);

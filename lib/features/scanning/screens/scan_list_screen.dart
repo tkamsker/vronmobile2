@@ -23,10 +23,7 @@ import '../models/room_layout.dart';
 class ScanListScreen extends StatefulWidget {
   final String? projectName;
 
-  const ScanListScreen({
-    super.key,
-    this.projectName,
-  });
+  const ScanListScreen({super.key, this.projectName});
 
   @override
   State<ScanListScreen> createState() => _ScanListScreenState();
@@ -143,7 +140,8 @@ class _ScanListScreenState extends State<ScanListScreen> {
                             child: Text(
                               _isLoadingProjects
                                   ? 'Loading projects...'
-                                  : (_selectedProject?.name ?? 'No project selected'),
+                                  : (_selectedProject?.name ??
+                                        'No project selected'),
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
@@ -151,10 +149,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
                               ),
                             ),
                           ),
-                          Icon(
-                            Icons.expand_more,
-                            color: Colors.grey.shade400,
-                          ),
+                          Icon(Icons.expand_more, color: Colors.grey.shade400),
                         ],
                       ),
                     ),
@@ -164,10 +159,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   // Helper text
                   Text(
                     'Selecting a project filters the scan list below.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
                   ),
                 ],
               ),
@@ -175,16 +167,16 @@ class _ScanListScreenState extends State<ScanListScreen> {
 
             // Recent Scans header
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
                     'Recent Scans',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   TextButton(
                     onPressed: () {
@@ -248,7 +240,9 @@ class _ScanListScreenState extends State<ScanListScreen> {
                     width: double.infinity,
                     height: 56,
                     child: OutlinedButton.icon(
-                      onPressed: scans.length >= 2 ? () => _roomStitching() : null,
+                      onPressed: scans.length >= 2
+                          ? () => _roomStitching()
+                          : null,
                       icon: Icon(
                         Icons.folder_open,
                         size: 24,
@@ -292,10 +286,12 @@ class _ScanListScreenState extends State<ScanListScreen> {
 
   Widget _buildScanCard(ScanData scan, int scanNumber) {
     // Determine room name - use metadata room name or default to "Scan N"
-    final roomName = scan.metadata?['roomName'] as String? ?? 'Scan $scanNumber';
+    final roomName =
+        scan.metadata?['roomName'] as String? ?? 'Scan $scanNumber';
 
     // Get project name from metadata or use default
-    final projectName = scan.metadata?['projectName'] as String? ?? 'Current Project';
+    final projectName =
+        scan.metadata?['projectName'] as String? ?? 'Current Project';
 
     // Get square footage from metadata if available
     final sqFt = scan.metadata?['squareFootage'] as double?;
@@ -345,7 +341,10 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   bottom: 8,
                   left: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor,
                       borderRadius: BorderRadius.circular(6),
@@ -383,11 +382,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   // Project name with folder icon
                   Row(
                     children: [
-                      Icon(
-                        Icons.folder,
-                        size: 16,
-                        color: Colors.blue.shade400,
-                      ),
+                      Icon(Icons.folder, size: 16, color: Colors.blue.shade400),
                       const SizedBox(width: 4),
                       Text(
                         projectName,
@@ -403,21 +398,14 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   // Timestamp and square footage
                   Text(
                     '${_formatRelativeDate(scan.capturedAt)}$sqFtText',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade400,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
                   ),
                 ],
               ),
             ),
 
             // Chevron icon
-            Icon(
-              Icons.chevron_right,
-              color: Colors.grey.shade600,
-              size: 28,
-            ),
+            Icon(Icons.chevron_right, color: Colors.grey.shade600, size: 28),
           ],
         ),
       ),
@@ -437,7 +425,10 @@ class _ScanListScreenState extends State<ScanListScreen> {
             children: [
               Icon(Icons.add_circle, color: Colors.blue.shade400),
               const SizedBox(width: 12),
-              const Text('Create BYO Project', style: TextStyle(color: Colors.white)),
+              const Text(
+                'Create BYO Project',
+                style: TextStyle(color: Colors.white),
+              ),
             ],
           ),
           content: SingleChildScrollView(
@@ -451,11 +442,17 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   decoration: BoxDecoration(
                     color: Colors.blue.shade900.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.shade700.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: Colors.blue.shade700.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue.shade400, size: 20),
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.blue.shade400,
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -503,28 +500,30 @@ class _ScanListScreenState extends State<ScanListScreen> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: worldFile != null
-                          ? Colors.green.shade600
-                          : Colors.grey.shade700,
+                            ? Colors.green.shade600
+                            : Colors.grey.shade700,
                       ),
                     ),
                     child: Row(
                       children: [
                         Icon(
-                          worldFile != null ? Icons.check_circle : Icons.upload_file,
+                          worldFile != null
+                              ? Icons.check_circle
+                              : Icons.upload_file,
                           color: worldFile != null
-                            ? Colors.green.shade400
-                            : Colors.grey.shade500,
+                              ? Colors.green.shade400
+                              : Colors.grey.shade500,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             worldFile != null
-                              ? worldFile!.path.split('/').last
-                              : 'Select world GLB file',
+                                ? worldFile!.path.split('/').last
+                                : 'Select world GLB file',
                             style: TextStyle(
                               color: worldFile != null
-                                ? Colors.white
-                                : Colors.grey.shade500,
+                                  ? Colors.white
+                                  : Colors.grey.shade500,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -567,28 +566,30 @@ class _ScanListScreenState extends State<ScanListScreen> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: meshFile != null
-                          ? Colors.green.shade600
-                          : Colors.grey.shade700,
+                            ? Colors.green.shade600
+                            : Colors.grey.shade700,
                       ),
                     ),
                     child: Row(
                       children: [
                         Icon(
-                          meshFile != null ? Icons.check_circle : Icons.upload_file,
+                          meshFile != null
+                              ? Icons.check_circle
+                              : Icons.upload_file,
                           color: meshFile != null
-                            ? Colors.green.shade400
-                            : Colors.grey.shade500,
+                              ? Colors.green.shade400
+                              : Colors.grey.shade500,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             meshFile != null
-                              ? meshFile!.path.split('/').last
-                              : 'Select mesh GLB file',
+                                ? meshFile!.path.split('/').last
+                                : 'Select mesh GLB file',
                             style: TextStyle(
                               color: meshFile != null
-                                ? Colors.white
-                                : Colors.grey.shade500,
+                                  ? Colors.white
+                                  : Colors.grey.shade500,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -605,11 +606,17 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   decoration: BoxDecoration(
                     color: Colors.blue.shade900.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.shade700.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: Colors.blue.shade700.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue.shade400, size: 20),
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.blue.shade400,
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -631,7 +638,10 @@ class _ScanListScreenState extends State<ScanListScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel', style: TextStyle(color: Colors.grey.shade400)),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey.shade400),
+              ),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -670,10 +680,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
     );
   }
 
-  Future<void> _createNewProject(
-    File worldFile,
-    File meshFile,
-  ) async {
+  Future<void> _createNewProject(File worldFile, File meshFile) async {
     try {
       // Show loading indicator
       showDialog(
@@ -748,9 +755,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
               children: [
                 Icon(Icons.check_circle, color: Colors.green.shade400),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: Text('BYO project created successfully!'),
-                ),
+                Expanded(child: Text('BYO project created successfully!')),
               ],
             ),
             backgroundColor: Colors.green.shade700,
@@ -774,20 +779,23 @@ class _ScanListScreenState extends State<ScanListScreen> {
         String? actionMessage;
 
         // Check if mutation doesn't exist on backend
-        if (errorMessage.contains('VRonCreateProjectFromOwnWorld mutation not implemented')) {
+        if (errorMessage.contains(
+          'VRonCreateProjectFromOwnWorld mutation not implemented',
+        )) {
           displayMessage = 'Backend not ready for BYO project creation';
           actionMessage = 'Please create projects via the web UI for now';
         } else if (errorMessage.contains('already exists') ||
-                   errorMessage.contains('DUPLICATE_SLUG') ||
-                   errorMessage.contains('duplicate')) {
+            errorMessage.contains('DUPLICATE_SLUG') ||
+            errorMessage.contains('duplicate')) {
           displayMessage = 'A project with this slug already exists';
           actionMessage = 'Please choose a different name';
         } else if (errorMessage.contains('Not authenticated') ||
-                   errorMessage.contains('401')) {
+            errorMessage.contains('401')) {
           displayMessage = 'Authentication failed';
           actionMessage = 'Please log in again';
         } else {
-          displayMessage = 'Failed to create project: ${errorMessage.length > 100 ? errorMessage.substring(0, 100) + '...' : errorMessage}';
+          displayMessage =
+              'Failed to create project: ${errorMessage.length > 100 ? '${errorMessage.substring(0, 100)}...' : errorMessage}';
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -807,10 +815,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   const SizedBox(height: 8),
                   Text(
                     actionMessage,
-                    style: TextStyle(
-                      color: Colors.red.shade200,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.red.shade200, fontSize: 12),
                   ),
                 ],
               ],
@@ -893,13 +898,25 @@ class _ScanListScreenState extends State<ScanListScreen> {
             title: Row(
               children: [
                 Icon(
-                  dialogState.isConverting ? Icons.sync : (dialogState.errorMessage != null ? Icons.error : Icons.check_circle),
-                  color: dialogState.isConverting ? Colors.blue.shade400 : (dialogState.errorMessage != null ? Colors.red.shade400 : Colors.green.shade400),
+                  dialogState.isConverting
+                      ? Icons.sync
+                      : (dialogState.errorMessage != null
+                            ? Icons.error
+                            : Icons.check_circle),
+                  color: dialogState.isConverting
+                      ? Colors.blue.shade400
+                      : (dialogState.errorMessage != null
+                            ? Colors.red.shade400
+                            : Colors.green.shade400),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    dialogState.isConverting ? 'Converting to GLB' : (dialogState.errorMessage != null ? 'Conversion Failed' : 'Conversion Complete'),
+                    dialogState.isConverting
+                        ? 'Converting to GLB'
+                        : (dialogState.errorMessage != null
+                              ? 'Conversion Failed'
+                              : 'Conversion Complete'),
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
@@ -912,7 +929,9 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   LinearProgressIndicator(
                     value: dialogState.progress,
                     backgroundColor: Colors.grey.shade800,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade400),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.blue.shade400,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -926,14 +945,15 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   const SizedBox(height: 8),
                   Text(
                     dialogState.statusText,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade400,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
                     textAlign: TextAlign.center,
                   ),
                 ] else if (dialogState.errorMessage != null) ...[
-                  Icon(Icons.error_outline, size: 48, color: Colors.red.shade400),
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: Colors.red.shade400,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     dialogState.errorMessage!,
@@ -941,7 +961,11 @@ class _ScanListScreenState extends State<ScanListScreen> {
                     textAlign: TextAlign.center,
                   ),
                 ] else ...[
-                  Icon(Icons.check_circle, size: 48, color: Colors.green.shade400),
+                  Icon(
+                    Icons.check_circle,
+                    size: 48,
+                    color: Colors.green.shade400,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Creating project...',
@@ -951,12 +975,17 @@ class _ScanListScreenState extends State<ScanListScreen> {
                 ],
               ],
             ),
-            actions: dialogState.errorMessage != null ? [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: Text('Close', style: TextStyle(color: Colors.grey.shade400)),
-              ),
-            ] : [],
+            actions: dialogState.errorMessage != null
+                ? [
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: Text(
+                        'Close',
+                        style: TextStyle(color: Colors.grey.shade400),
+                      ),
+                    ),
+                  ]
+                : [],
           );
         },
       ),
@@ -1035,25 +1064,24 @@ class _ScanListScreenState extends State<ScanListScreen> {
               ),
             ),
             Divider(color: Colors.grey.shade800, height: 1),
-            ..._projects.map((project) => ListTile(
-              leading: Icon(
-                Icons.folder,
-                color: Colors.blue.shade400,
+            ..._projects.map(
+              (project) => ListTile(
+                leading: Icon(Icons.folder, color: Colors.blue.shade400),
+                title: Text(
+                  project.name,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                trailing: _selectedProject?.id == project.id
+                    ? Icon(Icons.check, color: Colors.blue.shade400)
+                    : null,
+                onTap: () {
+                  setState(() {
+                    _selectedProject = project;
+                  });
+                  Navigator.pop(context);
+                },
               ),
-              title: Text(
-                project.name,
-                style: const TextStyle(color: Colors.white),
-              ),
-              trailing: _selectedProject?.id == project.id
-                  ? Icon(Icons.check, color: Colors.blue.shade400)
-                  : null,
-              onTap: () {
-                setState(() {
-                  _selectedProject = project;
-                });
-                Navigator.pop(context);
-              },
-            )),
+            ),
             if (_projects.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(32.0),
@@ -1084,7 +1112,10 @@ class _ScanListScreenState extends State<ScanListScreen> {
               leading: Icon(Icons.add_circle, color: Colors.green.shade400),
               title: Text(
                 'Create Project from Scan',
-                style: TextStyle(color: Colors.green.shade400, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: Colors.green.shade400,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               subtitle: const Text(
                 'Backend will convert USDZ → GLB automatically',
@@ -1097,7 +1128,10 @@ class _ScanListScreenState extends State<ScanListScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.visibility, color: Colors.white),
-              title: const Text('View USDZ', style: TextStyle(color: Colors.white)),
+              title: const Text(
+                'View USDZ',
+                style: TextStyle(color: Colors.white),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _viewUsdzPreview(scan);
@@ -1105,7 +1139,10 @@ class _ScanListScreenState extends State<ScanListScreen> {
             ),
             ListTile(
               leading: Icon(Icons.delete_outline, color: Colors.red.shade400),
-              title: Text('Delete', style: TextStyle(color: Colors.red.shade400)),
+              title: Text(
+                'Delete',
+                style: TextStyle(color: Colors.red.shade400),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _confirmDeleteScan(scan);
@@ -1122,11 +1159,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.threed_rotation,
-            size: 80,
-            color: Colors.grey.shade300,
-          ),
+          Icon(Icons.threed_rotation, size: 80, color: Colors.grey.shade300),
           const SizedBox(height: 16),
           Text(
             'No scans yet',
@@ -1139,10 +1172,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
           const SizedBox(height: 8),
           Text(
             'Start scanning to create your first 3D room',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade500,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
           ),
         ],
       ),
@@ -1182,9 +1212,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
 
   Future<void> _scanAnotherRoom() async {
     final result = await Navigator.of(context).push<ScanData>(
-      MaterialPageRoute(
-        builder: (context) => const ScanningScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const ScanningScreen()),
     );
 
     if (result != null) {
@@ -1199,16 +1227,15 @@ class _ScanListScreenState extends State<ScanListScreen> {
 
     // Get projectId from scan metadata or use temporary session-based ID
     final projectId = scans.isNotEmpty
-        ? (scans.first.metadata?['projectId'] as String? ?? 'temp-session-${DateTime.now().millisecondsSinceEpoch}')
+        ? (scans.first.metadata?['projectId'] as String? ??
+              'temp-session-${DateTime.now().millisecondsSinceEpoch}')
         : 'temp-session-${DateTime.now().millisecondsSinceEpoch}';
 
     // Step 1: Show canvas layout screen for room arrangement
     final RoomLayout? layout = await Navigator.of(context).push<RoomLayout>(
       MaterialPageRoute(
-        builder: (context) => RoomLayoutCanvasScreen(
-          scans: scans,
-          projectId: projectId,
-        ),
+        builder: (context) =>
+            RoomLayoutCanvasScreen(scans: scans, projectId: projectId),
       ),
     );
 
@@ -1300,9 +1327,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
     final snackBar = SnackBar(
       content: Row(
         children: [
-          const Expanded(
-            child: Text('Scan deleted'),
-          ),
+          const Expanded(child: Text('Scan deleted')),
           TextButton(
             onPressed: () {
               // Restore scan

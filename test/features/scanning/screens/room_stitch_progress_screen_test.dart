@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:vronmobile2/features/scanning/screens/room_stitch_progress_screen.dart';
 import 'package:vronmobile2/features/scanning/models/room_stitch_job.dart';
-import 'package:vronmobile2/features/scanning/models/stitched_model.dart';
 import 'package:vronmobile2/features/scanning/services/room_stitching_service.dart';
 
 // Mock classes
@@ -38,32 +37,39 @@ void main() {
 
     group('Initial UI State', () {
       testWidgets('displays screen title "Stitching Rooms"', (tester) async {
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((_) async => RoomStitchJob(
-              jobId: 'job-001',
-              status: RoomStitchJobStatus.completed,
-              progress: 100,
-              resultUrl: 'https://example.com/stitched.glb',
-              createdAt: DateTime.now(),
-              completedAt: DateTime.now(),
-            ));
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer(
+          (_) async => RoomStitchJob(
+            jobId: 'job-001',
+            status: RoomStitchJobStatus.completed,
+            progress: 100,
+            resultUrl: 'https://example.com/stitched.glb',
+            createdAt: DateTime.now(),
+            completedAt: DateTime.now(),
+          ),
+        );
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         expect(find.text('Stitching Rooms'), findsOneWidget);
       });
 
-      testWidgets('displays initial progress indicator (indeterminate)', (tester) async {
+      testWidgets('displays initial progress indicator (indeterminate)', (
+        tester,
+      ) async {
         // Mock polling that never completes (for initial state test)
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((_) async {
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer((_) async {
           await Future.delayed(const Duration(milliseconds: 200));
           return RoomStitchJob(
             jobId: 'job-001',
@@ -73,10 +79,9 @@ void main() {
           );
         });
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
         await tester.pump(); // Initial frame
 
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -85,11 +90,15 @@ void main() {
         await tester.pumpAndSettle();
       });
 
-      testWidgets('displays initial status message "Waiting to start..."', (tester) async {
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((_) async {
+      testWidgets('displays initial status message "Waiting to start..."', (
+        tester,
+      ) async {
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer((_) async {
           await Future.delayed(const Duration(milliseconds: 200));
           return RoomStitchJob(
             jobId: 'job-001',
@@ -100,10 +109,9 @@ void main() {
           );
         });
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
         await tester.pump();
 
         expect(find.text('Waiting to start...'), findsOneWidget);
@@ -113,10 +121,12 @@ void main() {
       });
 
       testWidgets('displays room names being stitched', (tester) async {
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((_) async {
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer((_) async {
           await Future.delayed(const Duration(milliseconds: 200));
           return RoomStitchJob(
             jobId: 'job-001',
@@ -126,14 +136,16 @@ void main() {
           );
         });
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-          roomNames: {
-            'scan-001': 'Living Room',
-            'scan-002': 'Master Bedroom',
-          },
-        ));
+        await tester.pumpWidget(
+          createTestWidget(
+            jobId: 'job-001',
+            scanIds: ['scan-001', 'scan-002'],
+            roomNames: {
+              'scan-001': 'Living Room',
+              'scan-002': 'Master Bedroom',
+            },
+          ),
+        );
         await tester.pump();
 
         expect(find.text('Living Room + Master Bedroom'), findsOneWidget);
@@ -144,7 +156,9 @@ void main() {
     });
 
     group('Progress Updates', () {
-      testWidgets('updates progress indicator when status changes', (tester) async {
+      testWidgets('updates progress indicator when status changes', (
+        tester,
+      ) async {
         final statusUpdates = <RoomStitchJob>[
           RoomStitchJob(
             jobId: 'job-001',
@@ -169,11 +183,15 @@ void main() {
         int callCount = 0;
         void Function(RoomStitchJob)? onStatusChangeCallback;
 
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((invocation) async {
-          onStatusChangeCallback = invocation.namedArguments[#onStatusChange] as void Function(RoomStitchJob)?;
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer((invocation) async {
+          onStatusChangeCallback =
+              invocation.namedArguments[#onStatusChange]
+                  as void Function(RoomStitchJob)?;
 
           // Simulate status updates
           for (final update in statusUpdates) {
@@ -191,10 +209,9 @@ void main() {
           );
         });
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         // Initial state
         await tester.pump();
@@ -219,19 +236,25 @@ void main() {
       testWidgets('displays progress percentage', (tester) async {
         void Function(RoomStitchJob)? onStatusChangeCallback;
 
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((invocation) async {
-          onStatusChangeCallback = invocation.namedArguments[#onStatusChange] as void Function(RoomStitchJob)?;
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer((invocation) async {
+          onStatusChangeCallback =
+              invocation.namedArguments[#onStatusChange]
+                  as void Function(RoomStitchJob)?;
 
           await Future.delayed(const Duration(milliseconds: 100));
-          onStatusChangeCallback?.call(RoomStitchJob(
-            jobId: 'job-001',
-            status: RoomStitchJobStatus.aligning,
-            progress: 65,
-            createdAt: DateTime.now(),
-          ));
+          onStatusChangeCallback?.call(
+            RoomStitchJob(
+              jobId: 'job-001',
+              status: RoomStitchJobStatus.aligning,
+              progress: 65,
+              createdAt: DateTime.now(),
+            ),
+          );
 
           return RoomStitchJob(
             jobId: 'job-001',
@@ -241,10 +264,9 @@ void main() {
           );
         });
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 100));
@@ -252,7 +274,9 @@ void main() {
         expect(find.text('65%'), findsOneWidget);
       });
 
-      testWidgets('shows all status messages during progression', (tester) async {
+      testWidgets('shows all status messages during progression', (
+        tester,
+      ) async {
         final statuses = [
           (RoomStitchJobStatus.pending, 'Waiting to start...'),
           (RoomStitchJobStatus.uploading, 'Uploading scans...'),
@@ -264,19 +288,25 @@ void main() {
         for (final (status, expectedMessage) in statuses) {
           void Function(RoomStitchJob)? onStatusChangeCallback;
 
-          when(() => mockStitchingService.pollStitchStatus(
-                jobId: any(named: 'jobId'),
-                onStatusChange: any(named: 'onStatusChange'),
-              )).thenAnswer((invocation) async {
-            onStatusChangeCallback = invocation.namedArguments[#onStatusChange] as void Function(RoomStitchJob)?;
+          when(
+            () => mockStitchingService.pollStitchStatus(
+              jobId: any(named: 'jobId'),
+              onStatusChange: any(named: 'onStatusChange'),
+            ),
+          ).thenAnswer((invocation) async {
+            onStatusChangeCallback =
+                invocation.namedArguments[#onStatusChange]
+                    as void Function(RoomStitchJob)?;
 
             await Future.delayed(const Duration(milliseconds: 50));
-            onStatusChangeCallback?.call(RoomStitchJob(
-              jobId: 'job-001',
-              status: status,
-              progress: 50,
-              createdAt: DateTime.now(),
-            ));
+            onStatusChangeCallback?.call(
+              RoomStitchJob(
+                jobId: 'job-001',
+                status: status,
+                progress: 50,
+                createdAt: DateTime.now(),
+              ),
+            );
 
             return RoomStitchJob(
               jobId: 'job-001',
@@ -286,10 +316,12 @@ void main() {
             );
           });
 
-          await tester.pumpWidget(createTestWidget(
-            jobId: 'job-001',
-            scanIds: ['scan-001', 'scan-002'],
-          ));
+          await tester.pumpWidget(
+            createTestWidget(
+              jobId: 'job-001',
+              scanIds: ['scan-001', 'scan-002'],
+            ),
+          );
 
           await tester.pump();
           await tester.pump(const Duration(milliseconds: 50));
@@ -304,20 +336,26 @@ void main() {
       testWidgets('displays estimated time remaining', (tester) async {
         void Function(RoomStitchJob)? onStatusChangeCallback;
 
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((invocation) async {
-          onStatusChangeCallback = invocation.namedArguments[#onStatusChange] as void Function(RoomStitchJob)?;
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer((invocation) async {
+          onStatusChangeCallback =
+              invocation.namedArguments[#onStatusChange]
+                  as void Function(RoomStitchJob)?;
 
           await Future.delayed(const Duration(milliseconds: 100));
-          onStatusChangeCallback?.call(RoomStitchJob(
-            jobId: 'job-001',
-            status: RoomStitchJobStatus.processing,
-            progress: 30,
-            estimatedDurationSeconds: 120, // 2 minutes estimated
-            createdAt: DateTime.now().subtract(const Duration(seconds: 30)),
-          ));
+          onStatusChangeCallback?.call(
+            RoomStitchJob(
+              jobId: 'job-001',
+              status: RoomStitchJobStatus.processing,
+              progress: 30,
+              estimatedDurationSeconds: 120, // 2 minutes estimated
+              createdAt: DateTime.now().subtract(const Duration(seconds: 30)),
+            ),
+          );
 
           return RoomStitchJob(
             jobId: 'job-001',
@@ -327,10 +365,9 @@ void main() {
           );
         });
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 100));
@@ -342,32 +379,41 @@ void main() {
     });
 
     group('Success Handling', () {
-      testWidgets('navigates to preview screen when stitching completes', (tester) async {
+      testWidgets('navigates to preview screen when stitching completes', (
+        tester,
+      ) async {
         final mockFile = MockFile();
-        when(() => mockFile.path).thenReturn('/Documents/scans/stitched-001.glb');
+        when(
+          () => mockFile.path,
+        ).thenReturn('/Documents/scans/stitched-001.glb');
         when(() => mockFile.lengthSync()).thenReturn(45000000); // 45 MB
 
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((_) async => RoomStitchJob(
-              jobId: 'job-001',
-              status: RoomStitchJobStatus.completed,
-              progress: 100,
-              resultUrl: 'https://example.com/stitched.glb',
-              createdAt: DateTime.now(),
-              completedAt: DateTime.now(),
-            ));
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer(
+          (_) async => RoomStitchJob(
+            jobId: 'job-001',
+            status: RoomStitchJobStatus.completed,
+            progress: 100,
+            resultUrl: 'https://example.com/stitched.glb',
+            createdAt: DateTime.now(),
+            completedAt: DateTime.now(),
+          ),
+        );
 
-        when(() => mockStitchingService.downloadStitchedModel(
-              resultUrl: any(named: 'resultUrl'),
-              filename: any(named: 'filename'),
-            )).thenAnswer((_) async => mockFile);
+        when(
+          () => mockStitchingService.downloadStitchedModel(
+            resultUrl: any(named: 'resultUrl'),
+            filename: any(named: 'filename'),
+          ),
+        ).thenAnswer((_) async => mockFile);
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pumpAndSettle();
 
@@ -375,54 +421,73 @@ void main() {
         expect(find.byType(RoomStitchProgressScreen), findsNothing);
       });
 
-      testWidgets('downloads stitched model before navigating to preview', (tester) async {
+      testWidgets('downloads stitched model before navigating to preview', (
+        tester,
+      ) async {
         final mockFile = MockFile();
-        when(() => mockFile.path).thenReturn('/Documents/scans/stitched-001.glb');
+        when(
+          () => mockFile.path,
+        ).thenReturn('/Documents/scans/stitched-001.glb');
         when(() => mockFile.lengthSync()).thenReturn(45000000);
 
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((_) async => RoomStitchJob(
-              jobId: 'job-001',
-              status: RoomStitchJobStatus.completed,
-              progress: 100,
-              resultUrl: 'https://example.com/stitched.glb',
-              createdAt: DateTime.now(),
-              completedAt: DateTime.now(),
-            ));
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer(
+          (_) async => RoomStitchJob(
+            jobId: 'job-001',
+            status: RoomStitchJobStatus.completed,
+            progress: 100,
+            resultUrl: 'https://example.com/stitched.glb',
+            createdAt: DateTime.now(),
+            completedAt: DateTime.now(),
+          ),
+        );
 
-        when(() => mockStitchingService.downloadStitchedModel(
-              resultUrl: any(named: 'resultUrl'),
-              filename: any(named: 'filename'),
-            )).thenAnswer((_) async => mockFile);
+        when(
+          () => mockStitchingService.downloadStitchedModel(
+            resultUrl: any(named: 'resultUrl'),
+            filename: any(named: 'filename'),
+          ),
+        ).thenAnswer((_) async => mockFile);
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pumpAndSettle();
 
         // Verify download was called
-        verify(() => mockStitchingService.downloadStitchedModel(
-              resultUrl: 'https://example.com/stitched.glb',
-              filename: any(named: 'filename'),
-            )).called(1);
+        verify(
+          () => mockStitchingService.downloadStitchedModel(
+            resultUrl: 'https://example.com/stitched.glb',
+            filename: any(named: 'filename'),
+          ),
+        ).called(1);
       });
 
-      testWidgets('shows success message "Stitching complete!"', (tester) async {
+      testWidgets('shows success message "Stitching complete!"', (
+        tester,
+      ) async {
         final mockFile = MockFile();
-        when(() => mockFile.path).thenReturn('/Documents/scans/stitched-001.glb');
+        when(
+          () => mockFile.path,
+        ).thenReturn('/Documents/scans/stitched-001.glb');
         when(() => mockFile.lengthSync()).thenReturn(45000000);
 
         void Function(RoomStitchJob)? onStatusChangeCallback;
 
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((invocation) async {
-          onStatusChangeCallback = invocation.namedArguments[#onStatusChange] as void Function(RoomStitchJob)?;
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer((invocation) async {
+          onStatusChangeCallback =
+              invocation.namedArguments[#onStatusChange]
+                  as void Function(RoomStitchJob)?;
 
           await Future.delayed(const Duration(milliseconds: 100));
           final completedJob = RoomStitchJob(
@@ -438,18 +503,19 @@ void main() {
           return completedJob;
         });
 
-        when(() => mockStitchingService.downloadStitchedModel(
-              resultUrl: any(named: 'resultUrl'),
-              filename: any(named: 'filename'),
-            )).thenAnswer((_) async {
+        when(
+          () => mockStitchingService.downloadStitchedModel(
+            resultUrl: any(named: 'resultUrl'),
+            filename: any(named: 'filename'),
+          ),
+        ).thenAnswer((_) async {
           await Future.delayed(const Duration(seconds: 2));
           return mockFile;
         });
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 100));
@@ -460,22 +526,25 @@ void main() {
 
     group('Failure Handling', () {
       testWidgets('shows error dialog when stitching fails', (tester) async {
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((_) async => RoomStitchJob(
-              jobId: 'job-001',
-              status: RoomStitchJobStatus.failed,
-              progress: 50,
-              errorMessage: 'Insufficient overlap between scans',
-              createdAt: DateTime.now(),
-              completedAt: DateTime.now(),
-            ));
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer(
+          (_) async => RoomStitchJob(
+            jobId: 'job-001',
+            status: RoomStitchJobStatus.failed,
+            progress: 50,
+            errorMessage: 'Insufficient overlap between scans',
+            createdAt: DateTime.now(),
+            completedAt: DateTime.now(),
+          ),
+        );
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pumpAndSettle();
 
@@ -493,22 +562,28 @@ void main() {
         ];
 
         for (final errorMessage in errorMessages) {
-          when(() => mockStitchingService.pollStitchStatus(
-                jobId: any(named: 'jobId'),
-                onStatusChange: any(named: 'onStatusChange'),
-              )).thenAnswer((_) async => RoomStitchJob(
-                jobId: 'job-001',
-                status: RoomStitchJobStatus.failed,
-                progress: 50,
-                errorMessage: errorMessage,
-                createdAt: DateTime.now(),
-                completedAt: DateTime.now(),
-              ));
+          when(
+            () => mockStitchingService.pollStitchStatus(
+              jobId: any(named: 'jobId'),
+              onStatusChange: any(named: 'onStatusChange'),
+            ),
+          ).thenAnswer(
+            (_) async => RoomStitchJob(
+              jobId: 'job-001',
+              status: RoomStitchJobStatus.failed,
+              progress: 50,
+              errorMessage: errorMessage,
+              createdAt: DateTime.now(),
+              completedAt: DateTime.now(),
+            ),
+          );
 
-          await tester.pumpWidget(createTestWidget(
-            jobId: 'job-001',
-            scanIds: ['scan-001', 'scan-002'],
-          ));
+          await tester.pumpWidget(
+            createTestWidget(
+              jobId: 'job-001',
+              scanIds: ['scan-001', 'scan-002'],
+            ),
+          );
 
           await tester.pumpAndSettle();
 
@@ -524,22 +599,25 @@ void main() {
       });
 
       testWidgets('provides "Retry" button in error dialog', (tester) async {
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((_) async => RoomStitchJob(
-              jobId: 'job-001',
-              status: RoomStitchJobStatus.failed,
-              progress: 50,
-              errorMessage: 'Backend timeout',
-              createdAt: DateTime.now(),
-              completedAt: DateTime.now(),
-            ));
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer(
+          (_) async => RoomStitchJob(
+            jobId: 'job-001',
+            status: RoomStitchJobStatus.failed,
+            progress: 50,
+            errorMessage: 'Backend timeout',
+            createdAt: DateTime.now(),
+            completedAt: DateTime.now(),
+          ),
+        );
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pumpAndSettle();
 
@@ -550,10 +628,12 @@ void main() {
       testWidgets('"Retry" button restarts polling', (tester) async {
         int pollCallCount = 0;
 
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((_) async {
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer((_) async {
           pollCallCount++;
 
           if (pollCallCount == 1) {
@@ -579,10 +659,9 @@ void main() {
           }
         });
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pumpAndSettle();
 
@@ -598,22 +677,25 @@ void main() {
       });
 
       testWidgets('"Cancel" button exits screen', (tester) async {
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((_) async => RoomStitchJob(
-              jobId: 'job-001',
-              status: RoomStitchJobStatus.failed,
-              progress: 50,
-              errorMessage: 'Error',
-              createdAt: DateTime.now(),
-              completedAt: DateTime.now(),
-            ));
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer(
+          (_) async => RoomStitchJob(
+            jobId: 'job-001',
+            status: RoomStitchJobStatus.failed,
+            progress: 50,
+            errorMessage: 'Error',
+            createdAt: DateTime.now(),
+            completedAt: DateTime.now(),
+          ),
+        );
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pumpAndSettle();
 
@@ -626,60 +708,76 @@ void main() {
       });
 
       testWidgets('handles polling timeout gracefully', (tester) async {
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenThrow(TimeoutException('Polling exceeded maximum attempts'));
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenThrow(TimeoutException('Polling exceeded maximum attempts'));
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pumpAndSettle();
 
         // Should show error dialog
         expect(find.byType(AlertDialog), findsOneWidget);
-        expect(find.textContaining('timeout'), findsOneWidget, reason: 'Should mention timeout');
+        expect(
+          find.textContaining('timeout'),
+          findsOneWidget,
+          reason: 'Should mention timeout',
+        );
       });
 
       testWidgets('handles download failure gracefully', (tester) async {
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((_) async => RoomStitchJob(
-              jobId: 'job-001',
-              status: RoomStitchJobStatus.completed,
-              progress: 100,
-              resultUrl: 'https://example.com/stitched.glb',
-              createdAt: DateTime.now(),
-              completedAt: DateTime.now(),
-            ));
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer(
+          (_) async => RoomStitchJob(
+            jobId: 'job-001',
+            status: RoomStitchJobStatus.completed,
+            progress: 100,
+            resultUrl: 'https://example.com/stitched.glb',
+            createdAt: DateTime.now(),
+            completedAt: DateTime.now(),
+          ),
+        );
 
-        when(() => mockStitchingService.downloadStitchedModel(
-              resultUrl: any(named: 'resultUrl'),
-              filename: any(named: 'filename'),
-            )).thenThrow(Exception('Network error during download'));
+        when(
+          () => mockStitchingService.downloadStitchedModel(
+            resultUrl: any(named: 'resultUrl'),
+            filename: any(named: 'filename'),
+          ),
+        ).thenThrow(Exception('Network error during download'));
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pumpAndSettle();
 
         // Should show download error dialog
         expect(find.byType(AlertDialog), findsOneWidget);
-        expect(find.textContaining('download'), findsOneWidget, reason: 'Should mention download error');
+        expect(
+          find.textContaining('download'),
+          findsOneWidget,
+          reason: 'Should mention download error',
+        );
       });
     });
 
     group('Cancel Button', () {
       testWidgets('displays "Cancel" button during progress', (tester) async {
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((_) async {
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer((_) async {
           await Future.delayed(const Duration(milliseconds: 200));
           return RoomStitchJob(
             jobId: 'job-001',
@@ -689,10 +787,9 @@ void main() {
           );
         });
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pump();
 
@@ -702,11 +799,15 @@ void main() {
         await tester.pumpAndSettle();
       });
 
-      testWidgets('shows confirmation dialog when cancel is tapped', (tester) async {
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((_) async {
+      testWidgets('shows confirmation dialog when cancel is tapped', (
+        tester,
+      ) async {
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer((_) async {
           await Future.delayed(const Duration(milliseconds: 200));
           return RoomStitchJob(
             jobId: 'job-001',
@@ -716,10 +817,9 @@ void main() {
           );
         });
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pump();
 
@@ -733,10 +833,12 @@ void main() {
       });
 
       testWidgets('exits screen when cancellation confirmed', (tester) async {
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((_) async {
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer((_) async {
           await Future.delayed(const Duration(milliseconds: 200));
           return RoomStitchJob(
             jobId: 'job-001',
@@ -746,10 +848,9 @@ void main() {
           );
         });
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pump();
 
@@ -770,19 +871,25 @@ void main() {
       testWidgets('announces status changes to screen readers', (tester) async {
         void Function(RoomStitchJob)? onStatusChangeCallback;
 
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((invocation) async {
-          onStatusChangeCallback = invocation.namedArguments[#onStatusChange] as void Function(RoomStitchJob)?;
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer((invocation) async {
+          onStatusChangeCallback =
+              invocation.namedArguments[#onStatusChange]
+                  as void Function(RoomStitchJob)?;
 
           await Future.delayed(const Duration(milliseconds: 100));
-          onStatusChangeCallback?.call(RoomStitchJob(
-            jobId: 'job-001',
-            status: RoomStitchJobStatus.aligning,
-            progress: 60,
-            createdAt: DateTime.now(),
-          ));
+          onStatusChangeCallback?.call(
+            RoomStitchJob(
+              jobId: 'job-001',
+              status: RoomStitchJobStatus.aligning,
+              progress: 60,
+              createdAt: DateTime.now(),
+            ),
+          );
 
           return RoomStitchJob(
             jobId: 'job-001',
@@ -792,10 +899,9 @@ void main() {
           );
         });
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pump();
 
@@ -807,10 +913,12 @@ void main() {
       });
 
       testWidgets('progress indicator has accessible label', (tester) async {
-        when(() => mockStitchingService.pollStitchStatus(
-              jobId: any(named: 'jobId'),
-              onStatusChange: any(named: 'onStatusChange'),
-            )).thenAnswer((_) async {
+        when(
+          () => mockStitchingService.pollStitchStatus(
+            jobId: any(named: 'jobId'),
+            onStatusChange: any(named: 'onStatusChange'),
+          ),
+        ).thenAnswer((_) async {
           await Future.delayed(const Duration(milliseconds: 200));
           return RoomStitchJob(
             jobId: 'job-001',
@@ -820,10 +928,9 @@ void main() {
           );
         });
 
-        await tester.pumpWidget(createTestWidget(
-          jobId: 'job-001',
-          scanIds: ['scan-001', 'scan-002'],
-        ));
+        await tester.pumpWidget(
+          createTestWidget(jobId: 'job-001', scanIds: ['scan-001', 'scan-002']),
+        );
 
         await tester.pump();
 

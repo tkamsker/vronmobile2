@@ -9,7 +9,6 @@ import 'package:vronmobile2/features/scanning/services/blender_api_client.dart';
 import 'package:vronmobile2/features/scanning/services/device_info_service.dart';
 import 'package:vronmobile2/features/scanning/services/retry_policy_service.dart';
 import 'package:vronmobile2/features/scanning/models/error_context.dart';
-import 'package:vronmobile2/features/scanning/models/session_diagnostics.dart';
 import 'dart:convert';
 import 'dart:io';
 
