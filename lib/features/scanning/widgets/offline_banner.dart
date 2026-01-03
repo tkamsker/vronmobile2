@@ -23,8 +23,7 @@ import '../services/connectivity_service.dart';
 class OfflineBanner extends StatelessWidget {
   final ConnectivityService connectivityService;
 
-  const OfflineBanner({Key? key, required this.connectivityService})
-    : super(key: key);
+  const OfflineBanner({super.key, required this.connectivityService});
 
   @override
   Widget build(BuildContext context) {

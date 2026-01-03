@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:native_ar_viewer/native_ar_viewer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:http/http.dart' as http;
 import '../models/scan_data.dart';
 import '../models/conversion_result.dart';
 import '../services/scan_upload_service.dart';
@@ -75,8 +74,12 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
     final rawHeight = metadata?['height'] as double?;
 
     // Guard against NaN values that can cause CoreGraphics errors
-    final width = (rawWidth != null && !rawWidth.isNaN && rawWidth.isFinite) ? rawWidth : null;
-    final height = (rawHeight != null && !rawHeight.isNaN && rawHeight.isFinite) ? rawHeight : null;
+    final width = (rawWidth != null && !rawWidth.isNaN && rawWidth.isFinite)
+        ? rawWidth
+        : null;
+    final height = (rawHeight != null && !rawHeight.isNaN && rawHeight.isFinite)
+        ? rawHeight
+        : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -100,10 +103,7 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
             onPressed: () => _saveToProject(),
             child: const Text(
               'Ready to save',
-              style: TextStyle(
-                color: Colors.blue,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -201,7 +201,9 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade600,
-                              backgroundColor: Colors.white.withValues(alpha: 0.9),
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.9,
+                              ),
                             ),
                           ),
                         ),
@@ -219,7 +221,9 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade600,
-                                backgroundColor: Colors.white.withValues(alpha: 0.9),
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: 0.9,
+                                ),
                               ),
                             ),
                           ),
@@ -235,7 +239,8 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  if (_glbLocalPath == null || !File(_glbLocalPath!).existsSync()) ...[
+                  if (_glbLocalPath == null ||
+                      !File(_glbLocalPath!).existsSync()) ...[
                     // Convert to GLB button (when GLB doesn't exist)
                     SizedBox(
                       width: double.infinity,
@@ -248,7 +253,9 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
                                 ),
                               )
                             : const Icon(Icons.transform, size: 24),
@@ -362,7 +369,9 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
 
   Future<void> _viewInAR() async {
     try {
-      print('🔍 [USDZ] Opening AR viewer in object mode for: ${_currentScanData.localPath}');
+      print(
+        '🔍 [USDZ] Opening AR viewer in object mode for: ${_currentScanData.localPath}',
+      );
 
       if (Platform.isIOS) {
         // Use url_launcher with URL fragment to start in object mode
@@ -511,7 +520,11 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.cloud_upload, color: Colors.blue.shade700, size: 20),
+                      Icon(
+                        Icons.cloud_upload,
+                        color: Colors.blue.shade700,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -530,10 +543,7 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                     '1. Upload your USDZ file\n'
                     '2. Convert it to GLB format\n'
                     '3. Store GLB locally for preview and navmesh creation',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.blue.shade700,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.blue.shade700),
                   ),
                 ],
               ),
@@ -541,7 +551,11 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
             const SizedBox(height: 16),
             Row(
               children: [
-                Icon(Icons.tips_and_updates, color: Colors.amber.shade700, size: 20),
+                Icon(
+                  Icons.tips_and_updates,
+                  color: Colors.amber.shade700,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -706,9 +720,7 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
     }
 
     // Navigate to GLB preview screen
-    final glbScanData = _currentScanData.copyWith(
-      glbLocalPath: _glbLocalPath,
-    );
+    final glbScanData = _currentScanData.copyWith(glbLocalPath: _glbLocalPath);
 
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -794,9 +806,7 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
   Future<void> _scanAnotherRoom() async {
     // Navigate to ScanningScreen to start new scan
     final result = await Navigator.of(context).push<ScanData>(
-      MaterialPageRoute(
-        builder: (context) => const ScanningScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const ScanningScreen()),
     );
 
     if (result != null && mounted) {

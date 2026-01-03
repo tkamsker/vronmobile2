@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:mocktail/mocktail.dart';
 import 'package:vronmobile2/features/scanning/services/session_investigation_service.dart';
-import 'package:vronmobile2/features/scanning/models/session_diagnostics.dart';
 import 'dart:convert';
 
 class MockHttpClient extends Mock implements http.Client {}

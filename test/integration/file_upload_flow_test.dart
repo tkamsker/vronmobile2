@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:vronmobile2/features/scanning/services/file_upload_service.dart';
@@ -36,27 +35,32 @@ void main() {
       // Automated integration tests for file picker require platform-specific mocking
     });
 
-    test('File storage service can save and retrieve GLB scan data', () async {
-      // Arrange
-      final testScanData = ScanData(
-        id: 'integration-test-glb',
-        format: ScanFormat.glb,
-        localPath: '/test/path/scan.glb',
-        fileSizeBytes: 100 * 1024 * 1024, // 100 MB
-        capturedAt: DateTime.now(),
-        status: ScanStatus.completed,
-      );
+    test(
+      'File storage service can save and retrieve GLB scan data',
+      () async {
+        // Arrange
+        final testScanData = ScanData(
+          id: 'integration-test-glb',
+          format: ScanFormat.glb,
+          localPath: '/test/path/scan.glb',
+          fileSizeBytes: 100 * 1024 * 1024, // 100 MB
+          capturedAt: DateTime.now(),
+          status: ScanStatus.completed,
+        );
 
-      // Act
-      // NOTE: FileStorageService no longer has saveScanMetadata/getAllScans/deleteScan methods
-      // Architecture changed to use ScanSessionManager for in-memory session management
-      // TODO: Update this test to reflect current architecture or remove
-      // await storageService.saveScanMetadata(testScanData);
-      // final savedScans = await storageService.getAllScans();
+        // Act
+        // NOTE: FileStorageService no longer has saveScanMetadata/getAllScans/deleteScan methods
+        // Architecture changed to use ScanSessionManager for in-memory session management
+        // TODO: Update this test to reflect current architecture or remove
+        // await storageService.saveScanMetadata(testScanData);
+        // final savedScans = await storageService.getAllScans();
 
-      // Assert
-      // Skipped pending architecture update
-    }, skip: 'FileStorageService methods no longer exist - architecture changed to ScanSessionManager');
+        // Assert
+        // Skipped pending architecture update
+      },
+      skip:
+          'FileStorageService methods no longer exist - architecture changed to ScanSessionManager',
+    );
 
     test('File validation rejects files over 250 MB', () async {
       // Arrange

@@ -3,6 +3,7 @@
 ///
 /// These models represent request/response structures for the BlenderAPI service
 /// which handles USDZ to GLB conversion via Blender's native import/export.
+library;
 
 import 'package:json_annotation/json_annotation.dart';
 import 'package:vronmobile2/features/scanning/services/error_message_service.dart';

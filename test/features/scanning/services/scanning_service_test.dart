@@ -1,7 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vronmobile2/features/scanning/services/scanning_service.dart';
-import 'package:vronmobile2/features/scanning/models/lidar_capability.dart';
-import 'package:vronmobile2/features/scanning/models/scan_data.dart';
 
 void main() {
   group('ScanningService', () {
@@ -93,14 +91,17 @@ void main() {
       // );
     });
 
-    test('startScan() respects 2-second initiation requirement (SC-001)', () async {
-      // final stopwatch = Stopwatch()..start();
+    test(
+      'startScan() respects 2-second initiation requirement (SC-001)',
+      () async {
+        // final stopwatch = Stopwatch()..start();
 
-      // await service.startScan();
+        // await service.startScan();
 
-      // stopwatch.stop();
-      // expect(stopwatch.elapsedMilliseconds, lessThan(2000));
-    });
+        // stopwatch.stop();
+        // expect(stopwatch.elapsedMilliseconds, lessThan(2000));
+      },
+    );
 
     // T025: Test _saveScanLocally()
     test('_saveScanLocally() saves USDZ file to Documents directory', () async {

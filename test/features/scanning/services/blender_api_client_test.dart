@@ -6,7 +6,6 @@ import 'package:http/testing.dart';
 import 'package:vronmobile2/features/scanning/models/blender_api_models.dart';
 import 'package:vronmobile2/features/scanning/services/blender_api_client.dart';
 import 'package:vronmobile2/features/scanning/services/error_log_service.dart';
-import 'package:vronmobile2/features/scanning/models/error_context.dart';
 
 void main() {
   late Directory tempDir;

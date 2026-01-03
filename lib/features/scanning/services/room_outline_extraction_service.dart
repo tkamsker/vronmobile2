@@ -7,15 +7,16 @@ import 'package:vronmobile2/features/scanning/models/scan_data.dart';
 /// Service for extracting 2D floor plan outlines from 3D scan models
 /// Uses native platform code (iOS: SceneKit, Android: Filament/glTF parser)
 class RoomOutlineExtractionService {
-  static const MethodChannel _channel =
-      MethodChannel('com.vron.mobile/outline_extractor');
+  static const MethodChannel _channel = MethodChannel(
+    'com.vron.mobile/outline_extractor',
+  );
 
   /// Extract 2D outline from scan data
   /// Returns RoomOutline with projected vertices or null if extraction fails
   Future<RoomOutline?> extractOutline(ScanData scan) async {
     try {
       // Use GLB path if available, otherwise USDZ
-      final String? filePath = scan.glbLocalPath ?? scan.localPath;
+      final String filePath = scan.glbLocalPath ?? scan.localPath;
 
       if (filePath == null || filePath.isEmpty) {
         print('❌ No file path available for scan ${scan.id}');
