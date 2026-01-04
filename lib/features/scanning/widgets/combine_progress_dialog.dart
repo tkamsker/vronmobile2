@@ -9,6 +9,7 @@ class CombineProgressDialog extends StatefulWidget {
   final double uploadProgress;
   final VoidCallback? onCancel;
   final VoidCallback? onClose;
+  final VoidCallback? onRetry;
 
   const CombineProgressDialog({
     Key? key,
@@ -16,6 +17,7 @@ class CombineProgressDialog extends StatefulWidget {
     this.uploadProgress = 0.0,
     this.onCancel,
     this.onClose,
+    this.onRetry,
   }) : super(key: key);
 
   @override
@@ -248,10 +250,23 @@ class _CombineProgressDialogState extends State<CombineProgressDialog> {
         child: const Text('Close'),
       );
     } else if (widget.combinedScan.status == CombinedScanStatus.failed) {
-      // Show Close button when failed
-      return ElevatedButton(
-        onPressed: widget.onClose,
-        child: const Text('Close'),
+      // Show Retry and Close buttons when failed
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          if (widget.onRetry != null) ...[
+            ElevatedButton.icon(
+              onPressed: widget.onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+            ),
+            const SizedBox(width: 12),
+          ],
+          TextButton(
+            onPressed: widget.onClose,
+            child: const Text('Close'),
+          ),
+        ],
       );
     } else if (widget.combinedScan.status == CombinedScanStatus.glbReady) {
       // GLB ready state - no action button (will auto-close or proceed)

@@ -271,12 +271,57 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         _isCombining = false;
         _combinedScan = _combinedScan?.copyWith(
           status: CombinedScanStatus.failed,
-          errorMessage: e.toString(),
+          errorMessage: _formatErrorMessage(e),
         );
       });
 
-      // Dialog will show error state
+      // Dialog will show error state with retry option
     }
+  }
+
+  /// Format error messages to be user-friendly
+  String _formatErrorMessage(dynamic error) {
+    final errorStr = error.toString();
+
+    // Network errors
+    if (errorStr.contains('SocketException') ||
+        errorStr.contains('HandshakeException') ||
+        errorStr.contains('Connection refused')) {
+      return 'Network connection failed. Please check your internet connection and try again.';
+    }
+
+    // Timeout errors
+    if (errorStr.contains('TimeoutException') || errorStr.contains('timed out')) {
+      return 'Operation timed out. The server took too long to respond. Please try again.';
+    }
+
+    // File system errors
+    if (errorStr.contains('FileSystemException') ||
+        errorStr.contains('No such file or directory')) {
+      return 'File access error. One or more scan files could not be read.';
+    }
+
+    // Platform errors (iOS native)
+    if (errorStr.contains('PlatformException')) {
+      if (errorStr.contains('INVALID_GEOMETRY')) {
+        return 'Invalid scan geometry. One or more scans contain invalid 3D data.';
+      }
+      return 'Platform error: ${errorStr.replaceAll('PlatformException', '').trim()}';
+    }
+
+    // API errors
+    if (errorStr.contains('Failed to create session') ||
+        errorStr.contains('401') ||
+        errorStr.contains('403')) {
+      return 'Authentication failed. Please check your API credentials.';
+    }
+
+    if (errorStr.contains('500') || errorStr.contains('502') || errorStr.contains('503')) {
+      return 'Server error. The service is temporarily unavailable. Please try again later.';
+    }
+
+    // Generic error with cleaned message
+    return 'Failed to combine scans: ${errorStr.replaceAll('Exception:', '').trim()}';
   }
 
   /// Feature 018: Generate navmesh from combined GLB
@@ -322,11 +367,11 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         _isCombining = false;
         _combinedScan = _combinedScan?.copyWith(
           status: CombinedScanStatus.failed,
-          errorMessage: e.toString(),
+          errorMessage: _formatErrorMessage(e),
         );
       });
 
-      // Dialog will show error state
+      // Dialog will show error state with retry option
     }
   }
 
@@ -353,6 +398,20 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
             },
             onClose: () {
               Navigator.of(context).pop();
+            },
+            onRetry: () {
+              Navigator.of(context).pop();
+              // Determine which operation to retry based on current status
+              if (_combinedScan!.status == CombinedScanStatus.failed) {
+                // Check which stage failed to determine retry action
+                if (_combinedScan!.combinedGlbLocalPath != null) {
+                  // GLB exists, so navmesh generation failed - retry navmesh
+                  _handleGenerateNavmesh();
+                } else {
+                  // No GLB, so combination failed - retry combination
+                  _handleCombineScans();
+                }
+              }
             },
           );
         },
