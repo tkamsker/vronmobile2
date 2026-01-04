@@ -48,6 +48,7 @@ class RoomOutline {
     required this.vertices,
     this.rotationDegrees = 0.0,
     this.positionOffset = Offset.zero,
+    this.scaleFactor = 1.0,
     this.isSelected = false,
     this.estimatedDoorIndices = const [],
     this.outlineColor = Colors.blue,
@@ -67,6 +68,7 @@ class RoomOutline {
     List<Offset>? vertices,
     double? rotationDegrees,
     Offset? positionOffset,
+    double? scaleFactor,
     bool? isSelected,
     List<int>? estimatedDoorIndices,
     Color? outlineColor,
@@ -77,6 +79,7 @@ class RoomOutline {
       vertices: vertices ?? this.vertices,
       rotationDegrees: rotationDegrees ?? this.rotationDegrees,
       positionOffset: positionOffset ?? this.positionOffset,
+      scaleFactor: scaleFactor ?? this.scaleFactor,
       isSelected: isSelected ?? this.isSelected,
       estimatedDoorIndices: estimatedDoorIndices ?? this.estimatedDoorIndices,
       outlineColor: outlineColor ?? this.outlineColor,
@@ -125,13 +128,16 @@ class RoomOutline {
 
   /// Transform a point from local to canvas coordinates
   Offset _transformPoint(Offset point) {
+    // Apply scale first
+    final scaled = Offset(point.dx * scaleFactor, point.dy * scaleFactor);
+
     // Apply rotation
     final radians = rotationDegrees * (pi / 180.0);
     final cosTheta = cos(radians);
     final sinTheta = sin(radians);
     final rotated = Offset(
-      point.dx * cosTheta - point.dy * sinTheta,
-      point.dx * sinTheta + point.dy * cosTheta,
+      scaled.dx * cosTheta - scaled.dy * sinTheta,
+      scaled.dx * sinTheta + scaled.dy * cosTheta,
     );
 
     // Apply position offset
@@ -147,10 +153,13 @@ class RoomOutline {
     final radians = -rotationDegrees * (pi / 180.0);
     final cosTheta = cos(radians);
     final sinTheta = sin(radians);
-    return Offset(
+    final rotated = Offset(
       translated.dx * cosTheta - translated.dy * sinTheta,
       translated.dx * sinTheta + translated.dy * cosTheta,
     );
+
+    // Apply inverse scale
+    return Offset(rotated.dx / scaleFactor, rotated.dy / scaleFactor);
   }
 
   /// Ray casting helper: check if horizontal ray from point intersects line segment

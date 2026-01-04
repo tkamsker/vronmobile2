@@ -1,0 +1,343 @@
+# Tasks: Combined Scan to NavMesh Workflow
+
+**Feature**: 018-combined-scan-navmesh
+**Input**: Design documents from `/specs/018-combined-scan-navmesh/`
+**Prerequisites**: plan.md ✅, spec.md ✅, research.md ✅, data-model.md ✅, contracts/ ✅, quickstart.md ✅
+
+**Tests**: This feature follows TDD as required by project constitution. Tests are written BEFORE implementation.
+
+**Organization**: Tasks are grouped by user story to enable independent implementation and testing.
+
+## Format: `[ID] [P?] [Story] Description`
+
+- **[P]**: Can run in parallel (different files, no dependencies)
+- **[Story]**: Which user story this task belongs to (e.g., US1)
+- Include exact file paths in descriptions
+
+## Path Conventions
+
+Mobile Flutter app with iOS-specific native code:
+- **Dart/Flutter**: `lib/features/scanning/`
+- **iOS Native**: `ios/Runner/`
+- **Tests**: `test/features/scanning/`, `ios/RunnerTests/`
+
+---
+
+## Phase 1: Setup (Shared Infrastructure)
+
+**Purpose**: Project initialization and basic structure for combined scan feature
+
+- [ ] T001 Verify ScanData model has position fields (positionX, positionY, rotationDegrees, scaleFactor) in lib/features/scanning/models/scan_data.dart (Feature 017 already completed this)
+- [ ] T002 [P] Add BlenderAPI base URL configuration to environment config (stage: https://blenderapi.stage.motorenflug.at)
+- [ ] T003 [P] Verify iOS minimum deployment target is 16.0+ in ios/Podfile for SceneKit support
+
+---
+
+## Phase 2: Foundational (Blocking Prerequisites)
+
+**Purpose**: Core models and native infrastructure that MUST be complete before user story implementation
+
+**⚠️ CRITICAL**: No user story work can begin until this phase is complete
+
+- [ ] T004 Create CombinedScan model with all fields (id, projectId, scanIds, localCombinedPath, combinedGlbUrl, combinedGlbLocalPath, navmeshSessionId, navmeshUrl, localNavmeshPath, status, createdAt, completedAt, errorMessage) in lib/features/scanning/models/combined_scan.dart
+- [ ] T005 [P] Create CombinedScanStatus enum (combining, uploadingUsdz, processingGlb, glbReady, uploadingToBlender, generatingNavmesh, downloadingNavmesh, completed, failed) in lib/features/scanning/models/combined_scan.dart
+- [ ] T006 [P] Implement toJson() and fromJson() methods for CombinedScan model with all fields
+- [ ] T007 [P] Implement copyWith() method for CombinedScan model
+- [ ] T008 [P] Add helper methods to CombinedScan (isInProgress, canGenerateNavmesh, hasGlb, hasNavmesh, getLocalCombinedFileSize, getLocalNavmeshFileSize, deleteLocalFiles)
+- [ ] T009 Create iOS native USDZCombiner.swift class in ios/Runner/USDZCombiner.swift with combineScans method signature
+- [ ] T010 [P] Create iOS native USDZCombinerPlugin.swift Flutter MethodChannel bridge in ios/Runner/USDZCombinerPlugin.swift
+- [ ] T011 [P] Register USDZCombinerPlugin in ios/Runner/AppDelegate.swift
+
+**Checkpoint**: Foundation ready - user story implementation can now begin
+
+---
+
+## Phase 3: User Story 1 - Combined Scan to NavMesh Complete Workflow (Priority: P1) 🎯 MVP
+
+**Goal**: Enable users to combine multiple positioned room scans into a single GLB file with navigation mesh, upload to backend, generate navmesh via BlenderAPI, and export both files for Unity/game engine use.
+
+**Independent Test**: Create project with 3 scans → Arrange on canvas → Combine to GLB → Generate NavMesh → Export both files → Import to Unity and verify positions match
+
+**User Story**: As a user, I want to combine multiple room scans that I've arranged on the canvas into a single 3D model file with a navigation mesh, so I can use the complete floor plan in Unity or other game engines.
+
+### Tests for User Story 1 (TDD - Write FIRST) ⚠️
+
+> **CRITICAL**: Write these tests FIRST, ensure they FAIL before implementation
+
+**iOS Native Tests**:
+- [ ] T012 [P] [US1] Write XCTest for USDZCombiner.combineScans() with 2 scans in ios/RunnerTests/USDZCombinerTests.swift
+- [ ] T013 [P] [US1] Write XCTest for transform application (position, rotation, scale) in ios/RunnerTests/USDZCombinerTests.swift
+- [ ] T014 [P] [US1] Write XCTest for scene export as USDZ in ios/RunnerTests/USDZCombinerTests.swift
+
+**Dart Unit Tests**:
+- [ ] T015 [P] [US1] Write unit test for USDZCombinerService.combineScans() method channel calls in test/features/scanning/services/usdz_combiner_service_test.dart
+- [ ] T016 [P] [US1] Write unit test for BlenderAPIService.createSession() in test/features/scanning/services/blenderapi_service_test.dart
+- [ ] T017 [P] [US1] Write unit test for BlenderAPIService.uploadGLB() with progress callbacks in test/features/scanning/services/blenderapi_service_test.dart
+- [ ] T018 [P] [US1] Write unit test for BlenderAPIService.startNavMeshGeneration() with navmesh parameters in test/features/scanning/services/blenderapi_service_test.dart
+- [ ] T019 [P] [US1] Write unit test for BlenderAPIService.pollStatus() until completed in test/features/scanning/services/blenderapi_service_test.dart
+- [ ] T020 [P] [US1] Write unit test for BlenderAPIService.downloadNavMesh() in test/features/scanning/services/blenderapi_service_test.dart
+- [ ] T021 [P] [US1] Write unit test for CombinedScanService.createCombinedScan() orchestration in test/features/scanning/services/combined_scan_service_test.dart
+- [ ] T022 [P] [US1] Write unit test for CombinedScanService.generateNavmesh() complete workflow in test/features/scanning/services/combined_scan_service_test.dart
+- [ ] T023 [P] [US1] Write unit test for CombinedScan model JSON serialization/deserialization in test/features/scanning/models/combined_scan_test.dart
+
+**Widget Tests**:
+- [ ] T024 [P] [US1] Write widget test for CombineProgressDialog all status states in test/features/scanning/widgets/combine_progress_dialog_test.dart
+- [ ] T025 [P] [US1] Write widget test for ExportCombinedDialog with file size display in test/features/scanning/widgets/export_combined_dialog_test.dart
+- [ ] T026 [P] [US1] Write widget test for Combine button enabled/disabled states in test/features/scanning/screens/project_detail_screen_test.dart
+
+**Integration Test**:
+- [ ] T027 [US1] Write E2E integration test for complete combine→upload→navmesh→download flow in integration_test/combine_scan_flow_test.dart
+
+### Implementation for User Story 1
+
+**Sub-task 1A: iOS Native USDZ Combination**
+
+- [ ] T028 [P] [US1] Implement SceneKit scene loading from USDZ files in ios/Runner/USDZCombiner.swift
+- [ ] T029 [P] [US1] Implement transform application (position, rotation, scale) to SCNNode in ios/Runner/USDZCombiner.swift
+- [ ] T030 [US1] Implement scene merging into single combined scene in ios/Runner/USDZCombiner.swift (depends on T028, T029)
+- [ ] T031 [US1] Implement USDZ export with proper file naming in ios/Runner/USDZCombiner.swift
+- [ ] T032 [US1] Implement error handling for invalid USDZ files in ios/Runner/USDZCombiner.swift
+- [ ] T033 [US1] Wire up USDZCombinerPlugin.handle() method to call USDZCombiner in ios/Runner/USDZCombinerPlugin.swift
+
+**Sub-task 1B: Flutter USDZ Combiner Service**
+
+- [ ] T034 [P] [US1] Create USDZCombinerService class with MethodChannel setup in lib/features/scanning/services/usdz_combiner_service.dart
+- [ ] T035 [US1] Implement USDZCombinerService.combineScans() that calls iOS native method with transforms in lib/features/scanning/services/usdz_combiner_service.dart
+- [ ] T036 [US1] Add error handling for PlatformException in USDZCombinerService in lib/features/scanning/services/usdz_combiner_service.dart
+- [ ] T037 [US1] Add logging for combination operations in USDZCombinerService in lib/features/scanning/services/usdz_combiner_service.dart
+
+**Sub-task 1C: BlenderAPI REST Service**
+
+- [ ] T038 [P] [US1] Create BlenderAPIService class with base URL and headers configuration in lib/features/scanning/services/blenderapi_service.dart
+- [ ] T039 [P] [US1] Implement BlenderAPIService.createSession() that posts to /sessions in lib/features/scanning/services/blenderapi_service.dart
+- [ ] T040 [P] [US1] Implement BlenderAPIService.uploadGLB() with binary file upload and progress callbacks in lib/features/scanning/services/blenderapi_service.dart
+- [ ] T041 [P] [US1] Implement BlenderAPIService.startNavMeshGeneration() with navmesh_params in lib/features/scanning/services/blenderapi_service.dart
+- [ ] T042 [P] [US1] Implement BlenderAPIService.pollStatus() that queries /sessions/{id}/status every 2 seconds in lib/features/scanning/services/blenderapi_service.dart
+- [ ] T043 [P] [US1] Implement BlenderAPIService.waitForCompletion() with timeout and progress updates in lib/features/scanning/services/blenderapi_service.dart
+- [ ] T044 [P] [US1] Implement BlenderAPIService.downloadNavMesh() from /sessions/{id}/download/{filename} in lib/features/scanning/services/blenderapi_service.dart
+- [ ] T045 [P] [US1] Implement BlenderAPIService.deleteSession() for cleanup in lib/features/scanning/services/blenderapi_service.dart
+- [ ] T046 [US1] Implement BlenderAPIService.generateNavMesh() complete workflow method in lib/features/scanning/services/blenderapi_service.dart (depends on T039-T045)
+- [ ] T047 [US1] Add error handling for BlenderAPI error codes (INVALID_GEOMETRY, PROCESSING_TIMEOUT, etc.) in lib/features/scanning/services/blenderapi_service.dart
+- [ ] T048 [US1] Add network error handling (SocketException, TimeoutException) in lib/features/scanning/services/blenderapi_service.dart
+
+**Sub-task 1D: Combined Scan Orchestration Service**
+
+- [ ] T049 [US1] Create CombinedScanService class with dependencies (USDZCombinerService, ScanUploadService, BlenderAPIService) in lib/features/scanning/services/combined_scan_service.dart
+- [ ] T050 [US1] Implement CombinedScanService.createCombinedScan() that orchestrates: combine USDZ → upload to GraphQL → poll GLB conversion → download GLB in lib/features/scanning/services/combined_scan_service.dart
+- [ ] T051 [US1] Implement CombinedScanService.generateNavmesh() that orchestrates: upload GLB to BlenderAPI → generate → download navmesh in lib/features/scanning/services/combined_scan_service.dart
+- [ ] T052 [US1] Implement state persistence (save/load CombinedScan to SharedPreferences) in lib/features/scanning/services/combined_scan_service.dart
+- [ ] T053 [US1] Implement CombinedScanService.getCombinedScansForProject() query method in lib/features/scanning/services/combined_scan_service.dart
+- [ ] T054 [US1] Implement CombinedScanService.deleteCombinedScan() with local file cleanup in lib/features/scanning/services/combined_scan_service.dart
+
+**Sub-task 1E: Progress Dialog UI**
+
+- [ ] T055 [P] [US1] Create CombineProgressDialog widget with status display (combining, uploading, processing, etc.) in lib/features/scanning/widgets/combine_progress_dialog.dart
+- [ ] T056 [US1] Add progress bar with percentage display to CombineProgressDialog in lib/features/scanning/widgets/combine_progress_dialog.dart
+- [ ] T057 [US1] Add cancel button with confirmation to CombineProgressDialog in lib/features/scanning/widgets/combine_progress_dialog.dart
+- [ ] T058 [US1] Add status icons (checkmark, spinner, error) for each step in CombineProgressDialog in lib/features/scanning/widgets/combine_progress_dialog.dart
+- [ ] T059 [US1] Add Semantics widgets for accessibility in CombineProgressDialog in lib/features/scanning/widgets/combine_progress_dialog.dart
+
+**Sub-task 1F: Export Dialog UI**
+
+- [ ] T060 [P] [US1] Create ExportCombinedDialog widget with file information display in lib/features/scanning/widgets/export_combined_dialog.dart
+- [ ] T061 [US1] Add "Export Combined GLB" button with iOS share sheet integration in lib/features/scanning/widgets/export_combined_dialog.dart
+- [ ] T062 [US1] Add "Export NavMesh" button with iOS share sheet integration in lib/features/scanning/widgets/export_combined_dialog.dart
+- [ ] T063 [US1] Add "Export Both as ZIP" button that creates ZIP archive in lib/features/scanning/widgets/export_combined_dialog.dart
+- [ ] T064 [US1] Add file size display with formatting (KB/MB) in ExportCombinedDialog in lib/features/scanning/widgets/export_combined_dialog.dart
+- [ ] T065 [US1] Add Semantics widgets for accessibility in ExportCombinedDialog in lib/features/scanning/widgets/export_combined_dialog.dart
+
+**Sub-task 1G: Project Detail Screen Integration**
+
+- [ ] T066 [US1] Add "Combine Scans to GLB" button to ProjectDetailScreen in lib/features/projects/screens/project_detail_screen.dart
+- [ ] T067 [US1] Implement button enabled/disabled logic (requires ≥2 scans with positions) in lib/features/projects/screens/project_detail_screen.dart
+- [ ] T068 [US1] Add _startCombineFlow() method that creates CombinedScan and shows progress dialog in lib/features/projects/screens/project_detail_screen.dart
+- [ ] T069 [US1] Add "Generate NavMesh" button that appears after GLB ready in lib/features/projects/screens/project_detail_screen.dart
+- [ ] T070 [US1] Implement _generateNavmesh() method that calls service and shows progress in lib/features/projects/screens/project_detail_screen.dart
+- [ ] T071 [US1] Show ExportCombinedDialog when both files are ready in lib/features/projects/screens/project_detail_screen.dart
+- [ ] T072 [US1] Add error handling and error dialogs for all failure scenarios in lib/features/projects/screens/project_detail_screen.dart
+- [ ] T073 [US1] Add Semantics widgets for all buttons (combine, navmesh, export) in lib/features/projects/screens/project_detail_screen.dart
+
+**Sub-task 1H: Error Handling & Edge Cases**
+
+- [ ] T074 [US1] Add validation for insufficient scans (<2) with user-friendly message in lib/features/projects/screens/project_detail_screen.dart
+- [ ] T075 [US1] Add validation for scans without position data with guidance message in lib/features/projects/screens/project_detail_screen.dart
+- [ ] T076 [US1] Implement retry mechanism for network failures in CombinedScanService in lib/features/scanning/services/combined_scan_service.dart
+- [ ] T077 [US1] Implement cleanup on cancellation (delete partial files, cancel uploads) in CombinedScanService in lib/features/scanning/services/combined_scan_service.dart
+- [ ] T078 [US1] Add handling for BlenderAPI 413 Payload Too Large error in BlenderAPIService in lib/features/scanning/services/blenderapi_service.dart
+- [ ] T079 [US1] Add handling for BlenderAPI session expiration (410 Gone) in BlenderAPIService in lib/features/scanning/services/blenderapi_service.dart
+- [ ] T080 [US1] Add offline detection and queue mechanism for uploads in CombinedScanService in lib/features/scanning/services/combined_scan_service.dart
+
+**Checkpoint**: At this point, the complete combined scan to navmesh workflow should be fully functional and testable independently. User can:
+- Combine multiple scans into single GLB
+- Upload to backend and get converted GLB
+- Generate navmesh via BlenderAPI
+- Download navmesh
+- Export both files for Unity
+
+---
+
+## Phase 4: Polish & Cross-Cutting Concerns
+
+**Purpose**: Performance optimization, accessibility improvements, and production readiness
+
+- [ ] T081 [P] Add logging for all service operations with structured log format
+- [ ] T082 [P] Add analytics events for key user actions (combine started, navmesh generated, export completed)
+- [ ] T083 [P] Optimize memory usage during USDZ combination (load scenes sequentially if needed) in ios/Runner/USDZCombiner.swift
+- [ ] T084 [P] Add progress caching to resume interrupted uploads in CombinedScanService
+- [ ] T085 [P] Add file size validation before upload (warn if >50MB) in CombinedScanService
+- [ ] T086 [P] Review all UI text for clarity and consistency
+- [ ] T087 [P] Add haptic feedback for button taps and completion events
+- [ ] T088 Verify all interactive elements meet 44x44 minimum touch target size
+- [ ] T089 Test with VoiceOver (iOS screen reader) and fix any accessibility issues
+- [ ] T090 Test with Dynamic Type (large font sizes) and ensure UI layouts correctly
+- [ ] T091 Profile memory usage during 10-room combination and optimize if needed
+- [ ] T092 Profile frame rate during progress updates and optimize if dropping below 60fps
+- [ ] T093 Test on slower devices (iPhone 12) and optimize if performance is unacceptable
+- [ ] T094 Add user-facing documentation or help screen explaining the workflow
+- [ ] T095 Create example Unity project that imports combined GLB and navmesh for QA testing
+
+---
+
+## Dependencies & Execution Strategy
+
+### Critical Path (Must Complete in Order)
+
+```
+Phase 1 (Setup: T001-T003)
+    ↓
+Phase 2 (Foundational: T004-T011) ← BLOCKING: Must complete before Phase 3
+    ↓
+Phase 3 (User Story 1: T012-T080) ← Can execute sub-tasks in parallel
+    ↓
+Phase 4 (Polish: T081-T095) ← Can execute in parallel after Phase 3 complete
+```
+
+### Parallel Execution Opportunities
+
+**Phase 2 Foundational** (after T004):
+- Can run in parallel: T005, T006, T007, T008 (Dart model methods)
+- Can run in parallel: T009, T010, T011 (iOS native setup)
+
+**Phase 3 User Story 1**:
+
+After tests written (T012-T027), can parallelize implementation:
+
+**Parallel Group A** (Independent iOS work):
+- T028, T029 → T030 → T031, T032, T033
+
+**Parallel Group B** (Independent Dart services):
+- T034 → T035, T036, T037 (USDZ Combiner Service)
+- T038 → T039-T048 (BlenderAPI Service - most can run in parallel)
+
+**Parallel Group C** (After A & B complete):
+- T049 → T050-T054 (Orchestration Service)
+
+**Parallel Group D** (Independent UI work, can start early):
+- T055 → T056, T057, T058, T059 (Progress Dialog)
+- T060 → T061, T062, T063, T064, T065 (Export Dialog)
+
+**Parallel Group E** (After C & D complete):
+- T066 → T067-T073 (Screen Integration)
+- T074-T080 (Error handling - can partially overlap)
+
+**Phase 4 Polish** (all tasks can run in parallel after Phase 3):
+- T081-T095 (independent improvements)
+
+### MVP Scope (Minimum Viable Product)
+
+**Recommended MVP**: User Story 1 (T001-T080)
+
+This delivers the complete end-to-end workflow:
+- ✅ Combine multiple scans into single GLB
+- ✅ Generate navmesh via BlenderAPI
+- ✅ Export both files for Unity
+
+**Post-MVP Enhancements** (Phase 4):
+- Performance optimizations
+- Advanced error handling
+- Analytics and logging
+- Accessibility improvements
+- Documentation
+
+### Estimated Timeline
+
+- **Phase 1 (Setup)**: 1 hour
+- **Phase 2 (Foundational)**: 4 hours
+- **Phase 3 (User Story 1)**:
+  - Tests: 6 hours
+  - iOS Native: 8 hours
+  - Dart Services: 8 hours
+  - UI Components: 6 hours
+  - Integration: 4 hours
+  - **Subtotal**: ~32 hours
+- **Phase 4 (Polish)**: 6 hours
+
+**Total Estimated**: ~43 hours
+
+With parallel execution: ~25-30 hours calendar time
+
+### Task Count Summary
+
+- **Total Tasks**: 95
+- **Setup**: 3 tasks
+- **Foundational**: 8 tasks
+- **User Story 1**: 69 tasks (including 16 test tasks)
+- **Polish**: 15 tasks
+
+**Parallelizable Tasks**: 54 tasks marked with [P] (57% can run in parallel)
+
+**Test Coverage**: 16 test tasks covering:
+- iOS native functionality (3 tests)
+- Dart services (8 tests)
+- Widget UI (3 tests)
+- Integration E2E (1 test)
+- Model serialization (1 test)
+
+### Format Validation ✅
+
+All tasks follow required format:
+- ✅ Checkbox: `- [ ]`
+- ✅ Task ID: Sequential T001-T095
+- ✅ [P] marker: 54 parallelizable tasks marked
+- ✅ [Story] label: User Story 1 tasks marked with [US1]
+- ✅ File paths: All tasks include specific file paths
+- ✅ Descriptions: Clear, actionable task descriptions
+
+### Independent Test Criteria
+
+**User Story 1**:
+- ✅ Create project with 3 scans
+- ✅ Arrange scans on canvas with different positions and rotations
+- ✅ Tap "Combine Scans to GLB" and verify progress dialog
+- ✅ Wait for combined GLB creation and download
+- ✅ Tap "Generate NavMesh" and verify BlenderAPI workflow
+- ✅ Wait for navmesh generation and download
+- ✅ Tap export and save both files
+- ✅ Import combined GLB to Unity and verify room positions match canvas
+- ✅ Import navmesh GLB to Unity and verify walkable areas
+
+---
+
+## Backend Requirements (Zero New Development)
+
+✅ **No backend changes required**
+
+All backend functionality already exists:
+- ✅ `uploadProjectScan` GraphQL mutation (existing)
+- ✅ USDZ→GLB conversion pipeline (existing)
+- ✅ BlenderAPI microservice (existing, deployed to stage)
+- ✅ BlenderAPI navmesh generation (existing)
+
+**Backend Team Action**: Monitor BlenderAPI for any issues during mobile testing
+
+---
+
+## References
+
+- **Feature Specification**: `specs/018-combined-scan-navmesh/spec.md`
+- **Implementation Plan**: `specs/018-combined-scan-navmesh/plan.md`
+- **Research Decisions**: `specs/018-combined-scan-navmesh/research.md`
+- **Data Models**: `specs/018-combined-scan-navmesh/data-model.md`
+- **API Contracts**: `specs/018-combined-scan-navmesh/contracts/blenderapi-rest.md`
+- **Test Scenarios**: `specs/018-combined-scan-navmesh/quickstart.md`
+- **BlenderAPI Tests**: `/Users/thomaskamsker/Documents/Atom/vron.one/microservices/blenderapi/test_navmesh_and_download.sh`
