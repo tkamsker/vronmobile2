@@ -447,7 +447,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     });
 
     try {
-      final result = await _exportService.exportGlb(
+      await _exportService.exportGlb(
         combinedScan: _combinedScan!,
       );
 
@@ -490,7 +490,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     });
 
     try {
-      final result = await _exportService.exportNavmesh(
+      await _exportService.exportNavmesh(
         combinedScan: _combinedScan!,
       );
 
@@ -533,7 +533,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     });
 
     try {
-      final result = await _exportService.exportBothAsZip(
+      await _exportService.exportBothAsZip(
         combinedScan: _combinedScan!,
       );
 
