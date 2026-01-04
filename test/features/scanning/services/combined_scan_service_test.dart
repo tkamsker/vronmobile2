@@ -410,7 +410,7 @@ void main() {
           navmeshParams: captureAnyNamed('navmeshParams'),
         )).captured;
 
-        final params = captured[0] as Map<String, dynamic>;
+        final params = Map<String, dynamic>.from(captured[0] as Map);
         expect(params['cell_size'], 0.3);
         expect(params['cell_height'], 0.2);
         expect(params['agent_height'], 2.0);

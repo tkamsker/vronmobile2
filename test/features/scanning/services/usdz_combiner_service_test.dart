@@ -88,7 +88,7 @@ void main() {
         expect(methodCalls[0].method, 'combineScans');
 
         // And: Should pass correct arguments
-        final args = methodCalls[0].arguments as Map<String, dynamic>;
+        final args = Map<String, dynamic>.from(methodCalls[0].arguments as Map);
         expect(args['paths'], [
           '/path/to/scan1.usdz',
           '/path/to/scan2.usdz',
@@ -144,7 +144,7 @@ void main() {
         await service.combineScans(scans: scans, outputPath: outputPath);
 
         // Then: Should use default values (0, 0, 0, 1.0)
-        final args = methodCalls[0].arguments as Map<String, dynamic>;
+        final args = Map<String, dynamic>.from(methodCalls[0].arguments as Map);
         final transforms = args['transforms'] as List;
 
         expect(transforms[0]['positionX'], 0.0);
@@ -289,7 +289,7 @@ void main() {
         );
 
         // Then: Should use provided values and defaults
-        final args = methodCalls[0].arguments as Map<String, dynamic>;
+        final args = Map<String, dynamic>.from(methodCalls[0].arguments as Map);
         final transforms = args['transforms'] as List;
 
         // First scan: has position, defaults for rotation/scale

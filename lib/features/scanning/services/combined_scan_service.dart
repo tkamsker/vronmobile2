@@ -185,7 +185,7 @@ class CombinedScanService {
         sessionId: sessionId,
         inputFilename: inputFilename,
         outputFilename: outputFilename,
-        // Uses Unity-standard defaults from BlenderAPIService
+        navmeshParams: BlenderAPIService.unityStandardNavMeshParams,
       );
       print('✅ NavMesh generation started');
 
