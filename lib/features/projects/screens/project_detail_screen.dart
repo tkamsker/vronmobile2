@@ -98,8 +98,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       setState(() {
         _scans = [];
       });
+      print('🔍 [PROJECT] Loaded ${_scans.length} scans from storage');
     } catch (e) {
-      print('Error loading scans: $e');
+      print('❌ [PROJECT] Error loading scans: $e');
       setState(() {
         _scans = [];
       });
@@ -224,10 +225,14 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         scaleFactor: 1.0,
       );
 
+      print('📍 [PROJECT] Adding scan with position: (${scanWithPosition.positionX}, ${scanWithPosition.positionY})');
+
       setState(() {
         _isScanning = false;
         _scans.add(scanWithPosition);
       });
+
+      print('✅ [PROJECT] Scan added! Total scans: ${_scans.length}');
 
       // TODO: Persist scan to database/backend with position data
 
@@ -650,6 +655,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       );
     }
 
+    print('🏗️ [PROJECT] Building project detail - Scans: ${_scans.length}');
+
     return Column(
       children: [
         ProjectDetailHeader(project: _project!),
@@ -682,6 +689,8 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     final canCombine = validScans.length >= 2;
     final hasGlbReady = _combinedScan?.status == CombinedScanStatus.glbReady;
     final isCompleted = _combinedScan?.status == CombinedScanStatus.completed;
+
+    print('🎨 [PROJECT] Building combine section - Total: ${_scans.length}, Valid: ${validScans.length}, Can combine: $canCombine');
 
     return Container(
       padding: const EdgeInsets.all(16),
