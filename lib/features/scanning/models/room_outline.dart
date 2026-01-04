@@ -26,6 +26,10 @@ class RoomOutline {
   @JsonKey(fromJson: _offsetFromJson, toJson: _offsetToJson)
   final Offset positionOffset;
 
+  /// Scale factor for the room outline (1.0 = original size)
+  @JsonKey(defaultValue: 1.0)
+  final double scaleFactor;
+
   /// Whether this room is currently selected on the canvas
   @JsonKey(defaultValue: false)
   final bool isSelected;
