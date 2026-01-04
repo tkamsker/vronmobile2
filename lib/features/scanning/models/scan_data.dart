@@ -25,6 +25,12 @@ class ScanData {
   final String? remoteUrl;      // Backend URL after upload (null if not uploaded)
   final Map<String, dynamic>? metadata; // Additional metadata (room dimensions, object count, etc.)
 
+  // Positioning data from room arrangement canvas (for combining scans)
+  final double? positionX;      // X position on canvas (null if not arranged)
+  final double? positionY;      // Y position on canvas (null if not arranged)
+  final double? rotationDegrees; // Rotation in degrees (null if not arranged)
+  final double? scaleFactor;    // Scale factor (null if not arranged, default 1.0)
+
   ScanData({
     required this.id,
     required this.format,
@@ -36,6 +42,10 @@ class ScanData {
     this.projectId,
     this.remoteUrl,
     this.metadata,
+    this.positionX,
+    this.positionY,
+    this.rotationDegrees,
+    this.scaleFactor,
   });
 
   // JSON serialization for local storage (shared_preferences)
@@ -51,6 +61,10 @@ class ScanData {
       projectId: json['projectId'] as String?,
       remoteUrl: json['remoteUrl'] as String?,
       metadata: json['metadata'] as Map<String, dynamic>?,
+      positionX: json['positionX'] as double?,
+      positionY: json['positionY'] as double?,
+      rotationDegrees: json['rotationDegrees'] as double?,
+      scaleFactor: json['scaleFactor'] as double?,
     );
   }
 
@@ -66,6 +80,10 @@ class ScanData {
       'projectId': projectId,
       'remoteUrl': remoteUrl,
       'metadata': metadata,
+      'positionX': positionX,
+      'positionY': positionY,
+      'rotationDegrees': rotationDegrees,
+      'scaleFactor': scaleFactor,
     };
   }
 
@@ -81,6 +99,10 @@ class ScanData {
     String? projectId,
     String? remoteUrl,
     Map<String, dynamic>? metadata,
+    double? positionX,
+    double? positionY,
+    double? rotationDegrees,
+    double? scaleFactor,
   }) {
     return ScanData(
       id: id ?? this.id,
@@ -93,6 +115,10 @@ class ScanData {
       projectId: projectId ?? this.projectId,
       remoteUrl: remoteUrl ?? this.remoteUrl,
       metadata: metadata ?? this.metadata,
+      positionX: positionX ?? this.positionX,
+      positionY: positionY ?? this.positionY,
+      rotationDegrees: rotationDegrees ?? this.rotationDegrees,
+      scaleFactor: scaleFactor ?? this.scaleFactor,
     );
   }
 

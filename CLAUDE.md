@@ -5,6 +5,7 @@ Auto-generated from all feature plans. Last updated: 2025-12-20
 ## Active Technologies
 - Backend GraphQL API (PostgreSQL), local caching via shared_preferences (003-projectdetail)
 - Session-only state management using StatefulWidget or Provider (no persistence across app restarts) (005-product-search)
+- Dart 3.10+ / Flutter 3.x, Swift 5.x (iOS native code for USDZ combination) (018-combined-scan-navmesh)
 
 - Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0) (001-main-screen-login)
 
@@ -60,9 +61,9 @@ Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0): Follow s
 - Share common code via `lib/core/`
 
 ## Recent Changes
+- 018-combined-scan-navmesh: Added Dart 3.10+ / Flutter 3.x, Swift 5.x (iOS native code for USDZ combination)
 - 016-multi-room-options: Added Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0)
 - 014-lidar-scanning: Added Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0)
-- 008-view-projects: Added Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0)
 
 
 <!-- MANUAL ADDITIONS START -->
