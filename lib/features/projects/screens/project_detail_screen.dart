@@ -69,6 +69,9 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     // Use injected scans for testing, or load from service in production
     if (widget.scans != null) {
       _scans = widget.scans!;
+    } else {
+      // Load scans for this project in production
+      _loadScans();
     }
 
     // Mock GLB ready state for testing
@@ -85,6 +88,22 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     }
 
     _loadProjectDetail();
+  }
+
+  /// Load scans for this project from local storage
+  Future<void> _loadScans() async {
+    try {
+      // TODO: Implement proper scan loading from database/backend
+      // For now, create empty list - scans need to be persisted after capture
+      setState(() {
+        _scans = [];
+      });
+    } catch (e) {
+      print('Error loading scans: $e');
+      setState(() {
+        _scans = [];
+      });
+    }
   }
 
   Future<void> _loadProjectDetail() async {
@@ -194,14 +213,28 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
 
       print('✅ [PROJECT] Scan completed: ${scanData.localPath}');
 
+      // Add scan to project's scan list with auto-positioning
+      // Feature 017 (Room Stitching) will allow manual canvas arrangement
+      // For now, auto-position scans in a row for immediate combining capability
+      final scanWithPosition = scanData.copyWith(
+        projectId: widget.projectId,
+        positionX: _scans.length * 150.0, // Space scans 150 units apart
+        positionY: 0.0,
+        rotationDegrees: 0.0,
+        scaleFactor: 1.0,
+      );
+
       setState(() {
         _isScanning = false;
+        _scans.add(scanWithPosition);
       });
+
+      // TODO: Persist scan to database/backend with position data
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Scan completed! File saved: ${scanData.fileSizeBytes} bytes'),
+            content: Text('Scan completed! ${_scans.length} total scans'),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 3),
           ),
