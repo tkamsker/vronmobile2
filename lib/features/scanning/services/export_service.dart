@@ -31,7 +31,7 @@ class ExportService {
     final fileName = file.path.split('/').last;
 
     // Share file using native dialog
-    final result = await Share.shareXFiles(
+    final result = await SharePlus.instance.shareXFiles(
       [XFile(file.path, mimeType: 'model/gltf-binary')],
       subject: 'Combined Room Scan - GLB',
       text: 'Combined 3D scan in GLB format\nFile: $fileName',
@@ -63,7 +63,7 @@ class ExportService {
     final fileName = file.path.split('/').last;
 
     // Share file using native dialog
-    final result = await Share.shareXFiles(
+    final result = await SharePlus.instance.shareXFiles(
       [XFile(file.path, mimeType: 'model/gltf-binary')],
       subject: 'Navigation Mesh - GLB',
       text: 'Navigation mesh for Unity/game engines\nFile: $fileName',
@@ -132,7 +132,7 @@ class ExportService {
       await zipFile.writeAsBytes(zipBytes);
 
       // Share ZIP file using native dialog
-      final result = await Share.shareXFiles(
+      final result = await SharePlus.instance.shareXFiles(
         [XFile(zipPath, mimeType: 'application/zip')],
         subject: 'Combined Room Scan - Complete Package',
         text: 'Combined 3D scan (GLB) and navigation mesh\nContains: $glbFileName, $navmeshFileName',
@@ -142,8 +142,7 @@ class ExportService {
       try {
         await zipFile.delete();
       } catch (e) {
-        // Ignore cleanup errors
-        print('Warning: Failed to delete temporary ZIP: $e');
+        // Ignore cleanup errors (best-effort)
       }
 
       return result;

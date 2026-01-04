@@ -455,10 +455,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         _isExporting = false;
       });
 
-      if (mounted && result.status == ShareResultStatus.success) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('GLB file shared successfully'),
+            content: Text('GLB file shared'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -498,10 +498,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         _isExporting = false;
       });
 
-      if (mounted && result.status == ShareResultStatus.success) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('NavMesh file shared successfully'),
+            content: Text('NavMesh file shared'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -541,10 +541,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
         _isExporting = false;
       });
 
-      if (mounted && result.status == ShareResultStatus.success) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('ZIP file shared successfully'),
+            content: Text('ZIP file shared'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
