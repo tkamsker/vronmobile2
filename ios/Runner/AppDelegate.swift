@@ -9,11 +9,16 @@ import UIKit
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
 
+    let controller = window?.rootViewController as! FlutterViewController
+
+    // Register USDZ Combiner Plugin for Feature 018: Combined Scan to NavMesh
+    let registrar = self.registrar(forPlugin: "USDZCombinerPlugin")!
+    USDZCombinerPlugin.register(with: registrar)
+
     // Setup method channel for USDZ→GLB conversion
     // Note: On-device conversion is not supported due to iOS framework limitations.
     // ModelIO does not support GLB export format.
     // Future implementation will use server-side conversion.
-    let controller = window?.rootViewController as! FlutterViewController
     let conversionChannel = FlutterMethodChannel(
       name: "com.vron.mobile/usdz_converter",
       binaryMessenger: controller.binaryMessenger
