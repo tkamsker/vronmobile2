@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vronmobile2/features/scanning/models/scan_data.dart';
-import 'package:vronmobile2/features/scanning/screens/project_detail_screen.dart';
+import 'package:vronmobile2/features/projects/screens/project_detail_screen.dart';
 
 /// Test suite for ProjectDetailScreen "Combine Scans" button
 /// Feature 018: Combined Scan to NavMesh Workflow
