@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:vronmobile2/features/home/models/project.dart';
 import 'package:vronmobile2/features/home/services/project_service.dart';
 import 'package:vronmobile2/features/projects/widgets/project_detail_header.dart';
@@ -7,6 +8,11 @@ import 'package:vronmobile2/features/projects/widgets/project_data_tab.dart';
 import 'package:vronmobile2/features/projects/widgets/project_products_tab.dart';
 import 'package:vronmobile2/features/projects/widgets/project_tab_navigation.dart';
 import 'package:vronmobile2/features/scanning/services/scanning_service.dart';
+import 'package:vronmobile2/features/scanning/models/scan_data.dart';
+import 'package:vronmobile2/features/scanning/models/combined_scan.dart';
+import 'package:vronmobile2/features/scanning/services/combined_scan_service.dart';
+import 'package:vronmobile2/features/scanning/widgets/combine_progress_dialog.dart';
+import 'package:vronmobile2/features/scanning/widgets/export_combined_dialog.dart';
 import 'package:vronmobile2/core/constants/app_strings.dart';
 
 /// Project Detail Screen (UC10)
@@ -14,14 +20,22 @@ import 'package:vronmobile2/core/constants/app_strings.dart';
 /// - Viewer: 3D/VR viewer placeholder
 /// - Project data: Edit form for name and description
 /// - Products: Navigation to products list
+///
+/// Feature 018: Combined Scan to NavMesh Workflow
+/// - Shows scan list with combine button
+/// - Triggers combined scan workflow
 class ProjectDetailScreen extends StatefulWidget {
   final String projectId;
   final ProjectService? projectService;
+  final List<ScanData>? scans; // For testing - allows dependency injection
+  final bool? hasGlbReady; // For testing - mock GLB ready state
 
   const ProjectDetailScreen({
     super.key,
     required this.projectId,
     this.projectService,
+    this.scans,
+    this.hasGlbReady,
   });
 
   @override
@@ -31,9 +45,14 @@ class ProjectDetailScreen extends StatefulWidget {
 class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   late final ProjectService _projectService;
   late final ScanningService _scanningService;
+  late final CombinedScanService _combinedScanService;
   Project? _project;
+  List<ScanData> _scans = [];
+  CombinedScan? _combinedScan;
   bool _isLoading = true;
   bool _isScanning = false;
+  bool _isCombining = false;
+  double _uploadProgress = 0.0;
   String? _errorMessage;
 
   @override
@@ -41,6 +60,26 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     super.initState();
     _projectService = widget.projectService ?? ProjectService();
     _scanningService = ScanningService();
+    _combinedScanService = CombinedScanService();
+
+    // Use injected scans for testing, or load from service in production
+    if (widget.scans != null) {
+      _scans = widget.scans!;
+    }
+
+    // Mock GLB ready state for testing
+    if (widget.hasGlbReady == true) {
+      _combinedScan = CombinedScan(
+        id: 'test-combined',
+        projectId: widget.projectId,
+        scanIds: _scans.map((s) => s.id).toList(),
+        localCombinedPath: '/test/combined.usdz',
+        combinedGlbLocalPath: '/test/combined.glb',
+        status: CombinedScanStatus.glbReady,
+        createdAt: DateTime.now(),
+      );
+    }
+
     _loadProjectDetail();
   }
 
@@ -183,6 +222,168 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     }
   }
 
+  /// Feature 018: Start combined scan workflow
+  Future<void> _handleCombineScans() async {
+    if (_scans.length < 2) return;
+
+    final documentsDirectory = (await getApplicationDocumentsDirectory()).path;
+
+    setState(() {
+      _isCombining = true;
+    });
+
+    try {
+      // Show progress dialog
+      if (!mounted) return;
+      _showCombineProgressDialog();
+
+      // Start combination
+      final combinedScan = await _combinedScanService.createCombinedScan(
+        projectId: widget.projectId,
+        scans: _scans,
+        documentsDirectory: documentsDirectory,
+        onStatusChange: (status) {
+          setState(() {
+            _combinedScan = _combinedScan?.copyWith(status: status) ??
+                CombinedScan(
+                  id: 'temp',
+                  projectId: widget.projectId,
+                  scanIds: _scans.map((s) => s.id).toList(),
+                  localCombinedPath: '',
+                  status: status,
+                  createdAt: DateTime.now(),
+                );
+          });
+        },
+      );
+
+      setState(() {
+        _combinedScan = combinedScan;
+        _isCombining = false;
+      });
+
+      // Close progress dialog and show Generate NavMesh button
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      setState(() {
+        _isCombining = false;
+        _combinedScan = _combinedScan?.copyWith(
+          status: CombinedScanStatus.failed,
+          errorMessage: e.toString(),
+        );
+      });
+
+      // Dialog will show error state
+    }
+  }
+
+  /// Feature 018: Generate navmesh from combined GLB
+  Future<void> _handleGenerateNavmesh() async {
+    if (_combinedScan == null || !_combinedScan!.canGenerateNavmesh()) {
+      return;
+    }
+
+    final documentsDirectory = (await getApplicationDocumentsDirectory()).path;
+
+    setState(() {
+      _isCombining = true;
+    });
+
+    try {
+      // Show progress dialog
+      if (!mounted) return;
+      _showCombineProgressDialog();
+
+      // Start navmesh generation
+      final updatedScan = await _combinedScanService.generateNavmesh(
+        combinedScan: _combinedScan!,
+        documentsDirectory: documentsDirectory,
+        onStatusChange: (status) {
+          setState(() {
+            _combinedScan = _combinedScan?.copyWith(status: status);
+          });
+        },
+      );
+
+      setState(() {
+        _combinedScan = updatedScan;
+        _isCombining = false;
+      });
+
+      // Close progress dialog and show export dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+        _showExportDialog();
+      }
+    } catch (e) {
+      setState(() {
+        _isCombining = false;
+        _combinedScan = _combinedScan?.copyWith(
+          status: CombinedScanStatus.failed,
+          errorMessage: e.toString(),
+        );
+      });
+
+      // Dialog will show error state
+    }
+  }
+
+  void _showCombineProgressDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StreamBuilder<void>(
+        // Rebuild dialog when state changes
+        stream: Stream.periodic(const Duration(milliseconds: 100)),
+        builder: (context, snapshot) {
+          if (_combinedScan == null) {
+            return const SizedBox();
+          }
+
+          return CombineProgressDialog(
+            combinedScan: _combinedScan!,
+            uploadProgress: _uploadProgress,
+            onCancel: () {
+              Navigator.of(context).pop();
+              setState(() {
+                _isCombining = false;
+              });
+            },
+            onClose: () {
+              Navigator.of(context).pop();
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  void _showExportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => ExportCombinedDialog(
+        combinedScan: _combinedScan!,
+        onExportGlb: () {
+          // TODO: Implement export GLB (Feature 018 - Phase 5)
+          print('Export GLB: ${_combinedScan!.combinedGlbLocalPath}');
+        },
+        onExportNavmesh: () {
+          // TODO: Implement export navmesh (Feature 018 - Phase 5)
+          print('Export NavMesh: ${_combinedScan!.localNavmeshPath}');
+        },
+        onExportBoth: () {
+          // TODO: Implement export both as ZIP (Feature 018 - Phase 5)
+          print('Export Both');
+        },
+        onClose: () {
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
@@ -236,6 +437,10 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     return Column(
       children: [
         ProjectDetailHeader(project: _project!),
+
+        // Feature 018: Combined Scan Section
+        if (_scans.isNotEmpty) _buildCombineScanSection(),
+
         Expanded(
           child: ProjectTabNavigation(
             tabViews: [
@@ -249,6 +454,81 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  /// Feature 018: Build combine scan section with button
+  Widget _buildCombineScanSection() {
+    final validScans = _scans.where((scan) {
+      return scan.positionX != null || scan.positionY != null;
+    }).toList();
+
+    final canCombine = validScans.length >= 2;
+    final hasGlbReady = _combinedScan?.status == CombinedScanStatus.glbReady;
+    final isCompleted = _combinedScan?.status == CombinedScanStatus.completed;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        border: Border(
+          bottom: BorderSide(color: Colors.grey[300]!),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Scan count info
+          Row(
+            children: [
+              const Icon(Icons.threed_rotation, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                '${_scans.length} Scans',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              if (validScans.length < _scans.length) ...[
+                const SizedBox(width: 8),
+                Text(
+                  '(${validScans.length} positioned)',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Combine button or Generate NavMesh button
+          if (isCompleted)
+            // Show export button when complete
+            ElevatedButton.icon(
+              onPressed: _showExportDialog,
+              icon: const Icon(Icons.folder_zip),
+              label: const Text('Export Combined Scan'),
+            )
+          else if (hasGlbReady)
+            // Show Generate NavMesh button when GLB is ready
+            ElevatedButton.icon(
+              onPressed: _isCombining ? null : _handleGenerateNavmesh,
+              icon: const Icon(Icons.map),
+              label: const Text('Generate NavMesh'),
+            )
+          else
+            // Show Combine button initially
+            Tooltip(
+              message: canCombine
+                  ? 'Combine positioned scans into single GLB file'
+                  : 'Need at least 2 scans with positions to combine',
+              child: ElevatedButton.icon(
+                onPressed: canCombine && !_isCombining
+                    ? _handleCombineScans
+                    : null,
+                icon: const Icon(Icons.view_in_ar),
+                label: Text('Combine ${_scans.length} Scans to GLB'),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
