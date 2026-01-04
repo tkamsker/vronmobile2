@@ -67,6 +67,7 @@ cd ..
 
 ```bash
 # Open Xcode workspace
+ open -a /Applications/Xcode-16.4.app ios/Runner.xcworkspace
 open ios/Runner.xcworkspace
 ```
 
