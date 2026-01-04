@@ -11,9 +11,63 @@ import UIKit
 
     let controller = window?.rootViewController as! FlutterViewController
 
-    // Register USDZ Combiner Plugin for Feature 018: Combined Scan to NavMesh
-    let registrar = self.registrar(forPlugin: "USDZCombinerPlugin")!
-    USDZCombinerPlugin.register(with: registrar)
+    // Setup USDZ Combiner method channel for Feature 018: Combined Scan to NavMesh
+    let combinerChannel = FlutterMethodChannel(
+      name: "com.vron.usdz_combiner",
+      binaryMessenger: controller.binaryMessenger
+    )
+
+    let combiner = USDZCombiner()
+
+    combinerChannel.setMethodCallHandler { (call, result) in
+      if call.method == "combineScans" {
+        guard let args = call.arguments as? [String: Any],
+              let paths = args["paths"] as? [String],
+              let transformsData = args["transforms"] as? [[String: Any]],
+              let outputPath = args["outputPath"] as? String else {
+          result(FlutterError(
+            code: "INVALID_ARGUMENTS",
+            message: "Missing required arguments: paths, transforms, or outputPath",
+            details: nil
+          ))
+          return
+        }
+
+        // Parse transforms
+        let transforms = transformsData.map { data -> ScanTransform in
+          ScanTransform(
+            positionX: (data["positionX"] as? NSNumber)?.floatValue ?? 0.0,
+            positionY: (data["positionY"] as? NSNumber)?.floatValue ?? 0.0,
+            rotation: (data["rotation"] as? NSNumber)?.floatValue ?? 0.0,
+            scale: (data["scale"] as? NSNumber)?.floatValue ?? 1.0
+          )
+        }
+
+        // Perform combination in background
+        DispatchQueue.global(qos: .userInitiated).async {
+          let combineResult = combiner.combineScans(
+            scanPaths: paths,
+            transforms: transforms,
+            outputPath: outputPath
+          )
+
+          DispatchQueue.main.async {
+            switch combineResult {
+            case .success(let path):
+              result(path)
+            case .failure(let error):
+              result(FlutterError(
+                code: error.code,
+                message: error.message,
+                details: error.details
+              ))
+            }
+          }
+        }
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    }
 
     // Setup method channel for USDZ→GLB conversion
     // Note: On-device conversion is not supported due to iOS framework limitations.
