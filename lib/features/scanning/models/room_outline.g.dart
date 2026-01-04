@@ -16,6 +16,7 @@ RoomOutline _$RoomOutlineFromJson(Map<String, dynamic> json) => RoomOutline(
       : RoomOutline._offsetFromJson(
           json['positionOffset'] as Map<String, dynamic>,
         ),
+  scaleFactor: (json['scaleFactor'] as num?)?.toDouble() ?? 1.0,
   isSelected: json['isSelected'] as bool? ?? false,
   estimatedDoorIndices:
       (json['estimatedDoorIndices'] as List<dynamic>?)
@@ -34,6 +35,7 @@ Map<String, dynamic> _$RoomOutlineToJson(RoomOutline instance) =>
       'vertices': RoomOutline._pointsToJson(instance.vertices),
       'rotationDegrees': instance.rotationDegrees,
       'positionOffset': RoomOutline._offsetToJson(instance.positionOffset),
+      'scaleFactor': instance.scaleFactor,
       'isSelected': instance.isSelected,
       'estimatedDoorIndices': instance.estimatedDoorIndices,
       'outlineColor': RoomOutline._colorToJson(instance.outlineColor),

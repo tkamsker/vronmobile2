@@ -118,13 +118,16 @@ class RoomLayoutCanvasPainter extends CustomPainter {
 
   /// Transform a vertex from local room coordinates to canvas coordinates
   Offset _transformVertex(RoomOutline room, Offset vertex) {
+    // Apply scale first
+    final scaled = Offset(vertex.dx * room.scaleFactor, vertex.dy * room.scaleFactor);
+
     // Apply rotation
     final radians = room.rotationDegrees * (pi / 180.0);
     final cosTheta = cos(radians);
     final sinTheta = sin(radians);
     final rotated = Offset(
-      vertex.dx * cosTheta - vertex.dy * sinTheta,
-      vertex.dx * sinTheta + vertex.dy * cosTheta,
+      scaled.dx * cosTheta - scaled.dy * sinTheta,
+      scaled.dx * sinTheta + scaled.dy * cosTheta,
     );
 
     // Apply position offset

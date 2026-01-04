@@ -105,11 +105,9 @@ class _RoomLayoutCanvasScreenState extends State<RoomLayoutCanvasScreen> {
       case CanvasInteractionMode.selecting:
         _handleSelectTap(tapPosition);
         break;
-      case CanvasInteractionMode.placingDoor:
-        _handleDoorPlacement(tapPosition);
-        break;
       case CanvasInteractionMode.moving:
       case CanvasInteractionMode.rotating:
+      case CanvasInteractionMode.placingDoor:
       case CanvasInteractionMode.idle:
         // These modes don't use tap
         break;
@@ -302,6 +300,38 @@ class _RoomLayoutCanvasScreenState extends State<RoomLayoutCanvasScreen> {
     });
   }
 
+  /// Scale all rooms bigger (convenience feature for positioning)
+  void _scaleSelectedRoomBigger() {
+    setState(() {
+      final updatedRooms = _layout.rooms.map((room) {
+        final newScale = (room.scaleFactor + 0.1).clamp(0.1, 5.0);
+        return room.copyWith(scaleFactor: newScale);
+      }).toList();
+      _layout = _layout.copyWith(rooms: updatedRooms);
+    });
+  }
+
+  /// Scale all rooms smaller (convenience feature for positioning)
+  void _scaleSelectedRoomSmaller() {
+    setState(() {
+      final updatedRooms = _layout.rooms.map((room) {
+        final newScale = (room.scaleFactor - 0.1).clamp(0.1, 5.0);
+        return room.copyWith(scaleFactor: newScale);
+      }).toList();
+      _layout = _layout.copyWith(rooms: updatedRooms);
+    });
+  }
+
+  /// Reset all room sizes to original (scale = 1.0)
+  void _resetAllRoomSizes() {
+    setState(() {
+      final updatedRooms = _layout.rooms.map((room) {
+        return room.copyWith(scaleFactor: 1.0);
+      }).toList();
+      _layout = _layout.copyWith(rooms: updatedRooms);
+    });
+  }
+
   /// Proceed to stitching
   void _proceedToStitching() {
     Navigator.of(context).pop(_layout);
@@ -418,6 +448,24 @@ class _RoomLayoutCanvasScreenState extends State<RoomLayoutCanvasScreen> {
                       : null,
                 ),
                 _buildControlButton(
+                  icon: Icons.remove_circle_outline,
+                  label: 'Smaller',
+                  isActive: false,
+                  onPressed: _scaleSelectedRoomSmaller,
+                ),
+                _buildControlButton(
+                  icon: Icons.add_circle_outline,
+                  label: 'Bigger',
+                  isActive: false,
+                  onPressed: _scaleSelectedRoomBigger,
+                ),
+                _buildControlButton(
+                  icon: Icons.restart_alt,
+                  label: 'Reset Size',
+                  isActive: false,
+                  onPressed: _resetAllRoomSizes,
+                ),
+                _buildControlButton(
                   icon: Icons.open_with,
                   label: 'Move',
                   isActive: _mode == CanvasInteractionMode.moving,
@@ -425,18 +473,6 @@ class _RoomLayoutCanvasScreenState extends State<RoomLayoutCanvasScreen> {
                     if (_layout.getSelectedRoom() != null) {
                       setState(() {
                         _mode = CanvasInteractionMode.moving;
-                      });
-                    }
-                  },
-                ),
-                _buildControlButton(
-                  icon: Icons.door_front_door,
-                  label: 'Add Door',
-                  isActive: _mode == CanvasInteractionMode.placingDoor,
-                  onPressed: () {
-                    if (_layout.getSelectedRoom() != null) {
-                      setState(() {
-                        _mode = CanvasInteractionMode.placingDoor;
                       });
                     }
                   },
