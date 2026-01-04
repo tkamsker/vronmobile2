@@ -11,6 +11,7 @@ import 'package:vronmobile2/features/scanning/services/scanning_service.dart';
 import 'package:vronmobile2/features/scanning/models/scan_data.dart';
 import 'package:vronmobile2/features/scanning/models/combined_scan.dart';
 import 'package:vronmobile2/features/scanning/services/combined_scan_service.dart';
+import 'package:vronmobile2/features/scanning/services/export_service.dart';
 import 'package:vronmobile2/features/scanning/widgets/combine_progress_dialog.dart';
 import 'package:vronmobile2/features/scanning/widgets/export_combined_dialog.dart';
 import 'package:vronmobile2/core/constants/app_strings.dart';
@@ -46,12 +47,14 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
   late final ProjectService _projectService;
   late final ScanningService _scanningService;
   late final CombinedScanService _combinedScanService;
+  late final ExportService _exportService;
   Project? _project;
   List<ScanData> _scans = [];
   CombinedScan? _combinedScan;
   bool _isLoading = true;
   bool _isScanning = false;
   bool _isCombining = false;
+  bool _isExporting = false;
   double _uploadProgress = 0.0;
   String? _errorMessage;
 
@@ -61,6 +64,7 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
     _projectService = widget.projectService ?? ProjectService();
     _scanningService = ScanningService();
     _combinedScanService = CombinedScanService();
+    _exportService = ExportService();
 
     // Use injected scans for testing, or load from service in production
     if (widget.scans != null) {
@@ -424,23 +428,143 @@ class _ProjectDetailScreenState extends State<ProjectDetailScreen> {
       context: context,
       builder: (context) => ExportCombinedDialog(
         combinedScan: _combinedScan!,
-        onExportGlb: () {
-          // TODO: Implement export GLB (Feature 018 - Phase 5)
-          print('Export GLB: ${_combinedScan!.combinedGlbLocalPath}');
-        },
-        onExportNavmesh: () {
-          // TODO: Implement export navmesh (Feature 018 - Phase 5)
-          print('Export NavMesh: ${_combinedScan!.localNavmeshPath}');
-        },
-        onExportBoth: () {
-          // TODO: Implement export both as ZIP (Feature 018 - Phase 5)
-          print('Export Both');
-        },
+        onExportGlb: () => _handleExportGlb(),
+        onExportNavmesh: () => _handleExportNavmesh(),
+        onExportBoth: () => _handleExportBoth(),
         onClose: () {
           Navigator.of(context).pop();
         },
       ),
     );
+  }
+
+  /// Feature 018: Export combined GLB file
+  Future<void> _handleExportGlb() async {
+    if (_combinedScan == null) return;
+
+    setState(() {
+      _isExporting = true;
+    });
+
+    try {
+      final result = await _exportService.exportGlb(
+        combinedScan: _combinedScan!,
+      );
+
+      setState(() {
+        _isExporting = false;
+      });
+
+      if (mounted && result.status == ShareResultStatus.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('GLB file shared successfully'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isExporting = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Feature 018: Export navmesh file
+  Future<void> _handleExportNavmesh() async {
+    if (_combinedScan == null) return;
+
+    setState(() {
+      _isExporting = true;
+    });
+
+    try {
+      final result = await _exportService.exportNavmesh(
+        combinedScan: _combinedScan!,
+      );
+
+      setState(() {
+        _isExporting = false;
+      });
+
+      if (mounted && result.status == ShareResultStatus.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('NavMesh file shared successfully'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isExporting = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Feature 018: Export both files as ZIP
+  Future<void> _handleExportBoth() async {
+    if (_combinedScan == null) return;
+
+    setState(() {
+      _isExporting = true;
+    });
+
+    try {
+      final result = await _exportService.exportBothAsZip(
+        combinedScan: _combinedScan!,
+      );
+
+      setState(() {
+        _isExporting = false;
+      });
+
+      if (mounted && result.status == ShareResultStatus.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ZIP file shared successfully'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isExporting = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildBody() {
