@@ -3,9 +3,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/scan_data.dart';
+import '../models/combined_scan.dart';
 import '../services/scan_session_manager.dart';
 import '../services/blender_api_service.dart';
+import '../services/combined_scan_service.dart';
+import '../widgets/combine_progress_dialog.dart';
 import '../../home/models/project.dart';
 import '../../home/services/project_service.dart';
 import '../../home/services/byo_project_service.dart';
@@ -34,10 +38,16 @@ class _ScanListScreenState extends State<ScanListScreen> {
   final ProjectService _projectService = ProjectService();
   final BYOProjectService _byoProjectService = BYOProjectService();
   final BlenderApiService _blenderApiService = BlenderApiService();
+  final CombinedScanService _combinedScanService = CombinedScanService();
 
   List<Project> _projects = [];
   Project? _selectedProject;
   bool _isLoadingProjects = false;
+
+  // Feature 018: Combined scan state
+  CombinedScan? _combinedScan;
+  bool _isCombining = false;
+  double _uploadProgress = 0.0;
 
   @override
   void initState() {
@@ -76,10 +86,64 @@ class _ScanListScreenState extends State<ScanListScreen> {
         title: const Text('Projects & Scans', style: TextStyle(fontSize: 20)),
         centerTitle: false,
         actions: [
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.settings),
-            onPressed: () {
-              // Navigate to settings
+            tooltip: 'Options',
+            onSelected: (value) {
+              if (value == 'create_glb') {
+                _handleCombineScans();
+              } else if (value == 'generate_navmesh') {
+                _handleGenerateNavmesh();
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              final scans = _sessionManager.scans;
+              // Create GLB: enabled when 2+ scans exist
+              final canCombine = scans.length >= 2 && !_isCombining;
+              // Generate NavMesh: enabled when combined GLB exists
+              final hasGlbReady = _combinedScan?.status == CombinedScanStatus.glbReady;
+              final canGenerateNavmesh = hasGlbReady && !_isCombining;
+
+              return [
+                PopupMenuItem<String>(
+                  value: 'create_glb',
+                  enabled: canCombine,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.view_in_ar,
+                        color: canCombine ? Colors.blue : Colors.grey,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Create GLB',
+                        style: TextStyle(
+                          color: canCombine ? Colors.white : Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'generate_navmesh',
+                  enabled: canGenerateNavmesh,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.map,
+                        color: canGenerateNavmesh ? Colors.blue : Colors.grey,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Generate NavMesh',
+                        style: TextStyle(
+                          color: canGenerateNavmesh ? Colors.white : Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ];
             },
           ),
         ],
@@ -413,8 +477,25 @@ class _ScanListScreenState extends State<ScanListScreen> {
   }
 
   void _showAddProjectDialog() {
+    // Check if we have combined GLB files available
     File? worldFile;
     File? meshFile;
+
+    // If combined scan is complete, use those files as defaults
+    if (_combinedScan?.status == CombinedScanStatus.completed) {
+      if (_combinedScan!.combinedGlbLocalPath != null) {
+        final glbFile = File(_combinedScan!.combinedGlbLocalPath!);
+        if (glbFile.existsSync()) {
+          worldFile = glbFile;
+        }
+      }
+      if (_combinedScan!.localNavmeshPath != null) {
+        final navmeshFile = File(_combinedScan!.localNavmeshPath!);
+        if (navmeshFile.existsSync()) {
+          meshFile = navmeshFile;
+        }
+      }
+    }
 
     showDialog(
       context: context,
@@ -436,36 +517,69 @@ class _ScanListScreenState extends State<ScanListScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Info text about auto-generation
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade900.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Colors.blue.shade700.withValues(alpha: 0.5),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: Colors.blue.shade400,
-                        size: 20,
+                // Info text about combined files or auto-generation
+                if (worldFile != null && meshFile != null)
+                  // Show success message when files are auto-populated
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade900.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.green.shade700.withValues(alpha: 0.5),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Project name will be auto-generated from your uploaded GLB files.',
-                          style: TextStyle(
-                            color: Colors.blue.shade200,
-                            fontSize: 13,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle,
+                          color: Colors.green.shade400,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Using combined GLB and NavMesh from your scans. You can change files if needed.',
+                            style: TextStyle(
+                              color: Colors.green.shade200,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                  )
+                else
+                  // Show info about auto-generation
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade900.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.blue.shade700.withValues(alpha: 0.5),
                       ),
-                    ],
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.blue.shade400,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Project name will be auto-generated from your uploaded GLB files.',
+                            style: TextStyle(
+                              color: Colors.blue.shade200,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 const SizedBox(height: 20),
 
                 // World File Picker
@@ -532,6 +646,26 @@ class _ScanListScreenState extends State<ScanListScreen> {
                     ),
                   ),
                 ),
+                // Show info if using combined scan file
+                if (worldFile != null &&
+                    _combinedScan?.combinedGlbLocalPath == worldFile!.path) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.check_circle, size: 16, color: Colors.green.shade400),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Using combined GLB from scans',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.green.shade400,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 16),
 
                 // Mesh File Picker
@@ -598,6 +732,26 @@ class _ScanListScreenState extends State<ScanListScreen> {
                     ),
                   ),
                 ),
+                // Show info if using navmesh file
+                if (meshFile != null &&
+                    _combinedScan?.localNavmeshPath == meshFile!.path) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.check_circle, size: 16, color: Colors.green.shade400),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Using navmesh from scans',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.green.shade400,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 16),
 
                 // Info text
@@ -1368,6 +1522,220 @@ class _ScanListScreenState extends State<ScanListScreen> {
         print('🔔 [SCAN_LIST] Snackbar closed: $reason');
       }
     });
+  }
+
+  /// Feature 018: Start combined scan workflow
+  Future<void> _handleCombineScans() async {
+    final scans = _sessionManager.scans;
+
+    if (scans.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Need at least 2 scans to combine'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (_selectedProject == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a project first'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final documentsDirectory = (await getApplicationDocumentsDirectory()).path;
+
+    setState(() {
+      _isCombining = true;
+    });
+
+    try {
+      // Show progress dialog
+      if (!mounted) return;
+      _showCombineProgressDialog();
+
+      // Ensure all scans have position data - assign default positions if missing
+      final scansWithPositions = scans.map((scan) {
+        if (scan.positionX == null && scan.positionY == null) {
+          // Assign default positions in a simple grid layout
+          final index = scans.indexOf(scan);
+          return scan.copyWith(
+            positionX: (index % 3) * 100.0, // Simple grid: 3 columns
+            positionY: (index ~/ 3) * 100.0, // Simple grid: rows
+            rotationDegrees: 0.0,
+            scaleFactor: 1.0,
+          );
+        }
+        return scan;
+      }).toList();
+
+      // Start combination
+      final combinedScan = await _combinedScanService.createCombinedScan(
+        projectId: _selectedProject!.id,
+        scans: scansWithPositions,
+        documentsDirectory: documentsDirectory,
+        onStatusChange: (status) {
+          setState(() {
+            _combinedScan = _combinedScan?.copyWith(status: status) ??
+                CombinedScan(
+                  id: 'temp',
+                  projectId: _selectedProject!.id,
+                  scanIds: scans.map((s) => s.id).toList(),
+                  localCombinedPath: '',
+                  status: status,
+                  createdAt: DateTime.now(),
+                );
+          });
+        },
+      );
+
+      setState(() {
+        _combinedScan = combinedScan;
+        _isCombining = false;
+      });
+
+      print('✅ Combined scan created: ${combinedScan.id}');
+    } catch (e) {
+      print('❌ Failed to combine scans: $e');
+
+      setState(() {
+        _isCombining = false;
+        _combinedScan = _combinedScan?.copyWith(
+          status: CombinedScanStatus.failed,
+          errorMessage: _formatCombineError(e),
+        );
+      });
+    }
+  }
+
+  /// Format error messages for better user experience
+  String _formatCombineError(dynamic error) {
+    final errorStr = error.toString();
+
+    // Position validation errors
+    if (errorStr.contains('position data')) {
+      return 'Scans need to be arranged on canvas first. Use "Room stitching" to position scans.';
+    }
+
+    // File system errors
+    if (errorStr.contains('FileSystemException') ||
+        errorStr.contains('No such file or directory')) {
+      return 'File access error. One or more scan files could not be read.';
+    }
+
+    // Platform errors (iOS native)
+    if (errorStr.contains('PlatformException')) {
+      if (errorStr.contains('INVALID_GEOMETRY')) {
+        return 'Invalid scan geometry. One or more scans contain invalid 3D data.';
+      }
+      return 'Platform error: ${errorStr.replaceAll('PlatformException', '').trim()}';
+    }
+
+    // Generic error with cleaned message
+    return 'Failed to combine scans: ${errorStr.replaceAll('Exception:', '').trim()}';
+  }
+
+  /// Feature 018: Generate navmesh from combined GLB
+  Future<void> _handleGenerateNavmesh() async {
+    if (_combinedScan == null || !_combinedScan!.canGenerateNavmesh()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('GLB must be ready before generating navmesh'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final documentsDirectory = (await getApplicationDocumentsDirectory()).path;
+
+    setState(() {
+      _isCombining = true;
+    });
+
+    try {
+      // Show progress dialog
+      if (!mounted) return;
+      _showCombineProgressDialog();
+
+      // Start navmesh generation
+      final updatedScan = await _combinedScanService.generateNavmesh(
+        combinedScan: _combinedScan!,
+        documentsDirectory: documentsDirectory,
+        onStatusChange: (status) {
+          setState(() {
+            _combinedScan = _combinedScan?.copyWith(status: status);
+          });
+        },
+      );
+
+      setState(() {
+        _combinedScan = updatedScan;
+        _isCombining = false;
+      });
+
+      print('✅ NavMesh generation complete!');
+    } catch (e) {
+      print('❌ Failed to generate navmesh: $e');
+
+      setState(() {
+        _isCombining = false;
+        _combinedScan = _combinedScan?.copyWith(
+          status: CombinedScanStatus.failed,
+          errorMessage: 'NavMesh generation failed: $e',
+        );
+      });
+    }
+  }
+
+  /// Show combine progress dialog
+  void _showCombineProgressDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StreamBuilder<void>(
+        // Rebuild dialog when state changes
+        stream: Stream.periodic(const Duration(milliseconds: 100)),
+        builder: (context, snapshot) {
+          if (_combinedScan == null) {
+            return const SizedBox();
+          }
+
+          return CombineProgressDialog(
+            combinedScan: _combinedScan!,
+            uploadProgress: _uploadProgress,
+            onCancel: () {
+              Navigator.of(context).pop();
+              setState(() {
+                _isCombining = false;
+              });
+            },
+            onClose: () {
+              Navigator.of(context).pop();
+            },
+            onRetry: () {
+              Navigator.of(context).pop();
+              // Determine which operation to retry based on current status
+              if (_combinedScan!.status == CombinedScanStatus.failed) {
+                // Check which stage failed to determine retry action
+                if (_combinedScan!.combinedGlbLocalPath != null) {
+                  // GLB exists, so navmesh generation failed - retry navmesh
+                  _handleGenerateNavmesh();
+                } else {
+                  // No GLB, so combination failed - retry combination
+                  _handleCombineScans();
+                }
+              }
+            },
+          );
+        },
+      ),
+    );
   }
 }
 
