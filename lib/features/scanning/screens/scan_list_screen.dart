@@ -1594,12 +1594,46 @@ class _ScanListScreenState extends State<ScanListScreen> {
         },
       );
 
+      print('✅ Combined USDZ created: ${combinedScan.id}');
+      print('🔄 Starting GLB conversion via BlenderAPI...');
+
+      // Update status to uploading
       setState(() {
-        _combinedScan = combinedScan;
+        _combinedScan = combinedScan.copyWith(
+          status: CombinedScanStatus.uploadingUsdz,
+        );
+      });
+
+      // Convert combined USDZ to GLB using BlenderAPI
+      final glbPath = await _blenderApiService.convertUsdzToGlb(
+        usdzPath: combinedScan.localCombinedPath,
+        onProgress: (progress, statusText) {
+          // Update progress and status based on stage
+          setState(() {
+            _uploadProgress = progress;
+            // Switch to processingGlb status when upload is complete
+            if (progress > 0.5 && _combinedScan?.status == CombinedScanStatus.uploadingUsdz) {
+              _combinedScan = _combinedScan?.copyWith(
+                status: CombinedScanStatus.processingGlb,
+              );
+            }
+          });
+          print('📊 Conversion progress: ${(progress * 100).toInt()}% - $statusText');
+        },
+      );
+
+      print('✅ GLB conversion complete: $glbPath');
+
+      // Update combined scan with GLB path and mark as ready
+      setState(() {
+        _combinedScan = combinedScan.copyWith(
+          combinedGlbLocalPath: glbPath,
+          status: CombinedScanStatus.glbReady,
+        );
         _isCombining = false;
       });
 
-      print('✅ Combined scan created: ${combinedScan.id}');
+      print('✅ Combined scan ready for NavMesh generation!');
     } catch (e) {
       print('❌ Failed to combine scans: $e');
 
