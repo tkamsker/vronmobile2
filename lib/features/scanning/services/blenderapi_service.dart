@@ -39,11 +39,18 @@ class BlenderAPIService {
     final url = Uri.parse('$baseUrl/sessions');
 
     try {
+      print('🔄 Creating BlenderAPI session at $baseUrl');
+
       final response = await client.post(
         url,
         headers: {
           'Content-Type': 'application/json',
           'X-API-Key': apiKey,
+          'X-Device-ID': '8c1f9b2a-4e5d-4c8e-b4fa-9a7b3f6d92ab',
+          'X-Platform': 'ios',
+          'X-OS-Version': '17.2',
+          'X-App-Version': '1.4.2',
+          'X-Device-Model': 'iPad13,8',
         },
       );
 
@@ -55,6 +62,7 @@ class BlenderAPIService {
           throw Exception('Session ID not found in response');
         }
 
+        print('✅ Session created: $sessionId');
         return sessionId;
       } else {
         throw Exception(
@@ -83,10 +91,13 @@ class BlenderAPIService {
     }
 
     final url = Uri.parse('$baseUrl/sessions/$sessionId/upload');
+    final filename = glbFile.path.split('/').last;
 
     try {
       final fileBytes = await glbFile.readAsBytes();
       final totalBytes = fileBytes.length;
+
+      print('📤 Uploading ${filename} (${totalBytes} bytes)');
 
       // Report initial progress
       onProgress?.call(0.0);
@@ -95,7 +106,14 @@ class BlenderAPIService {
         url,
         headers: {
           'X-API-Key': apiKey,
+          'X-Asset-Type': 'model/gltf-binary',
+          'X-Filename': filename,
           'Content-Type': 'application/octet-stream',
+          'X-Device-ID': '8c1f9b2a-4e5d-4c8e-b4fa-9a7b3f6d92ab',
+          'X-Platform': 'ios',
+          'X-OS-Version': '17.2',
+          'X-App-Version': '1.4.2',
+          'X-Device-Model': 'iPad13,8',
         },
         body: fileBytes,
       );
@@ -108,6 +126,8 @@ class BlenderAPIService {
           'Upload failed: ${response.statusCode} - ${response.body}',
         );
       }
+
+      print('✅ Upload completed');
     } catch (e) {
       throw Exception('Failed to upload GLB to BlenderAPI: $e');
     }
@@ -140,11 +160,20 @@ class BlenderAPIService {
     };
 
     try {
+      print('🗺️ Starting navmesh generation...');
+      print('   Input: $inputFilename');
+      print('   Output: $outputFilename');
+
       final response = await client.post(
         url,
         headers: {
           'Content-Type': 'application/json',
           'X-API-Key': apiKey,
+          'X-Device-ID': '8c1f9b2a-4e5d-4c8e-b4fa-9a7b3f6d92ab',
+          'X-Platform': 'ios',
+          'X-OS-Version': '17.2',
+          'X-App-Version': '1.4.2',
+          'X-Device-Model': 'iPad13,8',
         },
         body: json.encode(requestBody),
       );
@@ -154,6 +183,8 @@ class BlenderAPIService {
           'Failed to start navmesh generation: ${response.statusCode} - ${response.body}',
         );
       }
+
+      print('✅ Navmesh generation started');
     } catch (e) {
       throw Exception('Failed to start navmesh generation: $e');
     }
@@ -165,9 +196,9 @@ class BlenderAPIService {
   /// [pollingInterval] - Time between polls (default: 2 seconds)
   /// [maxAttempts] - Maximum polling attempts (default: 450 = 15 minutes)
   ///
-  /// Returns final status ("COMPLETED")
+  /// Returns final status ("completed")
   ///
-  /// Throws [Exception] if status is FAILED
+  /// Throws [Exception] if status is failed
   /// Throws [TimeoutException] if max attempts reached
   Future<String> pollStatus({
     required String sessionId,
@@ -179,27 +210,39 @@ class BlenderAPIService {
 
     final url = Uri.parse('$baseUrl/sessions/$sessionId/status');
 
+    print('⏳ Polling status...');
+
     for (var attempt = 0; attempt < maxAttempt; attempt++) {
       try {
         final response = await client.get(
           url,
           headers: {
             'X-API-Key': apiKey,
+            'X-Device-ID': '8c1f9b2a-4e5d-4c8e-b4fa-9a7b3f6d92ab',
+            'X-Platform': 'ios',
+            'X-OS-Version': '17.2',
+            'X-App-Version': '1.4.2',
+            'X-Device-Model': 'iPad13,8',
           },
         );
 
         if (response.statusCode == 200) {
           final data = json.decode(response.body) as Map<String, dynamic>;
-          final status = data['status'] as String?;
+          // IMPORTANT: API returns 'session_status' not 'status'
+          final status = data['session_status'] as String?;
+          final progress = data['progress'] as int? ?? 0;
 
           if (status == null) {
-            throw Exception('Status not found in response');
+            throw Exception('session_status not found in response');
           }
 
-          if (status == 'COMPLETED') {
+          print('   Status: $status ($progress%)');
+
+          if (status == 'completed') {
+            print('✅ Navmesh generation completed');
             return status;
-          } else if (status == 'FAILED') {
-            final error = data['error'] as String? ?? 'Unknown error';
+          } else if (status == 'failed') {
+            final error = data['error_message'] as String? ?? 'Unknown error';
             throw Exception('NavMesh generation failed: $error');
           }
 
@@ -239,10 +282,17 @@ class BlenderAPIService {
     final url = Uri.parse('$baseUrl/sessions/$sessionId/download/$filename');
 
     try {
+      print('📥 Downloading navmesh: $filename');
+
       final response = await client.get(
         url,
         headers: {
           'X-API-Key': apiKey,
+          'X-Device-ID': '8c1f9b2a-4e5d-4c8e-b4fa-9a7b3f6d92ab',
+          'X-Platform': 'ios',
+          'X-OS-Version': '17.2',
+          'X-App-Version': '1.4.2',
+          'X-Device-Model': 'iPad13,8',
         },
       );
 
@@ -251,6 +301,8 @@ class BlenderAPIService {
         final outputFile = File(outputPath);
         await outputFile.create(recursive: true);
         await outputFile.writeAsBytes(response.bodyBytes);
+
+        print('✅ Downloaded to: $outputPath (${response.bodyBytes.length} bytes)');
       } else {
         throw Exception(
           'Download failed: ${response.statusCode} - ${response.body}',
@@ -270,16 +322,25 @@ class BlenderAPIService {
     final url = Uri.parse('$baseUrl/sessions/$sessionId');
 
     try {
+      print('🧹 Cleaning up session: $sessionId');
+
       await client.delete(
         url,
         headers: {
           'X-API-Key': apiKey,
+          'X-Device-ID': '8c1f9b2a-4e5d-4c8e-b4fa-9a7b3f6d92ab',
+          'X-Platform': 'ios',
+          'X-OS-Version': '17.2',
+          'X-App-Version': '1.4.2',
+          'X-Device-Model': 'iPad13,8',
         },
       );
+
+      print('✅ Session deleted');
       // Ignore response status - cleanup is best-effort
     } catch (e) {
       // Log but don't throw - cleanup failures are non-fatal
-      print('Warning: Failed to delete BlenderAPI session $sessionId: $e');
+      print('⚠️ Warning: Failed to delete BlenderAPI session $sessionId: $e');
     }
   }
 
