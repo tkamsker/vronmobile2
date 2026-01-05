@@ -146,26 +146,32 @@ Mobile Flutter app with iOS-specific native code:
 - [ ] T064 [US1] Add file size display with formatting (KB/MB) in ExportCombinedDialog in lib/features/scanning/widgets/export_combined_dialog.dart
 - [ ] T065 [US1] Add Semantics widgets for accessibility in ExportCombinedDialog in lib/features/scanning/widgets/export_combined_dialog.dart
 
-**Sub-task 1G: Project Detail Screen Integration**
+**Sub-task 1G: Scan List Screen Integration**
 
-- [ ] T066 [US1] Add "Combine Scans to GLB" button to ProjectDetailScreen in lib/features/projects/screens/project_detail_screen.dart
-- [ ] T067 [US1] Implement button enabled/disabled logic (requires ≥2 scans with positions) in lib/features/projects/screens/project_detail_screen.dart
-- [ ] T068 [US1] Add _startCombineFlow() method that creates CombinedScan and shows progress dialog in lib/features/projects/screens/project_detail_screen.dart
-- [ ] T069 [US1] Add "Generate NavMesh" button that appears after GLB ready in lib/features/projects/screens/project_detail_screen.dart
-- [ ] T070 [US1] Implement _generateNavmesh() method that calls service and shows progress in lib/features/projects/screens/project_detail_screen.dart
-- [ ] T071 [US1] Show ExportCombinedDialog when both files are ready in lib/features/projects/screens/project_detail_screen.dart
-- [ ] T072 [US1] Add error handling and error dialogs for all failure scenarios in lib/features/projects/screens/project_detail_screen.dart
-- [ ] T073 [US1] Add Semantics widgets for all buttons (combine, navmesh, export) in lib/features/projects/screens/project_detail_screen.dart
+- [ ] T066 [US1] Add PopupMenuButton with "Create GLB" and "Generate NavMesh" items to ScanListScreen gear menu in lib/features/scanning/screens/scan_list_screen.dart
+- [ ] T067 [US1] Implement menu item enabled/disabled logic (requires ≥2 scans, glbReady status) in lib/features/scanning/screens/scan_list_screen.dart
+- [ ] T068 [US1] Add _handleCombineScans() method that creates CombinedScan and shows progress dialog in lib/features/scanning/screens/scan_list_screen.dart
+- [ ] T069 [US1] Add _handleGenerateNavmesh() method that calls BlenderAPI service in lib/features/scanning/screens/scan_list_screen.dart
+- [ ] T070 [US1] Implement progress tracking and state updates during combine/navmesh operations in lib/features/scanning/screens/scan_list_screen.dart
+- [ ] T071 [US1] Show ExportCombinedDialog when both files are ready in lib/features/scanning/screens/scan_list_screen.dart
+- [ ] T072 [US1] Add error handling and error dialogs for all failure scenarios in lib/features/scanning/screens/scan_list_screen.dart
+- [ ] T073 [US1] Add Semantics widgets for all menu items and buttons in lib/features/scanning/screens/scan_list_screen.dart
 
 **Sub-task 1H: Error Handling & Edge Cases**
 
-- [ ] T074 [US1] Add validation for insufficient scans (<2) with user-friendly message in lib/features/projects/screens/project_detail_screen.dart
-- [ ] T075 [US1] Add validation for scans without position data with guidance message in lib/features/projects/screens/project_detail_screen.dart
+- [ ] T074 [US1] Add validation for insufficient scans (<2) with user-friendly message in lib/features/scanning/screens/scan_list_screen.dart
+- [ ] T075 [US1] Add validation for scans without position data with guidance message (auto-assign default positions) in lib/features/scanning/screens/scan_list_screen.dart
 - [ ] T076 [US1] Implement retry mechanism for network failures in CombinedScanService in lib/features/scanning/services/combined_scan_service.dart
 - [ ] T077 [US1] Implement cleanup on cancellation (delete partial files, cancel uploads) in CombinedScanService in lib/features/scanning/services/combined_scan_service.dart
 - [ ] T078 [US1] Add handling for BlenderAPI 413 Payload Too Large error in BlenderAPIService in lib/features/scanning/services/blenderapi_service.dart
 - [ ] T079 [US1] Add handling for BlenderAPI session expiration (410 Gone) in BlenderAPIService in lib/features/scanning/services/blenderapi_service.dart
 - [ ] T080 [US1] Add offline detection and queue mechanism for uploads in CombinedScanService in lib/features/scanning/services/combined_scan_service.dart
+- [ ] T081 [US1] Implement cancellation for USDZ combination in USDZCombinerService (abort SceneKit operation) in lib/features/scanning/services/usdz_combiner_service.dart
+- [ ] T082 [US1] Implement cancellation for upload operations in CombinedScanService (cancel HTTP request) in lib/features/scanning/services/combined_scan_service.dart
+- [ ] T083 [US1] Implement cancellation for BlenderAPI session (DELETE session endpoint) in lib/features/scanning/services/blenderapi_service.dart
+- [ ] T084 [US1] Implement cleanup on cancellation (delete partial files, reset CombinedScan state) in lib/features/scanning/services/combined_scan_service.dart
+- [ ] T085 [US1] Add cancellation confirmation dialog in CombineProgressDialog in lib/features/scanning/widgets/combine_progress_dialog.dart
+- [ ] T086 [US1] Wire cancel button in CombineProgressDialog to call service cancellation methods in lib/features/scanning/screens/scan_list_screen.dart
 
 **Checkpoint**: At this point, the complete combined scan to navmesh workflow should be fully functional and testable independently. User can:
 - Combine multiple scans into single GLB
@@ -173,6 +179,9 @@ Mobile Flutter app with iOS-specific native code:
 - Generate navmesh via BlenderAPI
 - Download navmesh
 - Export both files for Unity
+- Cancel operations at any stage with proper cleanup
+
+**Checkpoint**: User Story 1 now includes complete cancellation support across all workflow stages.
 
 ---
 
@@ -180,21 +189,21 @@ Mobile Flutter app with iOS-specific native code:
 
 **Purpose**: Performance optimization, accessibility improvements, and production readiness
 
-- [ ] T081 [P] Add logging for all service operations with structured log format
-- [ ] T082 [P] Add analytics events for key user actions (combine started, navmesh generated, export completed)
-- [ ] T083 [P] Optimize memory usage during USDZ combination (load scenes sequentially if needed) in ios/Runner/USDZCombiner.swift
-- [ ] T084 [P] Add progress caching to resume interrupted uploads in CombinedScanService
-- [ ] T085 [P] Add file size validation before upload (warn if >50MB) in CombinedScanService
-- [ ] T086 [P] Review all UI text for clarity and consistency
-- [ ] T087 [P] Add haptic feedback for button taps and completion events
-- [ ] T088 Verify all interactive elements meet 44x44 minimum touch target size
-- [ ] T089 Test with VoiceOver (iOS screen reader) and fix any accessibility issues
-- [ ] T090 Test with Dynamic Type (large font sizes) and ensure UI layouts correctly
-- [ ] T091 Profile memory usage during 10-room combination and optimize if needed
-- [ ] T092 Profile frame rate during progress updates and optimize if dropping below 60fps
-- [ ] T093 Test on slower devices (iPhone 12) and optimize if performance is unacceptable
-- [ ] T094 Add user-facing documentation or help screen explaining the workflow
-- [ ] T095 Create example Unity project that imports combined GLB and navmesh for QA testing
+- [ ] T087 [P] Add logging for all service operations with structured log format
+- [ ] T088 [P] Add analytics events for key user actions (combine started, navmesh generated, export completed)
+- [ ] T089 [P] Optimize memory usage during USDZ combination (load scenes sequentially if needed) in ios/Runner/USDZCombiner.swift
+- [ ] T090 [P] Add progress caching to resume interrupted uploads in CombinedScanService
+- [ ] T091 [P] Add file size validation before upload (warn if >50MB) in CombinedScanService
+- [ ] T092 [P] Review all UI text for clarity and consistency
+- [ ] T093 [P] Add haptic feedback for button taps and completion events
+- [ ] T094 Verify all interactive elements meet 44x44 minimum touch target size
+- [ ] T095 Test with VoiceOver (iOS screen reader) and fix any accessibility issues
+- [ ] T096 Test with Dynamic Type (large font sizes) and ensure UI layouts correctly
+- [ ] T097 Profile memory usage during 10-room combination and optimize if needed
+- [ ] T098 Profile frame rate during progress updates and optimize if dropping below 60fps
+- [ ] T099 Test on slower devices (iPhone 12) and optimize if performance is unacceptable
+- [ ] T100 Add user-facing documentation or help screen explaining the workflow
+- [ ] T101 Create example Unity project that imports combined GLB and navmesh for QA testing
 
 ---
 
@@ -207,9 +216,9 @@ Phase 1 (Setup: T001-T003)
     ↓
 Phase 2 (Foundational: T004-T011) ← BLOCKING: Must complete before Phase 3
     ↓
-Phase 3 (User Story 1: T012-T080) ← Can execute sub-tasks in parallel
+Phase 3 (User Story 1: T012-T086) ← Can execute sub-tasks in parallel
     ↓
-Phase 4 (Polish: T081-T095) ← Can execute in parallel after Phase 3 complete
+Phase 4 (Polish: T087-T101) ← Can execute in parallel after Phase 3 complete
 ```
 
 ### Parallel Execution Opportunities
@@ -239,18 +248,20 @@ After tests written (T012-T027), can parallelize implementation:
 **Parallel Group E** (After C & D complete):
 - T066 → T067-T073 (Screen Integration)
 - T074-T080 (Error handling - can partially overlap)
+- T081-T086 (Cancellation flow - can partially overlap with E)
 
 **Phase 4 Polish** (all tasks can run in parallel after Phase 3):
-- T081-T095 (independent improvements)
+- T087-T101 (independent improvements)
 
 ### MVP Scope (Minimum Viable Product)
 
-**Recommended MVP**: User Story 1 (T001-T080)
+**Recommended MVP**: User Story 1 (T001-T086)
 
 This delivers the complete end-to-end workflow:
 - ✅ Combine multiple scans into single GLB
 - ✅ Generate navmesh via BlenderAPI
 - ✅ Export both files for Unity
+- ✅ Cancel operations at any stage
 
 **Post-MVP Enhancements** (Phase 4):
 - Performance optimizations
@@ -269,22 +280,23 @@ This delivers the complete end-to-end workflow:
   - Dart Services: 8 hours
   - UI Components: 6 hours
   - Integration: 4 hours
-  - **Subtotal**: ~32 hours
+  - Cancellation Flow: 3 hours
+  - **Subtotal**: ~35 hours
 - **Phase 4 (Polish)**: 6 hours
 
-**Total Estimated**: ~43 hours
+**Total Estimated**: ~46 hours
 
-With parallel execution: ~25-30 hours calendar time
+With parallel execution: ~28-32 hours calendar time
 
 ### Task Count Summary
 
-- **Total Tasks**: 95
+- **Total Tasks**: 101
 - **Setup**: 3 tasks
 - **Foundational**: 8 tasks
-- **User Story 1**: 69 tasks (including 16 test tasks)
+- **User Story 1**: 75 tasks (including 16 test tasks, 6 cancellation tasks)
 - **Polish**: 15 tasks
 
-**Parallelizable Tasks**: 54 tasks marked with [P] (57% can run in parallel)
+**Parallelizable Tasks**: 54 tasks marked with [P] (53% can run in parallel)
 
 **Test Coverage**: 16 test tasks covering:
 - iOS native functionality (3 tests)
@@ -297,7 +309,7 @@ With parallel execution: ~25-30 hours calendar time
 
 All tasks follow required format:
 - ✅ Checkbox: `- [ ]`
-- ✅ Task ID: Sequential T001-T095
+- ✅ Task ID: Sequential T001-T101
 - ✅ [P] marker: 54 parallelizable tasks marked
 - ✅ [Story] label: User Story 1 tasks marked with [US1]
 - ✅ File paths: All tasks include specific file paths

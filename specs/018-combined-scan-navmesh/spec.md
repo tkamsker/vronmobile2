@@ -40,8 +40,8 @@ As a user, I want to combine multiple room scans that I've arranged on the canva
 
 ```
 1. User arranges rooms on canvas → Positions saved to ScanData
-2. User navigates to Project Detail screen
-3. User taps "Combine Scans to GLB" button
+2. User navigates to Projects & Scans screen
+3. User taps "Create GLB" in gear menu (top-right)
 4. App creates ONE combined USDZ file on-device with all scans + transforms
 5. App uploads combined USDZ using existing uploadProjectScan mutation
 6. Backend converts combined USDZ → GLB (existing conversion flow)
@@ -90,34 +90,63 @@ class CombinedScan {
 }
 
 enum CombinedScanStatus {
-  combining,        // Creating local USDZ
-  uploading,        // Uploading to backend
-  processing,       // Backend creating GLB
-  glbReady,         // GLB created, ready for navmesh
-  generatingNavmesh, // Creating navmesh
-  completed,        // Both GLB and navmesh ready
+  combining,          // Creating local USDZ on-device
+  uploadingUsdz,      // Uploading combined USDZ to backend
+  processingGlb,      // Backend converting USDZ to GLB
+  glbReady,           // GLB created, ready for navmesh
+  uploadingToBlender, // Uploading GLB to BlenderAPI
+  generatingNavmesh,  // BlenderAPI creating navmesh
+  downloadingNavmesh, // Downloading navmesh from BlenderAPI
+  completed,          // Both GLB and navmesh ready
   failed,
 }
 ```
 
 ## UI Components
 
-### 1. Project Detail Screen Enhancement
+### 1. Scan List Screen Enhancement (Projects & Scans)
 
-**Location**: `lib/features/projects/screens/project_detail_screen.dart`
+**Location**: `lib/features/scanning/screens/scan_list_screen.dart`
 
-**Add Button**:
+**Add to Gear Menu** (top-right PopupMenuButton):
 ```dart
-ElevatedButton.icon(
-  icon: Icon(Icons.view_in_ar),
-  label: Text('Combine Scans to GLB'),
-  onPressed: _hasScanWithPositions() ? _startCombineFlow : null,
+PopupMenuButton<String>(
+  icon: const Icon(Icons.settings),
+  itemBuilder: (context) => [
+    PopupMenuItem(
+      value: 'create_glb',
+      enabled: _scans.length >= 2 && !_isCombining,
+      child: Row(
+        children: [
+          Icon(Icons.view_in_ar),
+          SizedBox(width: 12),
+          Text('Create GLB'),
+        ],
+      ),
+    ),
+    PopupMenuItem(
+      value: 'generate_navmesh',
+      enabled: _combinedScan?.status == CombinedScanStatus.glbReady,
+      child: Row(
+        children: [
+          Icon(Icons.map),
+          SizedBox(width: 12),
+          Text('Generate NavMesh'),
+        ],
+      ),
+    ),
+  ],
+  onSelected: (value) {
+    if (value == 'create_glb') _handleCombineScans();
+    else if (value == 'generate_navmesh') _handleGenerateNavmesh();
+  },
 )
 ```
 
 **Conditions**:
-- Enabled only if project has ≥2 scans with position data
-- Shows scan count: "Combine 3 Scans to GLB"
+- "Create GLB" enabled only if ≥2 scans exist (auto-assigns default grid positions if missing)
+- "Generate NavMesh" enabled only when Combined GLB is ready (status = glbReady)
+- Located in gear menu (top-right) of Projects & Scans screen for quick access
 
 ### 2. Combine Progress Dialog
 
@@ -145,15 +174,12 @@ ElevatedButton.icon(
 
 **Appears after**: Combined GLB is ready (status = glbReady)
 
-**Location**: Same as Combine button, but replaces it
+**Location**: Same gear menu (top-right), enabled when GLB ready
 
-```dart
-ElevatedButton.icon(
-  icon: Icon(Icons.grid_on),
-  label: Text('Generate NavMesh'),
-  onPressed: _generateNavmesh,
-)
-```
+**Implementation**: Second menu item in PopupMenuButton (see section 1 above)
+- Icon: Icons.map
+- Enabled only when: `_combinedScan?.status == CombinedScanStatus.glbReady`
+- Shows in same menu as "Create GLB" for unified workflow access
 
 ### 4. Export Options
 
@@ -172,6 +198,12 @@ ElevatedButton.icon(
 │        [Close]                  │
 └─────────────────────────────────┘
 ```
+
+**ZIP Structure**: When exporting both files as ZIP, the archive contains:
+- `world.glb` - Combined scan file
+- `navmesh.glb` - Navigation mesh file
+- Both files in root directory (no subdirectories)
+- ZIP filename: `combined_scan_{projectId}_{timestamp}.zip`
 
 ## Technical Implementation
 
@@ -323,13 +355,31 @@ await ScanUploadService().pollConversionStatus(
 5. Download result: `GET /sessions/{id}/download/{filename}`
 6. Cleanup: `DELETE /sessions/{id}`
 
-**NavMesh Parameters**: Hard-coded Unity-standard defaults (no user configuration):
-- `cell_size`: 0.3 (30cm grid resolution)
-- `cell_height`: 0.2 (20cm height resolution)
-- `agent_height`: 2.0 (2m tall agent - Unity default)
-- `agent_radius`: 0.6 (60cm wide agent)
-- `agent_max_climb`: 0.9 (90cm max step height)
-- `agent_max_slope`: 45.0 (45° max slope angle)
+**NavMesh Parameters**: Hard-coded Unity-standard defaults (no user configuration)
+
+**Storage**: Static constant in `BlenderAPIService` class:
+
+```dart
+// lib/features/scanning/services/blenderapi_service.dart
+class BlenderAPIService {
+  /// Unity-standard navmesh parameters (hard-coded per spec)
+  static const Map<String, dynamic> unityStandardNavMeshParams = {
+    'cell_size': 0.3,        // 30cm grid resolution
+    'cell_height': 0.2,      // 20cm height resolution
+    'agent_height': 2.0,     // 2m tall agent (Unity default)
+    'agent_radius': 0.6,     // 60cm wide agent
+    'agent_max_climb': 0.9,  // 90cm max step height
+    'agent_max_slope': 45.0, // 45° max slope angle
+  };
+
+  // Used in startNavMeshGeneration() method
+}
+```
+
+**Rationale**:
+- Centralized location in the service that uses them
+- Public constant allows testing and future customization if needed
+- Self-documenting with inline comments explaining Unity defaults
 
 **See**: `contracts/blenderapi-rest.md` for complete REST API documentation
 
@@ -411,15 +461,8 @@ class CombinedScanService {
     await _blenderAPIService.generateNavMesh(
       glbFile: combinedGlbFile,
       outputPath: navmeshOutputPath,
-      // Hard-coded Unity-standard parameters (no user configuration)
-      navmeshParams: {
-        'cell_size': 0.3,        // 30cm grid resolution
-        'cell_height': 0.2,      // 20cm height resolution
-        'agent_height': 2.0,     // 2m tall agent (Unity default)
-        'agent_radius': 0.6,     // 60cm wide agent
-        'agent_max_climb': 0.9,  // 90cm max step height
-        'agent_max_slope': 45.0, // 45° max slope angle
-      },
+      // Use static constant from BlenderAPIService (see line 360 above)
+      navmeshParams: BlenderAPIService.unityStandardNavMeshParams,
     );
 
     print('✅ NavMesh ready!');
@@ -445,18 +488,59 @@ class CombinedScanService {
 
 ### Scenarios
 
-1. **Insufficient scans**: Show error "Need at least 2 scans with positions"
-2. **Combination failed**: Retry with error message
-3. **Upload failed**: Retry with exponential backoff
-4. **Backend processing failed**: Show error from API
-5. **NavMesh generation failed**: Show error, allow retry
+1. **Insufficient scans**: Show error "Need at least 2 scans to combine"
+   - No retry, user must capture more scans
+
+2. **Combination failed** (USDZ merge error on-device):
+   - **Retry Strategy**: 2 automatic retries immediately
+   - **User Action**: Show error dialog with "Retry" button for manual retry
+   - **Example**: "Failed to combine scans. Ensure all USDZ files are valid."
+
+3. **Upload failed** (network error during USDZ/GLB upload):
+   - **Retry Strategy**: 3 automatic retries with exponential backoff (1s, 2s, 4s)
+   - **Timeout**: 30 seconds per attempt
+   - **User Action**: After 3 failures, show error dialog with "Retry" button
+   - **Offline Handling**: Queue upload, show "Will retry when online" message
+
+4. **Backend processing failed** (GraphQL conversion error):
+   - **Retry Strategy**: No automatic retry (backend issue)
+   - **User Action**: Show error from API with "Contact Support" option
+   - **Example**: "Backend conversion failed: [API error message]"
+
+5. **NavMesh generation failed** (BlenderAPI error):
+   - **Retry Strategy**: 2 automatic retries with 5-second delay
+   - **Timeout**: 15 minutes per attempt (long-running operation)
+   - **User Action**: Show error with "Retry" button and troubleshooting tips
+   - **Example**: "NavMesh generation failed: Invalid geometry detected"
+
+6. **BlenderAPI session timeout** (410 Gone or session expired):
+   - **Retry Strategy**: Start new session automatically (1 retry)
+   - **User Action**: If retry fails, show error and "Start Over" button
+
+7. **File too large** (>250MB combined USDZ):
+   - **Validation**: Check before upload
+   - **User Action**: Show error "Combined file too large. Try combining fewer scans."
+   - **No retry** - user must reduce scope
 
 ### User Feedback
 
-- Toast messages for each step
-- Progress indicators with percentage
-- Clear error messages with retry options
-- Ability to cancel at any stage
+- **Toast messages** for transient status (uploading 45%...)
+- **Progress dialog** with cancellable operations
+- **Error dialogs** with:
+  - Clear error description
+  - Retry button (when applicable)
+  - "View Details" button (shows technical error for debugging)
+- **Retry indicators**: "Retrying (attempt 2 of 3)..."
+- **Timeout warnings**: "Operation taking longer than expected..."
+
+### Cancellation Support
+
+- **All long-running operations support cancellation**:
+  - USDZ combination: Cancel SceneKit operation
+  - Upload: Cancel HTTP request and delete partial upload
+  - BlenderAPI: Send DELETE to session endpoint, cleanup local files
+- **Cancel confirmation**: "Are you sure? Progress will be lost."
+- **Cleanup on cancel**: Delete temporary files, reset state to ready
 
 ## File Organization
 
