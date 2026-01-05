@@ -99,11 +99,12 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
         ),
         centerTitle: false,
         actions: [
-          TextButton(
-            onPressed: () => _saveToProject(),
-            child: const Text(
-              'Ready to save',
-              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w600),
+          TextButton.icon(
+            onPressed: () => _deleteScan(),
+            icon: const Icon(Icons.delete, color: Colors.red),
+            label: const Text(
+              'Delete Scan',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -801,6 +802,119 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
       glbLocalPath: _glbLocalPath,
     );
     Navigator.of(context).pop({'action': 'save', 'scan': updatedScanData});
+  }
+
+  /// Delete scan and all associated files (USDZ and GLB if exists)
+  Future<void> _deleteScan() async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: Row(
+          children: [
+            Icon(Icons.warning, color: Colors.orange.shade400),
+            const SizedBox(width: 12),
+            const Text(
+              'Delete Scan?',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'This will permanently delete:',
+              style: TextStyle(color: Colors.white),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '• USDZ file',
+              style: TextStyle(color: Colors.grey.shade300),
+            ),
+            if (_glbLocalPath != null)
+              Text(
+                '• GLB file',
+                style: TextStyle(color: Colors.grey.shade300),
+              ),
+            const SizedBox(height: 16),
+            Text(
+              'This action cannot be undone.',
+              style: TextStyle(
+                color: Colors.red.shade400,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade600,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    try {
+      print('🗑️ [USDZ] Deleting scan files...');
+
+      // Delete USDZ file
+      final usdzFile = File(_currentScanData.localPath);
+      if (await usdzFile.exists()) {
+        await usdzFile.delete();
+        print('✅ [USDZ] Deleted USDZ file: ${_currentScanData.localPath}');
+      }
+
+      // Delete GLB file if it exists
+      if (_glbLocalPath != null) {
+        final glbFile = File(_glbLocalPath!);
+        if (await glbFile.exists()) {
+          await glbFile.delete();
+          print('✅ [USDZ] Deleted GLB file: $_glbLocalPath');
+        }
+      }
+
+      // Remove scan from session manager
+      _sessionManager.removeScan(_currentScanData.id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Scan deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate back with delete action
+        Navigator.of(context).pop({'action': 'delete', 'scan': _currentScanData});
+      }
+    } catch (e) {
+      print('❌ [USDZ] Error deleting scan: $e');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete scan: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _scanAnotherRoom() async {
