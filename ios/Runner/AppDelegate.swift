@@ -147,7 +147,10 @@ class USDZCombiner {
   ) -> Bool {
     // Initialize Flutter engine
     flutterEngine.run()
-    GeneratedPluginRegistrant.register(with: self)
+
+    // Register plugins with the Flutter engine (not AppDelegate)
+    // This is required when using a custom FlutterEngine
+    GeneratedPluginRegistrant.register(with: flutterEngine)
 
     // Setup method channels
     setupMethodChannels()

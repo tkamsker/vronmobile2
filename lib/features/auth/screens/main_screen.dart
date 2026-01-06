@@ -301,6 +301,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('🎨 [UI] MainScreen build() called - rendering login screen');
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: SafeArea(

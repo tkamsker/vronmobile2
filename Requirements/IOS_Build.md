@@ -46,3 +46,4 @@ open ios/Runner.xcworkspace
  flutter run -d 00008140-0005185602DB001C --debug
  oder 
   flutter run -d 00008140-0005185602DB001C --release
+  

@@ -22,19 +22,27 @@ late GuestSessionManager guestSessionManager;
 void main() async {
   // Ensure Flutter is initialized before loading environment
   WidgetsFlutterBinding.ensureInitialized();
+  print('✅ [INIT] Flutter binding initialized');
 
   // Initialize i18n service (load translations and saved language preference)
   await I18nService().initialize();
+  print('✅ [INIT] I18N service initialized');
 
   // Load environment configuration from .env file
   await EnvConfig.initialize();
+  print('✅ [INIT] EnvConfig loaded from .env');
 
   // Initialize guest session manager
   final prefs = await SharedPreferences.getInstance();
+  print('✅ [INIT] SharedPreferences instance obtained');
+
   guestSessionManager = GuestSessionManager(prefs: prefs);
   await guestSessionManager.initialize();
+  print('✅ [INIT] GuestSessionManager initialized');
 
+  print('✅ [INIT] Starting VronApp...');
   runApp(const VronApp());
+  print('✅ [INIT] VronApp started - rendering UI');
 }
 
 class VronApp extends StatelessWidget {
@@ -42,10 +50,12 @@ class VronApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print('🎨 [UI] VronApp build() called');
     // Listen to i18n service for language changes and rebuild UI
     return ListenableBuilder(
       listenable: I18nService(),
       builder: (context, child) {
+        print('🎨 [UI] ListenableBuilder building MaterialApp');
         return MaterialApp(
           title: 'VRON',
           theme: AppTheme.lightTheme,
