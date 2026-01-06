@@ -1,9 +1,9 @@
-# Tasks: Google OAuth Login (Redirect-Based Mobile Flow)
+# Tasks: Google OAuth Login (SDK-Based Token Exchange)
 
 **Input**: Design documents from `/specs/003-google-oauth-login/`
 **Prerequisites**: plan.md ✅, spec.md ✅, contracts/ ✅
 
-**BREAKING CHANGE**: Tasks updated for redirect-based mobile OAuth flow with `exchangeMobileAuthCode` mutation (replacing old `signInWithGoogle` with idToken approach)
+**Implementation Approach**: SDK-based Google authentication using `google_sign_in` package with idToken exchange via `signInWithGoogle` GraphQL mutation
 
 **Tests**: Test tasks are included following TDD/Test-First Development (constitution requirement)
 
@@ -25,20 +25,20 @@ Flutter mobile app with feature-based architecture:
 
 ---
 
-## Phase 1: Setup (Dependencies & Deep Link Configuration)
+## Phase 1: Setup (Dependencies & SDK Configuration)
 
-**Purpose**: Add dependencies and configure deep link URL schemes for OAuth callback
+**Purpose**: Add Google Sign-In SDK dependency and configure platform-specific OAuth settings
 
-**Estimated Time**: 20-25 minutes
+**Estimated Time**: 15-20 minutes
 
-- [X] T001 Add `url_launcher: ^6.2.0` dependency to pubspec.yaml for OAuth redirect functionality
-- [X] T002 Run `flutter pub get` to install url_launcher package
-- [X] T003 [P] Define deep link URL scheme in android/app/src/main/AndroidManifest.xml with intent filter for OAuth callback
-- [X] T004 [P] Define deep link URL scheme in ios/Runner/Info.plist with CFBundleURLTypes for OAuth callback
-- [X] T005 [P] Add OAuth error message strings to lib/core/constants/app_strings.dart for redirect-based errors
-- [X] T006 [P] Add OAuth endpoint URL configuration to lib/core/config/env_config.dart
+- [X] T001 Add `google_sign_in: ^7.0.0` dependency to pubspec.yaml for Google OAuth SDK
+- [X] T002 Run `flutter pub get` to install google_sign_in package
+- [X] T003 [P] Verify Android SHA-1 certificate fingerprint is registered in Firebase/Google Cloud Console (documentation task)
+- [X] T004 [P] Verify iOS OAuth client ID is configured in ios/Runner/Info.plist (documentation task)
+- [X] T005 [P] Add OAuth error message strings to lib/core/constants/app_strings.dart for SDK errors
+- [X] T006 [P] Initialize GoogleSignIn instance in lib/features/auth/services/auth_service.dart with required scopes
 
-**Checkpoint**: Dependencies installed, deep links configured - OAuth redirect infrastructure ready
+**Checkpoint**: SDK dependency installed, platform configuration verified - Google Sign-In ready
 
 ---
 
@@ -48,9 +48,9 @@ Flutter mobile app with feature-based architecture:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [X] T007 [P] Create GraphQL mutation constant for exchangeMobileAuthCode in lib/features/auth/services/auth_service.dart
-- [X] T008 [P] Create DeepLinkHandler utility class in lib/features/auth/utils/deep_link_handler.dart for parsing OAuth callbacks
-- [X] T009 [P] Create OAuthErrorMapper utility in lib/features/auth/utils/oauth_error_mapper.dart for redirect error mapping
+- [X] T007 [P] Create GraphQL mutation constant for signInWithGoogle in lib/features/auth/services/auth_service.dart
+- [X] T008 [P] Verify OAuthErrorMapper utility in lib/features/auth/utils/oauth_error_mapper.dart handles SDK PlatformException errors
+- [X] T009 [P] Extend OAuthErrorMapper with methods for mapping Google SDK errors to user messages
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -58,94 +58,94 @@ Flutter mobile app with feature-based architecture:
 
 ## Phase 3: User Story 1 - Google Sign-In from Login Screen (Priority: P1) 🎯 MVP
 
-**Goal**: Enable users to authenticate using Google via redirect-based OAuth flow with authorization code exchange
+**Goal**: Enable users to authenticate using Google via SDK-based OAuth flow with idToken exchange
 
-**Independent Test**: Tap "Sign in with Google" button, redirect to backend OAuth endpoint, complete Google authentication, receive deep link callback with authorization code, exchange code for token, navigate to home screen
+**Independent Test**: Tap "Sign in with Google" button, SDK displays Google consent screen, user completes authentication, app receives idToken, exchange idToken for access token via GraphQL, navigate to home screen
 
 **Success Criteria**:
-- OAuth flow completes in under 45 seconds including redirect (SC-001)
-- Authorization code exchange completes in under 3 seconds (SC-008)
+- OAuth flow completes in under 30 seconds including SDK authentication (SC-001)
+- idToken exchange completes in under 3 seconds (SC-008)
 - User remains logged in across app restarts (SC-004)
-- Deep link callbacks handled correctly 100% of the time (SC-007)
+- SDK errors properly mapped to user messages 100% of the time (SC-007)
 - Google sign-in button follows platform design standards (SC-002)
 
 ### Tests for User Story 1 (TDD - Write FIRST) ⚠️
 
 > **CRITICAL (Constitution)**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T010 [P] [US1] Write unit test for initiateGoogleOAuth() URL construction in test/features/auth/services/auth_service_test.dart
-- [ ] T011 [P] [US1] Write unit test for handleOAuthCallback() with valid authorization code in test/features/auth/services/auth_service_test.dart
-- [ ] T012 [P] [US1] Write unit test for exchangeMobileAuthCode mutation success in test/features/auth/services/auth_service_test.dart
-- [ ] T013 [P] [US1] Write unit test for deep link URL parsing in test/features/auth/utils/deep_link_handler_test.dart
-- [ ] T014 [P] [US1] Write unit test for authorization code extraction in test/features/auth/utils/deep_link_handler_test.dart
-- [ ] T015 [P] [US1] Write unit test for token storage after code exchange in test/features/auth/services/auth_service_test.dart
-- [ ] T016 [P] [US1] Write widget test for OAuthButton redirect trigger in test/features/auth/widgets/oauth_button_test.dart
-- [ ] T017 [P] [US1] Write integration test for complete redirect-based OAuth flow in test/integration/auth_flow_test.dart
+- [ ] T010 [P] [US1] Write unit test for signInWithGoogle() SDK initialization in test/features/auth/services/auth_service_test.dart
+- [ ] T011 [P] [US1] Write unit test for signInWithGoogle() with valid idToken from SDK in test/features/auth/services/auth_service_test.dart
+- [ ] T012 [P] [US1] Write unit test for signInWithGoogle GraphQL mutation success in test/features/auth/services/auth_service_test.dart
+- [ ] T013 [P] [US1] Write unit test for SDK PlatformException error mapping in test/features/auth/utils/oauth_error_mapper_test.dart
+- [ ] T014 [P] [US1] Write unit test for idToken extraction from GoogleSignInAccount in test/features/auth/services/auth_service_test.dart
+- [ ] T015 [P] [US1] Write unit test for token storage after idToken exchange in test/features/auth/services/auth_service_test.dart
+- [ ] T016 [P] [US1] Write widget test for OAuthButton triggering SDK flow in test/features/auth/widgets/oauth_button_test.dart
+- [ ] T017 [P] [US1] Write integration test for complete SDK-based OAuth flow in test/integration/auth_flow_test.dart
 
 **TDD Checkpoint**: ✅ All US1 tests written and FAILING - proceed to implementation
 
 ### Implementation for User Story 1
 
-- [X] T018 [US1] Implement initiateGoogleOAuth() method in lib/features/auth/services/auth_service.dart to construct and launch OAuth URL
-- [X] T019 [US1] Implement handleOAuthCallback() method in lib/features/auth/services/auth_service.dart to process deep link callbacks
-- [X] T020 [US1] Implement DeepLinkHandler.parseOAuthCallback() in lib/features/auth/utils/deep_link_handler.dart
-- [X] T021 [US1] Implement DeepLinkHandler.extractAuthorizationCode() in lib/features/auth/utils/deep_link_handler.dart
-- [X] T022 [US1] Implement exchangeMobileAuthCode GraphQL mutation call in lib/features/auth/services/auth_service.dart
-- [X] T023 [US1] Implement token storage logic (saveAccessToken, saveAuthCode) after code exchange in auth_service.dart
+- [X] T018 [US1] Implement signInWithGoogle() method in lib/features/auth/services/auth_service.dart with SDK initialization
+- [X] T019 [US1] Implement SDK authenticate() call with scopeHint in signInWithGoogle() method
+- [X] T020 [US1] Implement idToken extraction from GoogleSignInAccount.authentication in signInWithGoogle()
+- [X] T021 [US1] Add null/empty idToken validation before GraphQL mutation call
+- [X] T022 [US1] Implement signInWithGoogle GraphQL mutation call with idToken in auth_service.dart
+- [X] T023 [US1] Implement token storage logic (saveAccessToken, saveAuthCode) after idToken exchange in auth_service.dart
 - [X] T024 [US1] Implement GraphQL client refresh after token storage in auth_service.dart
-- [X] T025 [US1] Add _handleGoogleSignIn() method to lib/features/auth/screens/main_screen.dart for URL redirect
-- [X] T026 [US1] Configure deep link handler to route OAuth callbacks to handleOAuthCallback() in main_screen.dart
-- [X] T027 [US1] Wire OAuthButton to _handleGoogleSignIn() in lib/features/auth/screens/main_screen.dart
-- [X] T028 [US1] Add navigation to home screen on successful authentication in main_screen.dart
+- [X] T025 [US1] Verify _handleGoogleSignIn() method in lib/features/auth/screens/main_screen.dart calls signInWithGoogle()
+- [X] T026 [US1] Implement error handling for SDK PlatformException in signInWithGoogle() method
+- [X] T027 [US1] Verify OAuthButton is wired to _handleGoogleSignIn() in lib/features/auth/screens/main_screen.dart
+- [X] T028 [US1] Verify navigation to home screen on successful authentication in main_screen.dart
 - [ ] T029 [US1] Verify all US1 tests now PASS (Red → Green)
 
 **Refactor Checkpoint** (TDD): Refactor if needed while keeping tests green
 
-**Checkpoint**: User Story 1 (MVP) is fully functional - users can sign in with Google via redirect and access the app
+**Checkpoint**: User Story 1 (MVP) is fully functional - users can sign in with Google via SDK and access the app
 
 ---
 
 ## Phase 4: User Story 2 - Error Handling for OAuth Flow (Priority: P2)
 
-**Goal**: Provide clear, user-friendly feedback when OAuth redirect flow fails or is cancelled
+**Goal**: Provide clear, user-friendly feedback when SDK OAuth flow fails or is cancelled
 
-**Independent Test**: Cancel OAuth flow at Google consent screen, simulate network error during code exchange, simulate invalid authorization code, verify appropriate error messages displayed
+**Independent Test**: Cancel OAuth flow at Google consent screen, simulate network error during idToken exchange, simulate SDK initialization failure, verify appropriate error messages displayed
 
 **Success Criteria**:
 - 95% of OAuth attempts either succeed or show clear error (SC-003)
 - Error messages are understandable without support contact (SC-006)
-- Deep link error callbacks handled correctly (SC-007)
+- SDK errors properly mapped to user messages 100% of the time (SC-007)
 
 ### Tests for User Story 2 (TDD - Write FIRST) ⚠️
 
 > **CRITICAL (Constitution)**: Write these tests FIRST, ensure they FAIL before implementation
 
-- [ ] T030 [P] [US2] Write unit test for OAuth cancellation handling via deep link error parameter in test/features/auth/services/auth_service_test.dart
-- [ ] T031 [P] [US2] Write unit test for network error during code exchange in test/features/auth/services/auth_service_test.dart
-- [ ] T032 [P] [US2] Write unit test for invalid/expired authorization code error in test/features/auth/services/auth_service_test.dart
-- [ ] T033 [P] [US2] Write unit test for malformed deep link callback URL in test/features/auth/utils/deep_link_handler_test.dart
-- [ ] T034 [P] [US2] Write unit test for backend GraphQL error during code exchange in test/features/auth/services/auth_service_test.dart
-- [ ] T035 [P] [US2] Write integration test for error message display via SnackBar in test/integration/auth_flow_test.dart
-- [ ] T036 [P] [US2] Write integration test for return to login screen after error in test/integration/auth_flow_test.dart
+- [X] T030 [P] [US2] Write unit test for OAuth cancellation handling via SDK PlatformException in test/features/auth/services/auth_service_test.dart
+- [X] T031 [P] [US2] Write unit test for network error during idToken exchange in test/features/auth/services/auth_service_test.dart
+- [X] T032 [P] [US2] Write unit test for invalid/expired idToken error in test/features/auth/services/auth_service_test.dart
+- [X] T033 [P] [US2] Write unit test for null/empty idToken from SDK in test/features/auth/services/auth_service_test.dart
+- [X] T034 [P] [US2] Write unit test for backend GraphQL error during idToken validation in test/features/auth/services/auth_service_test.dart
+- [X] T035 [P] [US2] Write integration test for error message display via SnackBar in test/integration/auth_flow_test.dart
+- [X] T036 [P] [US2] Write integration test for return to login screen after error in test/integration/auth_flow_test.dart
 
 **TDD Checkpoint**: ✅ All US2 tests written and FAILING - proceed to implementation
 
 ### Implementation for User Story 2
 
-- [ ] T037 [P] [US2] Implement OAuthErrorMapper.mapRedirectError() in lib/features/auth/utils/oauth_error_mapper.dart for deep link errors
-- [ ] T038 [P] [US2] Implement OAuthErrorMapper.mapMutationError() in lib/features/auth/utils/oauth_error_mapper.dart for GraphQL errors
-- [ ] T039 [US2] Add try-catch for URL launch failures in initiateGoogleOAuth() method
-- [ ] T040 [US2] Add error parameter detection in handleOAuthCallback() method for redirect errors
-- [ ] T041 [US2] Add error handling for invalid/expired authorization code in exchangeMobileAuthCode call
-- [ ] T042 [US2] Add error handling for malformed deep link URLs in DeepLinkHandler
-- [ ] T043 [US2] Add enhanced error handling for GraphQL errors with network detection in auth_service.dart
-- [ ] T044 [US2] Implement error message display with SnackBar in lib/features/auth/screens/main_screen.dart
-- [ ] T045 [US2] Add error handling for null authorization code scenario in handleOAuthCallback()
+- [X] T037 [P] [US2] Verify OAuthErrorMapper.mapPlatformError() in lib/features/auth/utils/oauth_error_mapper.dart handles SDK errors
+- [X] T038 [P] [US2] Verify OAuthErrorMapper handles GraphQL backend errors in lib/features/auth/utils/oauth_error_mapper.dart
+- [X] T039 [US2] Verify try-catch for SDK PlatformException in signInWithGoogle() method
+- [X] T040 [US2] Verify error handling for SDK cancellation in signInWithGoogle() method
+- [X] T041 [US2] Verify error handling for invalid/expired idToken in signInWithGoogle() method
+- [X] T042 [US2] Verify error handling for null/empty idToken from SDK in signInWithGoogle() method
+- [X] T043 [US2] Verify enhanced error handling for GraphQL errors with network detection in auth_service.dart
+- [X] T044 [US2] Verify error message display with SnackBar in lib/features/auth/screens/main_screen.dart
+- [X] T045 [US2] Verify error handling for SDK initialization failures in signInWithGoogle() method
 - [ ] T046 [US2] Verify all US2 tests now PASS (Red → Green)
 
 **Refactor Checkpoint** (TDD): Refactor error handling while keeping tests green
 
-**Checkpoint**: Error handling complete - users receive clear feedback for all redirect-based OAuth failure scenarios
+**Checkpoint**: Error handling complete - users receive clear feedback for all SDK-based OAuth failure scenarios
 
 ---
 
@@ -166,15 +166,15 @@ Flutter mobile app with feature-based architecture:
 
 - [ ] T047 [P] [US3] Write integration test for account linking scenario (requires backend + real devices)
 - [ ] T048 [P] [US3] Write integration test for new account creation scenario (requires backend + real devices)
-- [ ] T049 [P] [US3] Write unit test for backend returning existing user data via exchangeMobileAuthCode
+- [ ] T049 [P] [US3] Write unit test for backend returning existing user data via signInWithGoogle
 
 **TDD Checkpoint**: Frontend implementation ready - account linking tests require backend integration
 
 ### Implementation for User Story 3
 
-- [ ] T050 [US3] Verify backend exchangeMobileAuthCode mutation handles account linking (documented in contracts/graphql-api.md)
-- [ ] T051 [US3] Handle backend response - frontend agnostic to new vs existing user (backend manages all logic)
-- [ ] T052 [US3] Extract user data (email, name, picture) from exchangeMobileAuthCode response if available
+- [X] T050 [US3] Verify backend signInWithGoogle mutation handles account linking (documented in contracts/graphql-api.md)
+- [X] T051 [US3] Verify backend response handling - frontend agnostic to new vs existing user (backend manages all logic)
+- [X] T052 [US3] Verify user data extraction (email, name, picture, authProviders) from signInWithGoogle response
 - [ ] T053 [US3] Verify all US3 tests PASS (integration tests pending backend availability)
 
 **Refactor Checkpoint** (TDD): Refactor account linking logic while keeping tests green
@@ -187,20 +187,20 @@ Flutter mobile app with feature-based architecture:
 
 **Purpose**: Final enhancements, accessibility, timeout handling, and production readiness
 
-- [ ] T054 [P] Verify Semantics labels on OAuthButton (accessibility requirement FR-015)
-- [ ] T055 [P] Implement OAuth redirect timeout handling (5 minutes per FR-010) in auth_service.dart
-- [ ] T056 [P] Add deep link validation to prevent phishing attacks in DeepLinkHandler
-- [ ] T057 [P] Add query parameter sanitization for code/error extraction in DeepLinkHandler
-- [ ] T058 Test complete OAuth flow on Android device (redirect, callback, authentication)
-- [ ] T059 Test complete OAuth flow on iOS device (redirect, callback, authentication)
-- [ ] T060 [P] Verify loading indicator displays during OAuth redirect process (FR-012)
-- [ ] T061 [P] Verify loading indicator displays during code exchange (FR-013)
-- [ ] T062 [P] Verify Google branding guidelines compliance (FR-001)
-- [ ] T063 Add analytics tracking for OAuth events (initiated, success, failure, code_exchange_duration)
-- [ ] T064 Update app_strings.dart with any missing error message localization strings
+- [X] T054 [P] Verify Semantics labels on OAuthButton (accessibility requirement FR-015)
+- [ ] T055 [P] Implement SDK authentication timeout handling (per FR-010) in auth_service.dart
+- [ ] T056 [P] Add silent sign-in attempt on app startup for improved UX
+- [ ] T057 [P] Implement Google Sign-Out functionality in auth_service.dart
+- [ ] T058 Test complete OAuth flow on Android device (SDK, authentication, token exchange)
+- [ ] T059 Test complete OAuth flow on iOS device (SDK, authentication, token exchange)
+- [X] T060 [P] Verify loading indicator displays during SDK authentication process (FR-012)
+- [X] T061 [P] Verify loading indicator displays during idToken exchange (FR-013)
+- [X] T062 [P] Verify Google branding guidelines compliance (FR-001)
+- [ ] T063 Add analytics tracking for OAuth events (initiated, success, failure, token_exchange_duration)
+- [X] T064 Verify app_strings.dart has all required OAuth error message strings
 - [ ] T065 Final integration test run on both iOS and Android platforms with backend
 - [ ] T066 Code review and refactoring (constitution compliance check)
-- [ ] T067 [P] Document deep link URL scheme for QA testing and backend team
+- [ ] T067 [P] Document SDK configuration requirements for QA testing (SHA-1, client IDs)
 
 **Final Checkpoint**: Feature code-complete and ready for production deployment
 
