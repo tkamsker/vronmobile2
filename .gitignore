@@ -35,6 +35,9 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Generated build info (created by scripts/generate_build_info.sh)
+lib/core/config/build_info.dart
+
 # Symbolication related
 app.*.symbols
 

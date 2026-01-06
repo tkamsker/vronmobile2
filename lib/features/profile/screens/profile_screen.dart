@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:vronmobile2/core/i18n/i18n_service.dart';
 import 'package:vronmobile2/core/navigation/routes.dart';
+import 'package:vronmobile2/core/config/build_info.dart';
 import 'package:vronmobile2/features/home/widgets/bottom_nav_bar.dart';
 
 /// Profile/Settings screen for managing account and app preferences
@@ -346,6 +348,92 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onTap: () {
               Navigator.pushNamed(context, AppRoutes.language);
             },
+          ),
+          const SizedBox(height: 12),
+          _buildListTile(
+            icon: Icons.info_outline,
+            title: 'Build Version',
+            subtitle: 'View app build information and version details',
+            trailing: Text(
+              BuildInfo.commitHash,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(
+                color: Colors.grey[600],
+                fontFamily: 'monospace',
+              ),
+            ),
+            onTap: _showBuildInfoDialog,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBuildInfoDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.info_outline, color: Theme.of(context).primaryColor),
+            const SizedBox(width: 12),
+            const Text('Build Information'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: SelectableText(
+                  BuildInfo.formattedInfo,
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 13,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Clipboard.setData(
+                          ClipboardData(text: BuildInfo.formattedInfo),
+                        );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Build info copied to clipboard'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.copy, size: 16),
+                      label: const Text('Copy'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.grey[700],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
           ),
         ],
       ),
