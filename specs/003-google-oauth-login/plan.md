@@ -7,32 +7,32 @@
 
 ## Summary
 
-Implement Google OAuth 2.0 authentication as an alternative login method alongside existing email/password authentication using a redirect-based mobile OAuth flow. Users will tap "Sign in with Google" to redirect to the backend OAuth endpoint, complete authentication with Google, and return to the app via deep link callback with an authorization code. The app exchanges this code for an access token via the `exchangeMobileAuthCode` GraphQL mutation. The implementation handles token storage securely, supports automatic account linking for existing email addresses, and follows Flutter best practices using the existing AuthService pattern.
+Implement Google OAuth 2.0 authentication as an alternative login method alongside existing email/password authentication using the Google Sign-In SDK. Users will tap "Sign in with Google" to launch the SDK authentication flow, complete authentication with Google via the native SDK UI, and receive an idToken. The app exchanges this idToken for an access token via the `signInWithGoogle` GraphQL mutation. The implementation handles token storage securely, supports automatic account linking for existing email addresses, and follows Flutter best practices using the existing AuthService pattern.
 
 ## Technical Context
 
 **Language/Version**: Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0)
 **Primary Dependencies**:
-- url_launcher ^6.2.0 (for OAuth redirect to backend endpoint)
-- graphql_flutter 5.1.0 (existing - for exchangeMobileAuthCode mutation)
+- google_sign_in ^7.0.0 (for Google OAuth SDK)
+- graphql_flutter 5.1.0 (existing - for signInWithGoogle mutation)
 - flutter_secure_storage 9.0.0 (existing - for access token storage)
 
 **Storage**:
 - flutter_secure_storage for OAuth tokens (existing TokenStorage service)
 - Backend PostgreSQL for user accounts (via GraphQL API)
 
-**Deep Link Configuration**:
-- Android: Custom URL scheme in AndroidManifest.xml (e.g., `vronapp://oauth-callback`)
-- iOS: Universal Links or Custom URL scheme in Info.plist
+**Platform Configuration**:
+- Android: Google Sign-In SDK requires SHA-1 certificate fingerprint in Firebase/Google Cloud Console
+- iOS: Google Sign-In SDK requires URL scheme and client ID in Info.plist
 
 **Testing**: flutter_test (Dart SDK), widget tests, unit tests, integration tests
 **Target Platform**: iOS 15+ and Android API 21+ (dual platform mobile)
 **Project Type**: Mobile application (Flutter feature-based architecture)
 
 **Performance Goals**:
-- OAuth flow completion < 45 seconds including redirect (per SC-001)
-- Authorization code exchange < 3 seconds (per SC-008)
-- Deep link callback handling < 500ms
+- OAuth flow completion < 30 seconds including SDK authentication (per SC-001)
+- idToken exchange < 3 seconds (per SC-008)
+- SDK initialization < 500ms
 - Maintain 60 fps during authentication UI transitions
 - Token storage operations < 100ms
 
@@ -40,15 +40,15 @@ Implement Google OAuth 2.0 authentication as an alternative login method alongsi
 - Must integrate with existing AuthService pattern
 - Must use existing TokenStorage and GraphQLService
 - Must follow accessibility requirements (Semantics widgets)
-- Deep link URL scheme must not conflict with existing app URLs
-- Backend OAuth endpoint must be accessible from mobile devices
-- Authorization codes are single-use and expire in 5-10 minutes
+- Google Sign-In SDK v7.0+ API changes (initialize() and authenticate() methods)
+- Backend must validate Google idTokens using Google's token validation API
+- idTokens are short-lived JWT tokens from Google
 
 **Scale/Scope**:
 - Single feature addition to existing app
-- ~6-10 new/modified files (deep link handlers, OAuth redirect logic, mutation, tests)
+- ~4-6 modified files (AuthService extension, OAuth error mapping, tests)
 - Integration with existing auth infrastructure
-- Platform-specific deep link configuration (Android manifest, iOS Info.plist)
+- Platform-specific SDK configuration (Android SHA-1, iOS URL scheme)
 
 ## Constitution Check
 
@@ -57,7 +57,7 @@ Implement Google OAuth 2.0 authentication as an alternative login method alongsi
 ### I. Test-First Development (NON-NEGOTIABLE)
 - ✅ **PASS**: TDD approach required for all implementation
 - Tests MUST be written before code:
-  - Unit tests for OAuth service methods (signInWithGoogle, handleAuthCode)
+  - Unit tests for OAuth service methods (signInWithGoogle, silentSignIn)
   - Widget tests for OAuthButton (already exists, may need enhancement)
   - Integration tests for complete OAuth flow
 - Red-Green-Refactor cycle enforced
@@ -66,9 +66,9 @@ Implement Google OAuth 2.0 authentication as an alternative login method alongsi
 - ✅ **PASS**: Implementation focused only on stated requirements
 - Using existing patterns (AuthService, TokenStorage, GraphQLService)
 - No premature abstraction for other OAuth providers (Facebook already has widget stub but not implemented)
-- Minimal new code: add deep link handler, implement redirect logic, extend AuthService
+- Minimal new code: extend AuthService with Google SDK methods, enhance error mapping
 - Reuse OAuthButton widget (already exists)
-- No Google Sign-In SDK needed - backend handles OAuth flow entirely
+- Use google_sign_in SDK - proven solution for Google authentication
 - **Scope**: Google only per YAGNI principle
 
 ### III. Platform-Native Patterns
@@ -76,8 +76,8 @@ Implement Google OAuth 2.0 authentication as an alternative login method alongsi
 - Widget composition (reuse existing OAuthButton)
 - Feature-based architecture: `lib/features/auth/`
 - Async/await for OAuth flow and GraphQL mutation
-- Platform-specific deep link handling (Android intent filters, iOS URL schemes)
-- url_launcher for cross-platform URL opening
+- Platform-native Google Sign-In UI provided by SDK
+- Future-based async patterns for SDK authentication
 - Existing auth patterns preserved
 
 ### Security & Privacy Requirements
