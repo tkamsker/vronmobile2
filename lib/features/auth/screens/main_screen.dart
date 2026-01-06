@@ -313,11 +313,14 @@ class _MainScreenState extends State<MainScreen> {
               children: [
                 const SizedBox(height: 40),
 
-                // Logo/Branding placeholder
-                Text(
-                  'VRON',
-                  style: Theme.of(context).textTheme.displayLarge,
-                  textAlign: TextAlign.center,
+                // VRon Logo
+                Center(
+                  child: Image.asset(
+                    'assets/images/vron_logo.png',
+                    width: 200,
+                    height: 100,
+                    fit: BoxFit.contain,
+                  ),
                 ),
 
                 const SizedBox(height: 48),

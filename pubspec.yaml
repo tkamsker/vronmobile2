@@ -70,9 +70,19 @@ dev_dependencies:
   mockito: ^5.4.2
   build_runner: ^2.4.6
   json_serializable: ^6.7.1
+  flutter_launcher_icons: ^0.14.3
   # integration_test:
   #   sdk: flutter
   webview_flutter_platform_interface: ^2.14.0
+
+# Configuration for flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/vron_logo.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/vron_logo.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -91,6 +101,7 @@ flutter:
     - lib/core/i18n/en.json
     - lib/core/i18n/de.json
     - lib/core/i18n/pt.json
+    - assets/images/vron_logo.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
