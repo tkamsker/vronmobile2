@@ -18,6 +18,7 @@ BUILD_TIME=$(date -u +"%Y-%m-%d %H:%M UTC")
 COMMIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 COMMIT_MESSAGE=$(git log -1 --pretty=%B 2>/dev/null | head -n 1 || echo "No commit message")
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "no-tag")
 ENVIRONMENT="${FLUTTER_ENV:-staging}"
 
 # Sanitize commit message (escape quotes and newlines)
@@ -49,15 +50,19 @@ class BuildInfo {
   /// Git branch name
   static const String branch = '$BRANCH';
 
+  /// Last git tag (version)
+  static const String lastTag = '$LAST_TAG';
+
   /// Environment (staging, production, development)
   static const String environment = '$ENVIRONMENT';
 
   /// Full version string
-  static String get fullVersion => '\$commitHash on \$branch';
+  static String get fullVersion => '\$lastTag (\$commitHash)';
 
   /// Formatted build info for display
   static String get formattedInfo => '''
 ──────── Status ────────
+Version:      \$lastTag
 Build Time:   \$buildTime
 Commit:       \$commitHash
 Message:      \$commitMessage
@@ -68,8 +73,9 @@ Environment:  \$environment
 EOF
 
 echo -e "${GREEN}✓ Build info generated${NC}"
-echo -e "${YELLOW}  Build Time: $BUILD_TIME${NC}"
-echo -e "${YELLOW}  Commit:     $COMMIT_HASH${NC}"
-echo -e "${YELLOW}  Branch:     $BRANCH${NC}"
+echo -e "${YELLOW}  Version:     $LAST_TAG${NC}"
+echo -e "${YELLOW}  Build Time:  $BUILD_TIME${NC}"
+echo -e "${YELLOW}  Commit:      $COMMIT_HASH${NC}"
+echo -e "${YELLOW}  Branch:      $BRANCH${NC}"
 echo -e "${YELLOW}  Environment: $ENVIRONMENT${NC}"
 echo ""

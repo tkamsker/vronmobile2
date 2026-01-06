@@ -355,7 +355,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: 'Build Version',
             subtitle: 'View app build information and version details',
             trailing: Text(
-              BuildInfo.commitHash,
+              BuildInfo.lastTag != 'no-tag'
+                ? BuildInfo.lastTag
+                : BuildInfo.commitHash,
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(
