@@ -189,20 +189,20 @@ Mobile Flutter app with iOS-specific native code:
 
 **Purpose**: Performance optimization, accessibility improvements, and production readiness
 
-- [ ] T087 [P] Add logging for all service operations with structured log format
+- [x] T087 [P] Add logging for all service operations with structured log format
 - [ ] T088 [P] Add analytics events for key user actions (combine started, navmesh generated, export completed)
 - [ ] T089 [P] Optimize memory usage during USDZ combination (load scenes sequentially if needed) in ios/Runner/USDZCombiner.swift
 - [ ] T090 [P] Add progress caching to resume interrupted uploads in CombinedScanService
-- [ ] T091 [P] Add file size validation before upload (warn if >50MB) in CombinedScanService
-- [ ] T092 [P] Review all UI text for clarity and consistency
-- [ ] T093 [P] Add haptic feedback for button taps and completion events
-- [ ] T094 Verify all interactive elements meet 44x44 minimum touch target size
+- [x] T091 [P] Add file size validation before upload (warn if >50MB) in CombinedScanService
+- [x] T092 [P] Review all UI text for clarity and consistency
+- [x] T093 [P] Add haptic feedback for button taps and completion events
+- [x] T094 Verify all interactive elements meet 44x44 minimum touch target size
 - [ ] T095 Test with VoiceOver (iOS screen reader) and fix any accessibility issues
 - [ ] T096 Test with Dynamic Type (large font sizes) and ensure UI layouts correctly
 - [ ] T097 Profile memory usage during 10-room combination and optimize if needed
 - [ ] T098 Profile frame rate during progress updates and optimize if dropping below 60fps
 - [ ] T099 Test on slower devices (iPhone 12) and optimize if performance is unacceptable
-- [ ] T100 Add user-facing documentation or help screen explaining the workflow
+- [x] T100 Add user-facing documentation or help screen explaining the workflow
 - [ ] T101 Create example Unity project that imports combined GLB and navmesh for QA testing
 
 ---

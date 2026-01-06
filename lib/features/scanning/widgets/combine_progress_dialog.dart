@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // T093: Haptic feedback
 import 'package:vronmobile2/features/scanning/models/combined_scan.dart';
 
 /// Progress dialog for Combined Scan to NavMesh workflow
@@ -25,6 +26,23 @@ class CombineProgressDialog extends StatefulWidget {
 }
 
 class _CombineProgressDialogState extends State<CombineProgressDialog> {
+  @override
+  void didUpdateWidget(CombineProgressDialog oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // T093: Haptic feedback on completion
+    if (oldWidget.combinedScan.status != CombinedScanStatus.completed &&
+        widget.combinedScan.status == CombinedScanStatus.completed) {
+      HapticFeedback.mediumImpact();
+    }
+
+    // Haptic feedback on failure
+    if (oldWidget.combinedScan.status != CombinedScanStatus.failed &&
+        widget.combinedScan.status == CombinedScanStatus.failed) {
+      HapticFeedback.heavyImpact();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -246,7 +264,10 @@ class _CombineProgressDialogState extends State<CombineProgressDialog> {
     if (widget.combinedScan.status == CombinedScanStatus.completed) {
       // Show Close button when complete
       return ElevatedButton(
-        onPressed: widget.onClose,
+        onPressed: () {
+          HapticFeedback.lightImpact(); // T093: Button tap feedback
+          widget.onClose?.call();
+        },
         child: const Text('Close'),
       );
     } else if (widget.combinedScan.status == CombinedScanStatus.failed) {
@@ -256,14 +277,20 @@ class _CombineProgressDialogState extends State<CombineProgressDialog> {
         children: [
           if (widget.onRetry != null) ...[
             ElevatedButton.icon(
-              onPressed: widget.onRetry,
+              onPressed: () {
+                HapticFeedback.lightImpact(); // T093
+                widget.onRetry?.call();
+              },
               icon: const Icon(Icons.refresh),
               label: const Text('Retry'),
             ),
             const SizedBox(width: 12),
           ],
           TextButton(
-            onPressed: widget.onClose,
+            onPressed: () {
+              HapticFeedback.lightImpact(); // T093
+              widget.onClose?.call();
+            },
             child: const Text('Close'),
           ),
         ],
@@ -271,13 +298,19 @@ class _CombineProgressDialogState extends State<CombineProgressDialog> {
     } else if (widget.combinedScan.status == CombinedScanStatus.glbReady) {
       // GLB ready state - no action button (will auto-close or proceed)
       return ElevatedButton(
-        onPressed: widget.onClose,
+        onPressed: () {
+          HapticFeedback.lightImpact(); // T093
+          widget.onClose?.call();
+        },
         child: const Text('Close'),
       );
     } else {
       // Show Cancel button during processing
       return TextButton(
-        onPressed: widget.onCancel,
+        onPressed: () {
+          HapticFeedback.lightImpact(); // T093
+          widget.onCancel?.call();
+        },
         child: const Text('Cancel'),
       );
     }

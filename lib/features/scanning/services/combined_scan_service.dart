@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
+import 'package:vronmobile2/core/utils/logger.dart'; // T087: Structured logging
 import 'package:vronmobile2/features/scanning/models/combined_scan.dart';
 import 'package:vronmobile2/features/scanning/models/scan_data.dart';
 import 'package:vronmobile2/features/scanning/services/usdz_combiner_service.dart';
@@ -57,6 +58,25 @@ class CombinedScanService {
       );
     }
 
+    // T091: File size validation (warn if total >50MB)
+    final totalSizeBytes = scans.fold<int>(
+      0,
+      (sum, scan) => sum + scan.fileSizeBytes,
+    );
+    final totalSizeMB = totalSizeBytes / (1024 * 1024);
+
+    if (totalSizeMB > 50) {
+      print('⚠️ Large file size warning: Total ${totalSizeMB.toStringAsFixed(1)}MB');
+      print('   Combination may take longer and use more memory');
+    }
+
+    if (totalSizeMB > 250) {
+      throw ArgumentError(
+        'Total file size (${totalSizeMB.toStringAsFixed(1)}MB) exceeds 250MB limit. '
+        'Please reduce the number of scans or capture at lower quality.',
+      );
+    }
+
     // Generate unique ID
     final combinedScanId = Uuid().v4();
     final createdAt = DateTime.now();
@@ -80,15 +100,24 @@ class CombinedScanService {
     // Notify status change
     onStatusChange?.call(CombinedScanStatus.combining);
 
+    // T087: Log operation start
+    CombinedScanLogger.logStart('createCombinedScan', {
+      'projectId': projectId,
+      'scanCount': scans.length,
+      'totalSizeMB': totalSizeMB.toStringAsFixed(1),
+    });
+
     try {
       // Step 1: Combine USDZ files on-device
-      print('📦 Combining ${scans.length} scans into ONE USDZ...');
+      CombinedScanLogger.logInfo('Combining ${scans.length} scans into single USDZ');
       final combinedPath = await combiner.combineScans(
         scans: scans,
         outputPath: outputPath,
       );
 
-      print('✅ Combined USDZ created at: $combinedPath');
+      CombinedScanLogger.logSuccess('USDZ combination', {
+        'outputPath': combinedPath,
+      });
 
       // Update status
       combinedScan = combinedScan.copyWith(
@@ -96,12 +125,16 @@ class CombinedScanService {
       );
 
       return combinedScan;
-    } catch (e) {
+    } catch (e, stackTrace) {
       // Mark as failed
       combinedScan = combinedScan.copyWith(
         status: CombinedScanStatus.failed,
         errorMessage: 'Failed to combine USDZ files: $e',
       );
+
+      CombinedScanLogger.logError('createCombinedScan', e,
+          stackTrace: stackTrace,
+          context: {'projectId': projectId, 'scanCount': scans.length});
 
       throw Exception('Failed to create combined scan: $e');
     }
