@@ -235,6 +235,11 @@ class AuthService {
         return AuthResult.failure('Failed to obtain credentials');
       }
 
+      if (kDebugMode) {
+        print('✅ [AUTH] Silent sign-in idToken obtained');
+        print('   FULL idToken (for testing): ${googleAuth.idToken}');
+      }
+
       // Exchange Google token for backend JWT (same as regular sign-in)
       final result = await _graphqlService.mutate(
         _exchangeGoogleIdTokenMutation,
@@ -331,6 +336,7 @@ class AuthService {
             : googleAuth.idToken!;
         print('   idToken preview: $tokenPreview');
         print('   idToken length: ${googleAuth.idToken!.length} characters');
+        print('   FULL idToken (for testing): ${googleAuth.idToken}');
       }
 
       // Exchange Google idToken for backend access token
