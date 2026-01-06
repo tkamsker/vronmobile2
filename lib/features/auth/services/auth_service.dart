@@ -53,23 +53,13 @@ class AuthService {
     }
   ''';
 
-  /// GraphQL mutation for Google OAuth login (T011)
-  /// Enhanced for T044: Backend returns authProviders to show account linking status
-  static const String _signInWithGoogleMutation = '''
-    mutation SignInWithGoogle(\$input: SignInWithGoogleInput!) {
-      signInWithGoogle(input: \$input) {
-        accessToken
-        user {
-          id
-          email
-          name
-          picture
-          authProviders {
-            provider
-            enabled
-          }
-        }
-      }
+  /// GraphQL mutation for Google OAuth login
+  /// Backend mutation: exchangeGoogleIdToken
+  /// Input: { idToken: string }
+  /// Returns: accessToken string
+  static const String _exchangeGoogleIdTokenMutation = '''
+    mutation ExchangeGoogleIdToken(\$input: ExchangeGoogleIdTokenInput!) {
+      exchangeGoogleIdToken(input: \$input)
     }
   ''';
 
@@ -343,16 +333,16 @@ class AuthService {
         print('   idToken length: ${googleAuth.idToken!.length} characters');
       }
 
-      // Exchange Google token for backend JWT (T019-T021)
+      // Exchange Google idToken for backend access token
       if (kDebugMode) {
-        print('🔐 [AUTH] Exchanging Google token with backend...');
+        print('🔐 [AUTH] Exchanging Google idToken with backend...');
         print('   GraphQL endpoint: ${_graphqlService.toString()}');
-        print('   Mutation: signInWithGoogle');
+        print('   Mutation: exchangeGoogleIdToken');
         print('   Input: { idToken: <GOOGLE_TOKEN> }');
       }
 
       final result = await _graphqlService.mutate(
-        _signInWithGoogleMutation,
+        _exchangeGoogleIdTokenMutation,
         variables: {
           'input': {'idToken': googleAuth.idToken},
         },
@@ -426,36 +416,34 @@ class AuthService {
         );
       }
 
-      // Extract response data
-      if (result.data == null || result.data!['signInWithGoogle'] == null) {
+      // Extract access token from response
+      // Backend returns: exchangeGoogleIdToken(input: { idToken }) → String (accessToken)
+      if (result.data == null || result.data!['exchangeGoogleIdToken'] == null) {
         if (kDebugMode) {
           print('❌ [AUTH] Invalid response structure from backend');
           print('   result.data is null: ${result.data == null}');
           if (result.data != null) {
             print('   Available keys: ${result.data!.keys.toList()}');
             print(
-              '   signInWithGoogle field: ${result.data!['signInWithGoogle']}',
+              '   exchangeGoogleIdToken field: ${result.data!['exchangeGoogleIdToken']}',
             );
           }
         }
         return AuthResult.failure('Invalid response from server');
       }
 
-      final loginData =
-          result.data!['signInWithGoogle'] as Map<String, dynamic>;
+      // Backend returns the accessToken as a string directly
+      final accessToken = result.data!['exchangeGoogleIdToken'] as String?;
 
       if (kDebugMode) {
         print('✅ [AUTH] Backend response structure valid');
-        print('   Response keys: ${loginData.keys.toList()}');
+        print('   Response type: String (accessToken)');
       }
-
-      final accessToken = loginData['accessToken'] as String?;
 
       if (accessToken == null || accessToken.isEmpty) {
         if (kDebugMode) {
           print('❌ [AUTH] Missing access token in backend response');
-          print('   accessToken field: $accessToken');
-          print('   Full response: $loginData');
+          print('   accessToken value: $accessToken');
         }
         return AuthResult.failure(
           OAuthErrorMapper.getUserMessage(OAuthErrorCode.backendError),
@@ -483,40 +471,27 @@ class AuthService {
       await _graphqlService.refreshClient();
       if (kDebugMode) print('✅ [AUTH] GraphQL client refreshed with new auth');
 
-      // Return success with user data (T045, T046)
+      // Return success with user data from Google account
       // Note: Backend handles account linking automatically
       // - If email exists: links Google provider to existing account
       // - If new email: creates new account with Google provider
-      // The authProviders field shows which methods are linked
-      final user = loginData['user'] as Map<String, dynamic>;
 
       if (kDebugMode) {
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         print('✅ GOOGLE OAUTH SUCCESS!');
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        print('👤 User Information:');
-        print('   ID: ${user['id']}');
-        print('   Email: ${user['email']}');
-        print('   Name: ${user['name']}');
-        print('   Picture: ${user['picture']}');
-
-        if (user['authProviders'] != null) {
-          final providers = (user['authProviders'] as List);
-          print('🔗 Linked Authentication Providers:');
-          for (var provider in providers) {
-            print(
-              '   - ${provider['provider']}: ${provider['enabled'] ? "✅ Enabled" : "❌ Disabled"}',
-            );
-          }
-        }
-
+        print('👤 User Information (from Google):');
+        print('   Email: ${googleAccount.email}');
+        print('   Name: ${googleAccount.displayName}');
+        print('   Picture: ${googleAccount.photoUrl}');
+        print('   Access Token: Stored securely');
         print('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       }
 
       return AuthResult.success({
-        'email': user['email'],
-        'name': user['name'],
-        'picture': user['picture'],
+        'email': googleAccount.email,
+        'name': googleAccount.displayName,
+        'picture': googleAccount.photoUrl,
       });
     } on PlatformException catch (e) {
       // Handle Google Sign-In specific errors (T035)

@@ -87,7 +87,7 @@ class GraphQLService {
 
   /// Executes a GraphQL mutation
   /// Blocks all backend calls in guest mode (FR-005, SC-003)
-  /// EXCEPT authentication mutations (signIn, signInWithGoogle) which allow users to exit guest mode
+  /// EXCEPT authentication mutations (signIn, exchangeGoogleIdToken) which allow users to exit guest mode
   Future<QueryResult> mutate(
     String mutation, {
     Map<String, dynamic>? variables,
@@ -95,7 +95,7 @@ class GraphQLService {
     // Check if this is an authentication mutation
     final isAuthMutation =
         mutation.contains('signIn') ||
-        mutation.contains('signInWithGoogle') ||
+        mutation.contains('exchangeGoogleIdToken') ||
         mutation.contains('SignIn');
 
     // Guest mode check - block all backend calls EXCEPT authentication
