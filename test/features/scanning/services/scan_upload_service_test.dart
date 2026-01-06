@@ -1,7 +1,5 @@
-import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:vronmobile2/features/scanning/models/conversion_result.dart';
 import 'package:vronmobile2/features/scanning/models/scan_data.dart';
 import 'package:vronmobile2/features/scanning/services/scan_upload_service.dart';
 import 'package:vronmobile2/core/services/graphql_service.dart';

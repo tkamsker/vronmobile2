@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:vronmobile2/core/constants/app_strings.dart';
-import 'package:vronmobile2/features/auth/screens/main_screen.dart';
 import 'package:vronmobile2/features/guest/services/guest_session_manager.dart';
 import 'package:vronmobile2/features/lidar/screens/scanning_screen.dart';
 

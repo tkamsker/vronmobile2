@@ -310,8 +310,9 @@ class AuthService {
       if (kDebugMode) print('✅ [AUTH] Google Sign-In initialized');
 
       // Trigger Google OAuth flow (v7.0 API)
-      if (kDebugMode)
+      if (kDebugMode) {
         print('🔐 [AUTH] Calling authenticate() with scopes: $_googleScopes');
+      }
       final GoogleSignInAccount googleAccount = await _googleSignIn
           .authenticate(scopeHint: _googleScopes);
 

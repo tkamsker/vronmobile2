@@ -49,11 +49,11 @@ class BYOProjectService {
       final request = http.MultipartRequest('POST', uri);
 
       // GraphQL mutation - matches backend VRonCreateProjectFromOwnWorldInput
+      // Note: Backend only returns projectId (worldId not in response type)
       const mutation = '''
         mutation VRonCreateProjectFromOwnWorld(\$input: VRonCreateProjectFromOwnWorldInput!) {
           VRonCreateProjectFromOwnWorld(input: \$input) {
             projectId
-            worldId
           }
         }
       ''';
@@ -154,17 +154,15 @@ class BYOProjectService {
 
       final result = data['VRonCreateProjectFromOwnWorld'];
       final projectId = result['projectId'] as String;
-      final worldId = result['worldId'] as String?;
 
       if (kDebugMode) {
         print('✅ [BYO] Project created successfully');
         print('✅ [BYO] Project ID: $projectId');
-        print('✅ [BYO] World ID: $worldId');
       }
 
       return BYOProjectResult(
         projectId: projectId,
-        worldId: worldId,
+        worldId: null, // Backend doesn't return worldId
       );
     } catch (e) {
       if (kDebugMode) {

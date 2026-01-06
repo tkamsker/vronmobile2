@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:vronmobile2/features/auth/services/auth_service.dart';
 import 'package:vronmobile2/core/services/graphql_service.dart';
 import 'package:vronmobile2/core/services/token_storage.dart';

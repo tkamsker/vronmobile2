@@ -172,8 +172,9 @@ class _MainScreenState extends State<MainScreen> {
         // Disable guest mode if user was in guest mode
         if (guestSessionManager.isGuestMode) {
           await guestSessionManager.disableGuestMode();
-          if (kDebugMode)
+          if (kDebugMode) {
             print('✅ [UI] Guest mode disabled after Google sign-in');
+          }
         }
 
         // Navigate to home screen and remove login screen from stack

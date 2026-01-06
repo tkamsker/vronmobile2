@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:native_ar_viewer/native_ar_viewer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:http/http.dart' as http;
 import '../models/scan_data.dart';
 import '../models/conversion_result.dart';
 import '../services/scan_upload_service.dart';
@@ -75,8 +74,12 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
     final rawHeight = metadata?['height'] as double?;
 
     // Guard against NaN values that can cause CoreGraphics errors
-    final width = (rawWidth != null && !rawWidth.isNaN && rawWidth.isFinite) ? rawWidth : null;
-    final height = (rawHeight != null && !rawHeight.isNaN && rawHeight.isFinite) ? rawHeight : null;
+    final width = (rawWidth != null && !rawWidth.isNaN && rawWidth.isFinite)
+        ? rawWidth
+        : null;
+    final height = (rawHeight != null && !rawHeight.isNaN && rawHeight.isFinite)
+        ? rawHeight
+        : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -96,14 +99,12 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
         ),
         centerTitle: false,
         actions: [
-          TextButton(
-            onPressed: () => _saveToProject(),
-            child: const Text(
-              'Ready to save',
-              style: TextStyle(
-                color: Colors.blue,
-                fontWeight: FontWeight.w600,
-              ),
+          TextButton.icon(
+            onPressed: () => _deleteScan(),
+            icon: const Icon(Icons.delete, color: Colors.red),
+            label: const Text(
+              'Delete Scan',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -201,7 +202,9 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade600,
-                              backgroundColor: Colors.white.withValues(alpha: 0.9),
+                              backgroundColor: Colors.white.withValues(
+                                alpha: 0.9,
+                              ),
                             ),
                           ),
                         ),
@@ -219,7 +222,9 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade600,
-                                backgroundColor: Colors.white.withValues(alpha: 0.9),
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: 0.9,
+                                ),
                               ),
                             ),
                           ),
@@ -235,7 +240,8 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
-                  if (_glbLocalPath == null || !File(_glbLocalPath!).existsSync()) ...[
+                  if (_glbLocalPath == null ||
+                      !File(_glbLocalPath!).existsSync()) ...[
                     // Convert to GLB button (when GLB doesn't exist)
                     SizedBox(
                       width: double.infinity,
@@ -248,7 +254,9 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
                                 ),
                               )
                             : const Icon(Icons.transform, size: 24),
@@ -362,7 +370,9 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
 
   Future<void> _viewInAR() async {
     try {
-      print('🔍 [USDZ] Opening AR viewer in object mode for: ${_currentScanData.localPath}');
+      print(
+        '🔍 [USDZ] Opening AR viewer in object mode for: ${_currentScanData.localPath}',
+      );
 
       if (Platform.isIOS) {
         // Use url_launcher with URL fragment to start in object mode
@@ -511,7 +521,11 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.cloud_upload, color: Colors.blue.shade700, size: 20),
+                      Icon(
+                        Icons.cloud_upload,
+                        color: Colors.blue.shade700,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -530,10 +544,7 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
                     '1. Upload your USDZ file\n'
                     '2. Convert it to GLB format\n'
                     '3. Store GLB locally for preview and navmesh creation',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.blue.shade700,
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.blue.shade700),
                   ),
                 ],
               ),
@@ -541,7 +552,11 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
             const SizedBox(height: 16),
             Row(
               children: [
-                Icon(Icons.tips_and_updates, color: Colors.amber.shade700, size: 20),
+                Icon(
+                  Icons.tips_and_updates,
+                  color: Colors.amber.shade700,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -706,9 +721,7 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
     }
 
     // Navigate to GLB preview screen
-    final glbScanData = _currentScanData.copyWith(
-      glbLocalPath: _glbLocalPath,
-    );
+    final glbScanData = _currentScanData.copyWith(glbLocalPath: _glbLocalPath);
 
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -791,12 +804,123 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
     Navigator.of(context).pop({'action': 'save', 'scan': updatedScanData});
   }
 
+  /// Delete scan and all associated files (USDZ and GLB if exists)
+  Future<void> _deleteScan() async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: Row(
+          children: [
+            Icon(Icons.warning, color: Colors.orange.shade400),
+            const SizedBox(width: 12),
+            const Text(
+              'Delete Scan?',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'This will permanently delete:',
+              style: TextStyle(color: Colors.white),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '• USDZ file',
+              style: TextStyle(color: Colors.grey.shade300),
+            ),
+            if (_glbLocalPath != null)
+              Text(
+                '• GLB file',
+                style: TextStyle(color: Colors.grey.shade300),
+              ),
+            const SizedBox(height: 16),
+            Text(
+              'This action cannot be undone.',
+              style: TextStyle(
+                color: Colors.red.shade400,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade600,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    try {
+      print('🗑️ [USDZ] Deleting scan files...');
+
+      // Delete USDZ file
+      final usdzFile = File(_currentScanData.localPath);
+      if (await usdzFile.exists()) {
+        await usdzFile.delete();
+        print('✅ [USDZ] Deleted USDZ file: ${_currentScanData.localPath}');
+      }
+
+      // Delete GLB file if it exists
+      if (_glbLocalPath != null) {
+        final glbFile = File(_glbLocalPath!);
+        if (await glbFile.exists()) {
+          await glbFile.delete();
+          print('✅ [USDZ] Deleted GLB file: $_glbLocalPath');
+        }
+      }
+
+      // Remove scan from session manager
+      _sessionManager.removeScan(_currentScanData.id);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Scan deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Navigate back with delete action
+        Navigator.of(context).pop({'action': 'delete', 'scan': _currentScanData});
+      }
+    } catch (e) {
+      print('❌ [USDZ] Error deleting scan: $e');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to delete scan: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _scanAnotherRoom() async {
     // Navigate to ScanningScreen to start new scan
     final result = await Navigator.of(context).push<ScanData>(
-      MaterialPageRoute(
-        builder: (context) => const ScanningScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const ScanningScreen()),
     );
 
     if (result != null && mounted) {

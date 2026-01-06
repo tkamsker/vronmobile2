@@ -25,8 +25,9 @@ class GuestStorageHelper {
 
       // Create directory if it doesn't exist
       if (!await guestScansDir.exists()) {
-        if (kDebugMode)
+        if (kDebugMode) {
           print('📁 [GUEST STORAGE] Creating guest_scans directory');
+        }
         await guestScansDir.create(recursive: true);
       }
 

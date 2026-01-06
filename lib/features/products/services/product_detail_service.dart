@@ -77,8 +77,9 @@ class ProductDetailService {
       }
 
       if (result.data == null || result.data!['VRonGetProduct'] == null) {
-        if (kDebugMode)
+        if (kDebugMode) {
           print('⚠️ [PRODUCT DETAIL] No product data in response');
+        }
         throw Exception('Product not found: $productId');
       }
 

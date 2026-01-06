@@ -1,9 +1,4 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vronmobile2/features/scanning/screens/scanning_screen.dart';
-import 'package:vronmobile2/features/scanning/models/scan_data.dart';
-import 'package:vronmobile2/core/constants/app_strings.dart';
-import 'dart:io';
 
 void main() {
   group('Complete Scanning Flow Integration Test', () {
@@ -95,7 +90,9 @@ void main() {
       // expect(find.byType(ScanProgress), findsNothing);
     });
 
-    testWidgets('scan workflow handles unsupported device gracefully', (tester) async {
+    testWidgets('scan workflow handles unsupported device gracefully', (
+      tester,
+    ) async {
       // Mock: Android device (no LiDAR)
       // await tester.pumpWidget(
       //   MaterialApp(
@@ -138,7 +135,9 @@ void main() {
       // expect(find.text(AppStrings.continueScanButton), findsOneWidget);
     });
 
-    testWidgets('user can save partial scan after interruption', (tester) async {
+    testWidgets('user can save partial scan after interruption', (
+      tester,
+    ) async {
       // Start scan and trigger interruption
       // ... (setup code) ...
 

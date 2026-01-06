@@ -7,6 +7,7 @@
 /// - Conversion processing (USDZ → GLB)
 /// - Status polling (progress tracking)
 /// - File download (binary GLB)
+library;
 
 import 'dart:async';
 import 'dart:convert';

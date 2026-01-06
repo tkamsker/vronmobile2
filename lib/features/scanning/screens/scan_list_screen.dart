@@ -3,24 +3,31 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/scan_data.dart';
+import '../models/combined_scan.dart';
 import '../services/scan_session_manager.dart';
 import '../services/blender_api_service.dart';
+import '../services/combined_scan_service.dart';
+import '../widgets/combine_progress_dialog.dart';
 import '../../home/models/project.dart';
 import '../../home/services/project_service.dart';
 import '../../home/services/byo_project_service.dart';
 import 'scanning_screen.dart';
 import 'usdz_preview_screen.dart';
+import 'room_stitching_screen.dart';
+import 'room_layout_canvas_screen.dart';
+import '../services/room_stitching_service.dart';
+import '../services/retry_policy_service.dart';
+import '../../../core/services/graphql_service.dart';
+import '../models/room_layout.dart';
 
 /// Screen showing list of scans for current session
 /// Matches design from Requirements/ScanList2.jpg
 class ScanListScreen extends StatefulWidget {
   final String? projectName;
 
-  const ScanListScreen({
-    super.key,
-    this.projectName,
-  });
+  const ScanListScreen({super.key, this.projectName});
 
   @override
   State<ScanListScreen> createState() => _ScanListScreenState();
@@ -31,10 +38,16 @@ class _ScanListScreenState extends State<ScanListScreen> {
   final ProjectService _projectService = ProjectService();
   final BYOProjectService _byoProjectService = BYOProjectService();
   final BlenderApiService _blenderApiService = BlenderApiService();
+  final CombinedScanService _combinedScanService = CombinedScanService();
 
   List<Project> _projects = [];
   Project? _selectedProject;
   bool _isLoadingProjects = false;
+
+  // Feature 018: Combined scan state
+  CombinedScan? _combinedScan;
+  bool _isCombining = false;
+  double _uploadProgress = 0.0;
 
   @override
   void initState() {
@@ -73,10 +86,64 @@ class _ScanListScreenState extends State<ScanListScreen> {
         title: const Text('Projects & Scans', style: TextStyle(fontSize: 20)),
         centerTitle: false,
         actions: [
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.settings),
-            onPressed: () {
-              // Navigate to settings
+            tooltip: 'Options',
+            onSelected: (value) {
+              if (value == 'create_glb') {
+                _handleCombineScans();
+              } else if (value == 'generate_navmesh') {
+                _handleGenerateNavmesh();
+              }
+            },
+            itemBuilder: (BuildContext context) {
+              final scans = _sessionManager.scans;
+              // Create GLB: enabled when 2+ scans exist
+              final canCombine = scans.length >= 2 && !_isCombining;
+              // Generate NavMesh: enabled when combined GLB exists
+              final hasGlbReady = _combinedScan?.status == CombinedScanStatus.glbReady;
+              final canGenerateNavmesh = hasGlbReady && !_isCombining;
+
+              return [
+                PopupMenuItem<String>(
+                  value: 'create_glb',
+                  enabled: canCombine,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.view_in_ar,
+                        color: canCombine ? Colors.blue : Colors.grey,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Create GLB',
+                        style: TextStyle(
+                          color: canCombine ? Colors.white : Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'generate_navmesh',
+                  enabled: canGenerateNavmesh,
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.map,
+                        color: canGenerateNavmesh ? Colors.blue : Colors.grey,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Generate NavMesh',
+                        style: TextStyle(
+                          color: canGenerateNavmesh ? Colors.white : Colors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ];
             },
           ),
         ],
@@ -137,7 +204,8 @@ class _ScanListScreenState extends State<ScanListScreen> {
                             child: Text(
                               _isLoadingProjects
                                   ? 'Loading projects...'
-                                  : (_selectedProject?.name ?? 'No project selected'),
+                                  : (_selectedProject?.name ??
+                                        'No project selected'),
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w600,
@@ -145,10 +213,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
                               ),
                             ),
                           ),
-                          Icon(
-                            Icons.expand_more,
-                            color: Colors.grey.shade400,
-                          ),
+                          Icon(Icons.expand_more, color: Colors.grey.shade400),
                         ],
                       ),
                     ),
@@ -158,10 +223,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   // Helper text
                   Text(
                     'Selecting a project filters the scan list below.',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
                   ),
                 ],
               ),
@@ -169,16 +231,16 @@ class _ScanListScreenState extends State<ScanListScreen> {
 
             // Recent Scans header
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
                     'Recent Scans',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   TextButton(
                     onPressed: () {
@@ -242,7 +304,9 @@ class _ScanListScreenState extends State<ScanListScreen> {
                     width: double.infinity,
                     height: 56,
                     child: OutlinedButton.icon(
-                      onPressed: scans.length >= 2 ? () => _roomStitching() : null,
+                      onPressed: scans.length >= 2
+                          ? () => _roomStitching()
+                          : null,
                       icon: Icon(
                         Icons.folder_open,
                         size: 24,
@@ -286,10 +350,12 @@ class _ScanListScreenState extends State<ScanListScreen> {
 
   Widget _buildScanCard(ScanData scan, int scanNumber) {
     // Determine room name - use metadata room name or default to "Scan N"
-    final roomName = scan.metadata?['roomName'] as String? ?? 'Scan $scanNumber';
+    final roomName =
+        scan.metadata?['roomName'] as String? ?? 'Scan $scanNumber';
 
     // Get project name from metadata or use default
-    final projectName = scan.metadata?['projectName'] as String? ?? 'Current Project';
+    final projectName =
+        scan.metadata?['projectName'] as String? ?? 'Current Project';
 
     // Get square footage from metadata if available
     final sqFt = scan.metadata?['squareFootage'] as double?;
@@ -339,7 +405,10 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   bottom: 8,
                   left: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: statusColor,
                       borderRadius: BorderRadius.circular(6),
@@ -377,11 +446,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   // Project name with folder icon
                   Row(
                     children: [
-                      Icon(
-                        Icons.folder,
-                        size: 16,
-                        color: Colors.blue.shade400,
-                      ),
+                      Icon(Icons.folder, size: 16, color: Colors.blue.shade400),
                       const SizedBox(width: 4),
                       Text(
                         projectName,
@@ -397,21 +462,14 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   // Timestamp and square footage
                   Text(
                     '${_formatRelativeDate(scan.capturedAt)}$sqFtText',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade400,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
                   ),
                 ],
               ),
             ),
 
             // Chevron icon
-            Icon(
-              Icons.chevron_right,
-              color: Colors.grey.shade600,
-              size: 28,
-            ),
+            Icon(Icons.chevron_right, color: Colors.grey.shade600, size: 28),
           ],
         ),
       ),
@@ -419,8 +477,25 @@ class _ScanListScreenState extends State<ScanListScreen> {
   }
 
   void _showAddProjectDialog() {
+    // Check if we have combined GLB files available
     File? worldFile;
     File? meshFile;
+
+    // If combined scan is complete, use those files as defaults
+    if (_combinedScan?.status == CombinedScanStatus.completed) {
+      if (_combinedScan!.combinedGlbLocalPath != null) {
+        final glbFile = File(_combinedScan!.combinedGlbLocalPath!);
+        if (glbFile.existsSync()) {
+          worldFile = glbFile;
+        }
+      }
+      if (_combinedScan!.localNavmeshPath != null) {
+        final navmeshFile = File(_combinedScan!.localNavmeshPath!);
+        if (navmeshFile.existsSync()) {
+          meshFile = navmeshFile;
+        }
+      }
+    }
 
     showDialog(
       context: context,
@@ -431,7 +506,10 @@ class _ScanListScreenState extends State<ScanListScreen> {
             children: [
               Icon(Icons.add_circle, color: Colors.blue.shade400),
               const SizedBox(width: 12),
-              const Text('Create BYO Project', style: TextStyle(color: Colors.white)),
+              const Text(
+                'Create BYO Project',
+                style: TextStyle(color: Colors.white),
+              ),
             ],
           ),
           content: SingleChildScrollView(
@@ -439,30 +517,69 @@ class _ScanListScreenState extends State<ScanListScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Info text about auto-generation
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade900.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.shade700.withValues(alpha: 0.5)),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.info_outline, color: Colors.blue.shade400, size: 20),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Project name will be auto-generated from your uploaded GLB files.',
-                          style: TextStyle(
-                            color: Colors.blue.shade200,
-                            fontSize: 13,
+                // Info text about combined files or auto-generation
+                if (worldFile != null && meshFile != null)
+                  // Show success message when files are auto-populated
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade900.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.green.shade700.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle,
+                          color: Colors.green.shade400,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Using combined GLB and NavMesh from your scans. You can change files if needed.',
+                            style: TextStyle(
+                              color: Colors.green.shade200,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                  )
+                else
+                  // Show info about auto-generation
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade900.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.blue.shade700.withValues(alpha: 0.5),
                       ),
-                    ],
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Colors.blue.shade400,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Project name will be auto-generated from your uploaded GLB files.',
+                            style: TextStyle(
+                              color: Colors.blue.shade200,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 const SizedBox(height: 20),
 
                 // World File Picker
@@ -497,28 +614,30 @@ class _ScanListScreenState extends State<ScanListScreen> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: worldFile != null
-                          ? Colors.green.shade600
-                          : Colors.grey.shade700,
+                            ? Colors.green.shade600
+                            : Colors.grey.shade700,
                       ),
                     ),
                     child: Row(
                       children: [
                         Icon(
-                          worldFile != null ? Icons.check_circle : Icons.upload_file,
+                          worldFile != null
+                              ? Icons.check_circle
+                              : Icons.upload_file,
                           color: worldFile != null
-                            ? Colors.green.shade400
-                            : Colors.grey.shade500,
+                              ? Colors.green.shade400
+                              : Colors.grey.shade500,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             worldFile != null
-                              ? worldFile!.path.split('/').last
-                              : 'Select world GLB file',
+                                ? worldFile!.path.split('/').last
+                                : 'Select world GLB file',
                             style: TextStyle(
                               color: worldFile != null
-                                ? Colors.white
-                                : Colors.grey.shade500,
+                                  ? Colors.white
+                                  : Colors.grey.shade500,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -527,6 +646,26 @@ class _ScanListScreenState extends State<ScanListScreen> {
                     ),
                   ),
                 ),
+                // Show info if using combined scan file
+                if (worldFile != null &&
+                    _combinedScan?.combinedGlbLocalPath == worldFile!.path) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.check_circle, size: 16, color: Colors.green.shade400),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Using combined GLB from scans',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.green.shade400,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 16),
 
                 // Mesh File Picker
@@ -561,28 +700,30 @@ class _ScanListScreenState extends State<ScanListScreen> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: meshFile != null
-                          ? Colors.green.shade600
-                          : Colors.grey.shade700,
+                            ? Colors.green.shade600
+                            : Colors.grey.shade700,
                       ),
                     ),
                     child: Row(
                       children: [
                         Icon(
-                          meshFile != null ? Icons.check_circle : Icons.upload_file,
+                          meshFile != null
+                              ? Icons.check_circle
+                              : Icons.upload_file,
                           color: meshFile != null
-                            ? Colors.green.shade400
-                            : Colors.grey.shade500,
+                              ? Colors.green.shade400
+                              : Colors.grey.shade500,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             meshFile != null
-                              ? meshFile!.path.split('/').last
-                              : 'Select mesh GLB file',
+                                ? meshFile!.path.split('/').last
+                                : 'Select mesh GLB file',
                             style: TextStyle(
                               color: meshFile != null
-                                ? Colors.white
-                                : Colors.grey.shade500,
+                                  ? Colors.white
+                                  : Colors.grey.shade500,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -591,6 +732,26 @@ class _ScanListScreenState extends State<ScanListScreen> {
                     ),
                   ),
                 ),
+                // Show info if using navmesh file
+                if (meshFile != null &&
+                    _combinedScan?.localNavmeshPath == meshFile!.path) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.check_circle, size: 16, color: Colors.green.shade400),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Using navmesh from scans',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.green.shade400,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 16),
 
                 // Info text
@@ -599,11 +760,17 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   decoration: BoxDecoration(
                     color: Colors.blue.shade900.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue.shade700.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: Colors.blue.shade700.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue.shade400, size: 20),
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.blue.shade400,
+                        size: 20,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -625,7 +792,10 @@ class _ScanListScreenState extends State<ScanListScreen> {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('Cancel', style: TextStyle(color: Colors.grey.shade400)),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey.shade400),
+              ),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -664,10 +834,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
     );
   }
 
-  Future<void> _createNewProject(
-    File worldFile,
-    File meshFile,
-  ) async {
+  Future<void> _createNewProject(File worldFile, File meshFile) async {
     try {
       // Show loading indicator
       showDialog(
@@ -742,9 +909,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
               children: [
                 Icon(Icons.check_circle, color: Colors.green.shade400),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: Text('BYO project created successfully!'),
-                ),
+                Expanded(child: Text('BYO project created successfully!')),
               ],
             ),
             backgroundColor: Colors.green.shade700,
@@ -768,20 +933,23 @@ class _ScanListScreenState extends State<ScanListScreen> {
         String? actionMessage;
 
         // Check if mutation doesn't exist on backend
-        if (errorMessage.contains('VRonCreateProjectFromOwnWorld mutation not implemented')) {
+        if (errorMessage.contains(
+          'VRonCreateProjectFromOwnWorld mutation not implemented',
+        )) {
           displayMessage = 'Backend not ready for BYO project creation';
           actionMessage = 'Please create projects via the web UI for now';
         } else if (errorMessage.contains('already exists') ||
-                   errorMessage.contains('DUPLICATE_SLUG') ||
-                   errorMessage.contains('duplicate')) {
+            errorMessage.contains('DUPLICATE_SLUG') ||
+            errorMessage.contains('duplicate')) {
           displayMessage = 'A project with this slug already exists';
           actionMessage = 'Please choose a different name';
         } else if (errorMessage.contains('Not authenticated') ||
-                   errorMessage.contains('401')) {
+            errorMessage.contains('401')) {
           displayMessage = 'Authentication failed';
           actionMessage = 'Please log in again';
         } else {
-          displayMessage = 'Failed to create project: ${errorMessage.length > 100 ? errorMessage.substring(0, 100) + '...' : errorMessage}';
+          displayMessage =
+              'Failed to create project: ${errorMessage.length > 100 ? '${errorMessage.substring(0, 100)}...' : errorMessage}';
         }
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -801,10 +969,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   const SizedBox(height: 8),
                   Text(
                     actionMessage,
-                    style: TextStyle(
-                      color: Colors.red.shade200,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: Colors.red.shade200, fontSize: 12),
                   ),
                 ],
               ],
@@ -887,13 +1052,25 @@ class _ScanListScreenState extends State<ScanListScreen> {
             title: Row(
               children: [
                 Icon(
-                  dialogState.isConverting ? Icons.sync : (dialogState.errorMessage != null ? Icons.error : Icons.check_circle),
-                  color: dialogState.isConverting ? Colors.blue.shade400 : (dialogState.errorMessage != null ? Colors.red.shade400 : Colors.green.shade400),
+                  dialogState.isConverting
+                      ? Icons.sync
+                      : (dialogState.errorMessage != null
+                            ? Icons.error
+                            : Icons.check_circle),
+                  color: dialogState.isConverting
+                      ? Colors.blue.shade400
+                      : (dialogState.errorMessage != null
+                            ? Colors.red.shade400
+                            : Colors.green.shade400),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    dialogState.isConverting ? 'Converting to GLB' : (dialogState.errorMessage != null ? 'Conversion Failed' : 'Conversion Complete'),
+                    dialogState.isConverting
+                        ? 'Converting to GLB'
+                        : (dialogState.errorMessage != null
+                              ? 'Conversion Failed'
+                              : 'Conversion Complete'),
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
@@ -906,7 +1083,9 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   LinearProgressIndicator(
                     value: dialogState.progress,
                     backgroundColor: Colors.grey.shade800,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade400),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.blue.shade400,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -920,14 +1099,15 @@ class _ScanListScreenState extends State<ScanListScreen> {
                   const SizedBox(height: 8),
                   Text(
                     dialogState.statusText,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade400,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade400),
                     textAlign: TextAlign.center,
                   ),
                 ] else if (dialogState.errorMessage != null) ...[
-                  Icon(Icons.error_outline, size: 48, color: Colors.red.shade400),
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: Colors.red.shade400,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     dialogState.errorMessage!,
@@ -935,7 +1115,11 @@ class _ScanListScreenState extends State<ScanListScreen> {
                     textAlign: TextAlign.center,
                   ),
                 ] else ...[
-                  Icon(Icons.check_circle, size: 48, color: Colors.green.shade400),
+                  Icon(
+                    Icons.check_circle,
+                    size: 48,
+                    color: Colors.green.shade400,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Creating project...',
@@ -945,12 +1129,17 @@ class _ScanListScreenState extends State<ScanListScreen> {
                 ],
               ],
             ),
-            actions: dialogState.errorMessage != null ? [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: Text('Close', style: TextStyle(color: Colors.grey.shade400)),
-              ),
-            ] : [],
+            actions: dialogState.errorMessage != null
+                ? [
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      child: Text(
+                        'Close',
+                        style: TextStyle(color: Colors.grey.shade400),
+                      ),
+                    ),
+                  ]
+                : [],
           );
         },
       ),
@@ -1029,25 +1218,24 @@ class _ScanListScreenState extends State<ScanListScreen> {
               ),
             ),
             Divider(color: Colors.grey.shade800, height: 1),
-            ..._projects.map((project) => ListTile(
-              leading: Icon(
-                Icons.folder,
-                color: Colors.blue.shade400,
+            ..._projects.map(
+              (project) => ListTile(
+                leading: Icon(Icons.folder, color: Colors.blue.shade400),
+                title: Text(
+                  project.name,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                trailing: _selectedProject?.id == project.id
+                    ? Icon(Icons.check, color: Colors.blue.shade400)
+                    : null,
+                onTap: () {
+                  setState(() {
+                    _selectedProject = project;
+                  });
+                  Navigator.pop(context);
+                },
               ),
-              title: Text(
-                project.name,
-                style: const TextStyle(color: Colors.white),
-              ),
-              trailing: _selectedProject?.id == project.id
-                  ? Icon(Icons.check, color: Colors.blue.shade400)
-                  : null,
-              onTap: () {
-                setState(() {
-                  _selectedProject = project;
-                });
-                Navigator.pop(context);
-              },
-            )),
+            ),
             if (_projects.isEmpty)
               Padding(
                 padding: const EdgeInsets.all(32.0),
@@ -1078,7 +1266,10 @@ class _ScanListScreenState extends State<ScanListScreen> {
               leading: Icon(Icons.add_circle, color: Colors.green.shade400),
               title: Text(
                 'Create Project from Scan',
-                style: TextStyle(color: Colors.green.shade400, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  color: Colors.green.shade400,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               subtitle: const Text(
                 'Backend will convert USDZ → GLB automatically',
@@ -1091,7 +1282,10 @@ class _ScanListScreenState extends State<ScanListScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.visibility, color: Colors.white),
-              title: const Text('View USDZ', style: TextStyle(color: Colors.white)),
+              title: const Text(
+                'View USDZ',
+                style: TextStyle(color: Colors.white),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _viewUsdzPreview(scan);
@@ -1099,7 +1293,10 @@ class _ScanListScreenState extends State<ScanListScreen> {
             ),
             ListTile(
               leading: Icon(Icons.delete_outline, color: Colors.red.shade400),
-              title: Text('Delete', style: TextStyle(color: Colors.red.shade400)),
+              title: Text(
+                'Delete',
+                style: TextStyle(color: Colors.red.shade400),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 _confirmDeleteScan(scan);
@@ -1116,11 +1313,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.threed_rotation,
-            size: 80,
-            color: Colors.grey.shade300,
-          ),
+          Icon(Icons.threed_rotation, size: 80, color: Colors.grey.shade300),
           const SizedBox(height: 16),
           Text(
             'No scans yet',
@@ -1133,10 +1326,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
           const SizedBox(height: 8),
           Text(
             'Start scanning to create your first 3D room',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade500,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
           ),
         ],
       ),
@@ -1176,9 +1366,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
 
   Future<void> _scanAnotherRoom() async {
     final result = await Navigator.of(context).push<ScanData>(
-      MaterialPageRoute(
-        builder: (context) => const ScanningScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const ScanningScreen()),
     );
 
     if (result != null) {
@@ -1188,13 +1376,51 @@ class _ScanListScreenState extends State<ScanListScreen> {
     }
   }
 
-  void _roomStitching() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Room stitching feature coming soon!'),
-        duration: Duration(seconds: 2),
+  Future<void> _roomStitching() async {
+    final scans = _sessionManager.scans;
+
+    // Get projectId from scan metadata or use temporary session-based ID
+    final projectId = scans.isNotEmpty
+        ? (scans.first.metadata?['projectId'] as String? ??
+              'temp-session-${DateTime.now().millisecondsSinceEpoch}')
+        : 'temp-session-${DateTime.now().millisecondsSinceEpoch}';
+
+    // Step 1: Show canvas layout screen for room arrangement
+    final RoomLayout? layout = await Navigator.of(context).push<RoomLayout>(
+      MaterialPageRoute(
+        builder: (context) =>
+            RoomLayoutCanvasScreen(scans: scans, projectId: projectId),
       ),
     );
+
+    // If user canceled or went back, don't proceed to stitching
+    if (layout == null || !mounted) {
+      setState(() {});
+      return;
+    }
+
+    // Step 2: Proceed to stitching with layout configuration
+    final graphQLService = GraphQLService();
+    final retryPolicyService = RetryPolicyService();
+    final stitchingService = RoomStitchingService(
+      graphQLService: graphQLService,
+      retryPolicyService: retryPolicyService,
+    );
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => RoomStitchingScreen(
+          scans: scans,
+          stitchingService: stitchingService,
+          projectId: projectId,
+          isGuestMode: false, // TODO: Check actual auth status
+          roomLayout: layout, // Pass layout configuration
+        ),
+      ),
+    );
+
+    // Refresh the UI after returning from stitching screen
+    setState(() {});
   }
 
   Future<void> _viewUsdzPreview(ScanData scan) async {
@@ -1255,9 +1481,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
     final snackBar = SnackBar(
       content: Row(
         children: [
-          const Expanded(
-            child: Text('Scan deleted'),
-          ),
+          const Expanded(child: Text('Scan deleted')),
           TextButton(
             onPressed: () {
               // Restore scan
@@ -1298,6 +1522,254 @@ class _ScanListScreenState extends State<ScanListScreen> {
         print('🔔 [SCAN_LIST] Snackbar closed: $reason');
       }
     });
+  }
+
+  /// Feature 018: Start combined scan workflow
+  Future<void> _handleCombineScans() async {
+    final scans = _sessionManager.scans;
+
+    if (scans.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Need at least 2 scans to combine'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (_selectedProject == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a project first'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final documentsDirectory = (await getApplicationDocumentsDirectory()).path;
+
+    setState(() {
+      _isCombining = true;
+    });
+
+    try {
+      // Show progress dialog
+      if (!mounted) return;
+      _showCombineProgressDialog();
+
+      // Ensure all scans have position data - assign default positions if missing
+      final scansWithPositions = scans.map((scan) {
+        if (scan.positionX == null && scan.positionY == null) {
+          // Assign default positions in a simple grid layout
+          final index = scans.indexOf(scan);
+          return scan.copyWith(
+            positionX: (index % 3) * 100.0, // Simple grid: 3 columns
+            positionY: (index ~/ 3) * 100.0, // Simple grid: rows
+            rotationDegrees: 0.0,
+            scaleFactor: 1.0,
+          );
+        }
+        return scan;
+      }).toList();
+
+      // Start combination
+      final combinedScan = await _combinedScanService.createCombinedScan(
+        projectId: _selectedProject!.id,
+        scans: scansWithPositions,
+        documentsDirectory: documentsDirectory,
+        onStatusChange: (status) {
+          setState(() {
+            _combinedScan = _combinedScan?.copyWith(status: status) ??
+                CombinedScan(
+                  id: 'temp',
+                  projectId: _selectedProject!.id,
+                  scanIds: scans.map((s) => s.id).toList(),
+                  localCombinedPath: '',
+                  status: status,
+                  createdAt: DateTime.now(),
+                );
+          });
+        },
+      );
+
+      print('✅ Combined USDZ created: ${combinedScan.id}');
+      print('🔄 Starting GLB conversion via BlenderAPI...');
+
+      // Update status to uploading
+      setState(() {
+        _combinedScan = combinedScan.copyWith(
+          status: CombinedScanStatus.uploadingUsdz,
+        );
+      });
+
+      // Convert combined USDZ to GLB using BlenderAPI
+      final glbPath = await _blenderApiService.convertUsdzToGlb(
+        usdzPath: combinedScan.localCombinedPath,
+        onProgress: (progress, statusText) {
+          // Update progress and status based on stage
+          setState(() {
+            _uploadProgress = progress;
+            // Switch to processingGlb status when upload is complete
+            if (progress > 0.5 && _combinedScan?.status == CombinedScanStatus.uploadingUsdz) {
+              _combinedScan = _combinedScan?.copyWith(
+                status: CombinedScanStatus.processingGlb,
+              );
+            }
+          });
+          print('📊 Conversion progress: ${(progress * 100).toInt()}% - $statusText');
+        },
+      );
+
+      print('✅ GLB conversion complete: $glbPath');
+
+      // Update combined scan with GLB path and mark as ready
+      setState(() {
+        _combinedScan = combinedScan.copyWith(
+          combinedGlbLocalPath: glbPath,
+          status: CombinedScanStatus.glbReady,
+        );
+        _isCombining = false;
+      });
+
+      print('✅ Combined scan ready for NavMesh generation!');
+    } catch (e) {
+      print('❌ Failed to combine scans: $e');
+
+      setState(() {
+        _isCombining = false;
+        _combinedScan = _combinedScan?.copyWith(
+          status: CombinedScanStatus.failed,
+          errorMessage: _formatCombineError(e),
+        );
+      });
+    }
+  }
+
+  /// Format error messages for better user experience
+  String _formatCombineError(dynamic error) {
+    final errorStr = error.toString();
+
+    // Position validation errors
+    if (errorStr.contains('position data')) {
+      return 'Scans need to be arranged on canvas first. Use "Room stitching" to position scans.';
+    }
+
+    // File system errors
+    if (errorStr.contains('FileSystemException') ||
+        errorStr.contains('No such file or directory')) {
+      return 'File access error. One or more scan files could not be read.';
+    }
+
+    // Platform errors (iOS native)
+    if (errorStr.contains('PlatformException')) {
+      if (errorStr.contains('INVALID_GEOMETRY')) {
+        return 'Invalid scan geometry. One or more scans contain invalid 3D data.';
+      }
+      return 'Platform error: ${errorStr.replaceAll('PlatformException', '').trim()}';
+    }
+
+    // Generic error with cleaned message
+    return 'Failed to combine scans: ${errorStr.replaceAll('Exception:', '').trim()}';
+  }
+
+  /// Feature 018: Generate navmesh from combined GLB
+  Future<void> _handleGenerateNavmesh() async {
+    if (_combinedScan == null || !_combinedScan!.canGenerateNavmesh()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('GLB must be ready before generating navmesh'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final documentsDirectory = (await getApplicationDocumentsDirectory()).path;
+
+    setState(() {
+      _isCombining = true;
+    });
+
+    try {
+      // Show progress dialog
+      if (!mounted) return;
+      _showCombineProgressDialog();
+
+      // Start navmesh generation
+      final updatedScan = await _combinedScanService.generateNavmesh(
+        combinedScan: _combinedScan!,
+        documentsDirectory: documentsDirectory,
+        onStatusChange: (status) {
+          setState(() {
+            _combinedScan = _combinedScan?.copyWith(status: status);
+          });
+        },
+      );
+
+      setState(() {
+        _combinedScan = updatedScan;
+        _isCombining = false;
+      });
+
+      print('✅ NavMesh generation complete!');
+    } catch (e) {
+      print('❌ Failed to generate navmesh: $e');
+
+      setState(() {
+        _isCombining = false;
+        _combinedScan = _combinedScan?.copyWith(
+          status: CombinedScanStatus.failed,
+          errorMessage: 'NavMesh generation failed: $e',
+        );
+      });
+    }
+  }
+
+  /// Show combine progress dialog
+  void _showCombineProgressDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StreamBuilder<void>(
+        // Rebuild dialog when state changes
+        stream: Stream.periodic(const Duration(milliseconds: 100)),
+        builder: (context, snapshot) {
+          if (_combinedScan == null) {
+            return const SizedBox();
+          }
+
+          return CombineProgressDialog(
+            combinedScan: _combinedScan!,
+            uploadProgress: _uploadProgress,
+            onCancel: () {
+              Navigator.of(context).pop();
+              setState(() {
+                _isCombining = false;
+              });
+            },
+            onClose: () {
+              Navigator.of(context).pop();
+            },
+            onRetry: () {
+              Navigator.of(context).pop();
+              // Determine which operation to retry based on current status
+              if (_combinedScan!.status == CombinedScanStatus.failed) {
+                // Check which stage failed to determine retry action
+                if (_combinedScan!.combinedGlbLocalPath != null) {
+                  // GLB exists, so navmesh generation failed - retry navmesh
+                  _handleGenerateNavmesh();
+                } else {
+                  // No GLB, so combination failed - retry combination
+                  _handleCombineScans();
+                }
+              }
+            },
+          );
+        },
+      ),
+    );
   }
 }
 
