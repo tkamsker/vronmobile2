@@ -22,13 +22,18 @@ class AppStrings {
   static const String emailInvalid = 'Invalid email format';
   static const String passwordRequired = 'Password is required';
 
-  // OAuth error messages
+  // OAuth error messages (T005 - Redirect-based flow)
   static const String oauthCancelled = 'Sign-in was cancelled';
   static const String oauthNetworkError = 'Network error. Please check your connection and try again';
   static const String oauthServiceUnavailable = 'Google sign-in is temporarily unavailable. Please try again later';
   static const String oauthInvalidCredentials = 'Failed to obtain Google credentials';
   static const String oauthAuthenticationFailed = 'Authentication failed. Please try again';
   static const String oauthBackendError = 'Sign-in failed. Please try again later';
+  static const String oauthInvalidCode = 'Invalid authorization code. Please try again';
+  static const String oauthCodeExpired = 'Session expired. Please sign in again';
+  static const String oauthUrlLaunchFailed = 'Failed to open sign-in page. Please try again';
+  static const String oauthInvalidCallback = 'Invalid OAuth callback';
+  static const String oauthCodeExchangeFailed = 'Failed to complete authentication. Please try again';
 
   // Accessibility labels
   static const String emailInputSemantics = 'Email address input field';

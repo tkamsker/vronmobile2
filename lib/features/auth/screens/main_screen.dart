@@ -214,34 +214,36 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _handleGoogleSignIn() async {
-    if (kDebugMode) print('🔘 [UI] Google Sign In button pressed (redirect-based OAuth)');
+    if (kDebugMode) print('🔘 [UI] Google Sign In button pressed (SDK-based OAuth)');
 
     setState(() {
       _isGoogleLoading = true;
     });
 
     try {
-      if (kDebugMode) print('📡 [UI] Initiating Google OAuth redirect...');
+      if (kDebugMode) print('📡 [UI] Initiating Google Sign-In SDK authentication...');
 
-      // Initiate redirect-based OAuth flow (T025)
-      final result = await _authService.initiateGoogleOAuth();
+      // SDK-based OAuth flow (T018-T028)
+      final result = await _authService.signInWithGoogle();
 
       if (kDebugMode) {
         print(
-          '📡 [UI] OAuth redirect ${result.isSuccess ? "launched" : "failed"}',
+          '📡 [UI] Google Sign-In ${result.isSuccess ? "succeeded" : "failed"}',
         );
       }
 
       if (!mounted) return;
 
       if (!result.isSuccess) {
-        if (kDebugMode) print('❌ [UI] OAuth redirect failed: ${result.error}');
-        // Show error if redirect failed to launch
-        _showError(result.error ?? 'Failed to launch Google sign-in');
+        if (kDebugMode) print('❌ [UI] Google Sign-In failed: ${result.error}');
+        // Show error message to user
+        _showError(result.error ?? 'Failed to sign in with Google');
       } else {
-        if (kDebugMode) print('✅ [UI] OAuth redirect launched - waiting for callback...');
-        // Note: Actual authentication completes in handleOAuthCallback() via deep link
-        // User will be redirected back to app after completing OAuth flow
+        if (kDebugMode) print('✅ [UI] Google Sign-In successful - navigating to home...');
+        // Navigate to home screen after successful authentication
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, AppRoutes.home);
+        }
       }
     } catch (e) {
       if (kDebugMode) print('❌ [UI] Unexpected error: ${e.toString()}');

@@ -57,4 +57,22 @@ class EnvConfig {
   /// Backwards compatibility: Merchant web app base URL
   /// @deprecated Use vronMerchantsUrl instead
   static String get merchantUrl => vronMerchantsUrl;
+
+  /// OAuth redirect endpoint for Google authentication (T006)
+  /// Backend endpoint that handles OAuth flow and redirects back with code
+  /// Example: https://api.vron.stage.motorenflug.at/auth/google
+  static String get oauthGoogleEndpoint {
+    return '$vronApiUri/auth/google';
+  }
+
+  /// Deep link URL scheme for OAuth callbacks (T006)
+  /// Mobile app registers this scheme to receive OAuth redirect callbacks
+  static const String oauthDeepLinkScheme = 'vronapp';
+  static const String oauthDeepLinkHost = 'oauth-callback';
+
+  /// Full deep link URL for OAuth callbacks
+  /// Example: vronapp://oauth-callback
+  static String get oauthCallbackUrl {
+    return '$oauthDeepLinkScheme://$oauthDeepLinkHost';
+  }
 }

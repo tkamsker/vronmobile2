@@ -45,21 +45,20 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<!-- Google Sign-In Configuration (T007) -->
-	<!-- PRD Reference: Requirements/Google_OAuth.prd.md Section 8.2 -->
-	<!-- IMPORTANT: Use iOS Client ID here, NOT Web Client ID -->
-	<!-- Web Client ID is only used by backend for token verification -->
-	<key>GIDClientID</key>
-	<string>161042226580-klsi82nn94vm94bfs6jo364h2do3hr36.apps.googleusercontent.com</string>
+	<!-- Deep Link Configuration for OAuth Redirect Flow (T004) -->
+	<!-- DEPRECATED: GIDClientID no longer needed for redirect-based OAuth -->
+	<!-- Backend handles OAuth flow, mobile app receives deep link callback -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>OAuth Callback</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<!-- Reversed iOS Client ID for OAuth callback (must match GIDClientID above) -->
-				<string>com.googleusercontent.apps.161042226580-klsi82nn94vm94bfs6jo364h2do3hr36</string>
+				<!-- Deep link URL scheme for OAuth redirect callback -->
+				<string>vronapp</string>
 			</array>
 		</dict>
 	</array>
