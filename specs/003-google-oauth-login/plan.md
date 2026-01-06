@@ -48,7 +48,7 @@ Implement Google OAuth 2.0 authentication as an alternative login method alongsi
 ### I. Test-First Development (NON-NEGOTIABLE)
 - ✅ **PASS**: TDD approach required for all implementation
 - Tests MUST be written before code:
-  - Unit tests for OAuth service methods (signInWithGoogle, handleAuthCode)
+  - Unit tests for OAuth service methods (signInWithGoogle method, token exchange)
   - Widget tests for OAuthButton (already exists, may need enhancement)
   - Integration tests for complete OAuth flow
 - Red-Green-Refactor cycle enforced

@@ -12,7 +12,7 @@ This guide helps diagnose and resolve Google OAuth authentication issues in the 
 Run through this checklist to identify the root cause:
 
 - [ ] **Phase 1 Setup Complete**: Platform configuration (T003-T009) finished
-- [ ] **Backend Deployed**: `signInWithGoogle` GraphQL mutation is deployed and accessible
+- [ ] **Backend Deployed**: `exchangeGoogleIdToken` GraphQL mutation is deployed and accessible
 - [ ] **Environment Variables**: `.env` file exists and contains correct URLs
 - [ ] **Google Cloud Console**: OAuth clients configured for both Android and iOS
 - [ ] **Network Connectivity**: Device can reach backend API
@@ -124,7 +124,7 @@ Backend's OAuth client ID doesn't match the mobile app's OAuth client ID.
 
 2. Backend must use the **Web Client ID** for token verification
 
-3. Check with backend team that `signInWithGoogle` mutation is using correct client ID
+3. Check with backend team that `exchangeGoogleIdToken` mutation is using correct client ID
 
 **GraphQL Contract**: See `specs/003-google-oauth-login/contracts/graphql-api.md`
 
@@ -171,7 +171,7 @@ Mobile app cannot reach the GraphQL endpoint.
 - Console log shows: "Backend authentication failed" or "GraphQL exception"
 
 **Root Cause**:
-Backend `signInWithGoogle` mutation not implemented or throwing errors.
+Backend `exchangeGoogleIdToken` mutation not implemented or throwing errors.
 
 **Solution**:
 1. Verify backend mutation is deployed:
@@ -180,7 +180,7 @@ Backend `signInWithGoogle` mutation not implemented or throwing errors.
    curl -X POST https://api.vron.stage.motorenflug.at/graphql \
      -H "Content-Type: application/json" \
      -d '{
-       "query": "mutation { signInWithGoogle(input: { idToken: \"test\" }) { accessToken } }"
+       "query": "mutation { exchangeGoogleIdToken(input: { idToken: \"test\" }) }"
      }'
    ```
 
@@ -343,7 +343,7 @@ ls -la ios/Runner/GoogleService-Info.plist
 
 Confirm with backend team:
 
-- [ ] `signInWithGoogle` GraphQL mutation is deployed
+- [ ] `exchangeGoogleIdToken` GraphQL mutation is deployed
 - [ ] Mutation follows contract in `specs/003-google-oauth-login/contracts/graphql-api.md`
 - [ ] Backend validates Google idToken with Google's API
 - [ ] Backend handles account creation/linking logic

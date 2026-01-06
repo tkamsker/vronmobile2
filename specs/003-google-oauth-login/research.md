@@ -76,9 +76,9 @@ final scopes = [
 1. Mobile app initiates Google OAuth flow via `google_sign_in`
 2. User completes authentication in Google's native UI
 3. App receives `idToken` and `accessToken` from Google
-4. App sends `idToken` to backend GraphQL mutation (e.g., `signInWithGoogle`)
+4. App sends `idToken` to backend GraphQL mutation (`exchangeGoogleIdToken`)
 5. Backend validates token with Google's API
-6. Backend returns application JWT tokens (accessToken + AUTH_CODE)
+6. Backend returns application JWT accessToken (String)
 7. App stores tokens via existing `TokenStorage` service
 8. App refreshes `GraphQLService` client with new auth
 
@@ -89,20 +89,14 @@ final scopes = [
 - Reuses existing `AuthService.login()` pattern
 - Secure: idToken is cryptographically signed by Google
 
-**GraphQL Mutation** (to be defined in contracts):
+**GraphQL Mutation** (defined in contracts):
 ```graphql
-mutation SignInWithGoogle($idToken: String!) {
-  signInWithGoogle(idToken: $idToken) {
-    accessToken
-    user {
-      id
-      email
-      name
-      picture
-    }
-  }
+mutation ExchangeGoogleIdToken($input: ExchangeGoogleIdTokenInput!) {
+  exchangeGoogleIdToken(input: $input)
 }
 ```
+
+**Note**: Backend returns String directly (accessToken). User profile data (email, name, picture) is obtained from the Google Sign-In SDK (`GoogleSignInAccount`) on the client side.
 
 ---
 

@@ -2,13 +2,15 @@
 
 **Date**: 2025-12-23
 **Issue**: Backend returns token as cookie instead of in GraphQL response
-**Status**: ⚠️ BLOCKING mobile OAuth
+**Status**: ✅ RESOLVED - Using `exchangeGoogleIdToken` mutation
+
+**Resolution**: This issue led to the creation of `exchangeGoogleIdToken` mutation which returns the accessToken as a String directly in the GraphQL response, suitable for mobile apps.
 
 ---
 
-## Problem Summary
+## Problem Summary (Historical)
 
-The `signInWithGoogle` GraphQL mutation is setting the `accessToken` as an **HTTP-only cookie** instead of returning it in the GraphQL response body.
+The original `signInWithGoogle` GraphQL mutation was setting the `accessToken` as an **HTTP-only cookie** instead of returning it in the GraphQL response body. This was resolved by creating a dedicated `exchangeGoogleIdToken` mutation for mobile clients.
 
 **Current Backend Behavior** (❌ Wrong for mobile):
 ```
@@ -361,3 +363,30 @@ Contact the mobile team:
 - PRD: `Requirements/Google_OAuth.prd.md` (Section 8.3 - Option B)
 
 **Mobile app is ready and waiting for backend fix!** 🚀
+
+---
+
+## ✅ Current Solution (Implemented)
+
+The issue described above was resolved by implementing the `exchangeGoogleIdToken` mutation:
+
+### Current Implementation:
+
+```graphql
+mutation ExchangeGoogleIdToken($input: ExchangeGoogleIdTokenInput!) {
+  exchangeGoogleIdToken(input: $input)
+}
+```
+
+**Response**: String (accessToken directly, not an object)
+
+**Key Changes**:
+1. ✅ New mutation `exchangeGoogleIdToken` specifically for mobile apps
+2. ✅ Returns accessToken as String directly in GraphQL response
+3. ✅ User profile data obtained from Google Sign-In SDK on client side
+4. ✅ No cookie dependency for mobile clients
+5. ✅ Backend validates idToken with Google's API
+
+**Contract**: See `specs/003-google-oauth-login/contracts/graphql-api.md` for complete specification.
+
+**Mobile Implementation**: `lib/features/auth/services/auth_service.dart:299` (signInWithGoogle method)

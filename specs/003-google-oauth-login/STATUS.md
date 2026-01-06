@@ -153,7 +153,7 @@ The Google OAuth feature has been **fully implemented** following the PRD specif
    - Run `cd ios && pod install`
 
 6. **Backend Deployment**:
-   - Ensure `signInWithGoogle` GraphQL mutation is deployed
+   - Ensure `exchangeGoogleIdToken` GraphQL mutation is deployed
    - Verify backend is accessible from mobile devices
 
 ---
@@ -175,13 +175,13 @@ Based on the implementation review, OAuth is likely failing due to **one or more
 
 ### 2. Backend Not Deployed
 
-**Issue**: The `signInWithGoogle` GraphQL mutation might not be deployed to staging.
+**Issue**: The `exchangeGoogleIdToken` GraphQL mutation might not be deployed to staging.
 
 **Test Backend**:
 ```bash
 curl -X POST https://api.vron.stage.motorenflug.at/graphql \
   -H "Content-Type: application/json" \
-  -d '{"query":"mutation { signInWithGoogle(input: { idToken: \"test\" }) { accessToken } }"}'
+  -d '{"query":"mutation { exchangeGoogleIdToken(input: { idToken: \"test\" }) }"}'
 ```
 
 **Expected**: GraphQL error (invalid token), NOT 404 or "field not found"
@@ -205,9 +205,9 @@ The implementation follows **Option B (Token-based SSO)** from the PRD exactly:
 1. ✅ User taps "Sign in with Google" → `OAuthButton` in `main_screen.dart`
 2. ✅ Flutter uses `google_sign_in` → `GoogleSignIn.instance.authenticate()`
 3. ✅ Obtains Google `idToken` → `googleAuth.idToken`
-4. ✅ Calls GraphQL mutation → `signInWithGoogle(input: { idToken })`
+4. ✅ Calls GraphQL mutation → `exchangeGoogleIdToken(input: { idToken })`
 5. ✅ Backend verifies token → (Backend responsibility)
-6. ✅ Backend returns `accessToken` → Stored via `_tokenStorage`
+6. ✅ Backend returns `accessToken` String → Stored via `_tokenStorage`
 7. ✅ Flutter stores `accessToken` → `flutter_secure_storage`
 8. ✅ Uses as `Authorization: Bearer <accessToken>` → `GraphQLService`
 
@@ -217,26 +217,18 @@ The implementation follows **Option B (Token-based SSO)** from the PRD exactly:
 - ✅ `APP_COOKIE_DOMAIN` → Cookie domain
 - ✅ Flexible URL configuration → `EnvConfig` class
 
-### GraphQL Contract (PRD Section 4):
+### GraphQL Contract:
 ```graphql
-mutation SignInWithGoogle($input: SignInWithGoogleInput!) {
-  signInWithGoogle(input: $input) {
-    accessToken
-    user {
-      id
-      email
-      name
-      picture
-      authProviders {
-        provider
-        enabled
-      }
-    }
-  }
+mutation ExchangeGoogleIdToken($input: ExchangeGoogleIdTokenInput!) {
+  exchangeGoogleIdToken(input: $input)
 }
 ```
 
-**Implementation**: ✅ Matches exactly (auth_service.dart:58-74)
+**Response**: String (accessToken directly)
+
+**User Data**: Obtained from Google Sign-In SDK (`GoogleSignInAccount`)
+
+**Implementation**: ✅ Matches contract (auth_service.dart:58-74)
 
 ---
 
@@ -263,7 +255,7 @@ flutter test test/integration/auth_flow_test.dart
 ```
 
 **Requirements**:
-- Backend `signInWithGoogle` mutation deployed
+- Backend `exchangeGoogleIdToken` mutation deployed
 - Real Android/iOS devices with Google Play Services
 - Google Cloud Console configuration complete
 
@@ -350,7 +342,7 @@ cd ..
 ### Step 6: Verify Backend (5 mins)
 
 Confirm with backend team:
-- `signInWithGoogle` mutation is deployed
+- `exchangeGoogleIdToken` mutation is deployed
 - Uses correct OAuth Web Client ID for verification
 - Endpoint is accessible from mobile networks
 

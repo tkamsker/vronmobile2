@@ -58,10 +58,10 @@ This guide provides a step-by-step walkthrough for implementing Google OAuth aut
 ┌──────────────────────────────────────────────────▼────────────┐
 │                          Backend API                           │
 │                                                                 │
-│  ┌──────────────────┐   ┌──────────────┐   ┌───────────────┐ │
-│  │ GraphQL Mutation │──>│ Token        │──>│ PostgreSQL    │ │
-│  │ signInWithGoogle │   │ Validation   │   │ (User DB)     │ │
-│  └──────────────────┘   └──────────────┘   └───────────────┘ │
+│  ┌──────────────────────┐   ┌──────────────┐   ┌───────────────┐ │
+│  │ GraphQL Mutation     │──>│ Token        │──>│ PostgreSQL    │ │
+│  │ exchangeGoogleIdToken│   │ Validation   │   │ (User DB)     │ │
+│  └──────────────────────┘   └──────────────┘   └───────────────┘ │
 │         │                                                       │
 │         └──────> Returns JWT access token                      │
 └─────────────────────────────────────────────┬─────────────────┘
@@ -281,7 +281,7 @@ class AuthService {
 
       // Exchange Google token for backend JWT
       final result = await _graphqlService.mutate(
-        _signInWithGoogleMutation,
+        _exchangeGoogleIdTokenMutation,
         variables: {
           'input': {'idToken': googleAuth.idToken},
         },
@@ -299,16 +299,11 @@ class AuthService {
         );
       }
 
-      // Extract response data
-      if (result.data == null || result.data!['signInWithGoogle'] == null) {
-        return AuthResult.failure('Invalid response from server');
-      }
-
-      final loginData = result.data!['signInWithGoogle'] as Map<String, dynamic>;
-      final accessToken = loginData['accessToken'] as String?;
+      // Backend returns String directly (not an object)
+      final accessToken = result.data!['exchangeGoogleIdToken'] as String?;
 
       if (accessToken == null || accessToken.isEmpty) {
-        return AuthResult.failure('Invalid login response: missing access token');
+        return AuthResult.failure('Invalid response from server');
       }
 
       // Create AUTH_CODE (same pattern as email/password login)
@@ -321,12 +316,11 @@ class AuthService {
       // Refresh GraphQL client with new auth
       await _graphqlService.refreshClient();
 
-      // Return success with user data
-      final user = loginData['user'] as Map<String, dynamic>;
+      // Return success with user data from Google Sign-In SDK
       return AuthResult.success({
-        'email': user['email'],
-        'name': user['name'],
-        'picture': user['picture'],
+        'email': googleAccount.email,
+        'name': googleAccount.displayName,
+        'picture': googleAccount.photoUrl,
       });
     } on PlatformException catch (e) {
       // Handle Google Sign-In specific errors
@@ -356,17 +350,9 @@ class AuthService {
   }
 
   // NEW: GraphQL mutation for Google OAuth
-  static const String _signInWithGoogleMutation = '''
-    mutation SignInWithGoogle(\$input: SignInWithGoogleInput!) {
-      signInWithGoogle(input: \$input) {
-        accessToken
-        user {
-          id
-          email
-          name
-          picture
-        }
-      }
+  static const String _exchangeGoogleIdTokenMutation = '''
+    mutation ExchangeGoogleIdToken(\$input: ExchangeGoogleIdTokenInput!) {
+      exchangeGoogleIdToken(input: \$input)
     }
   ''';
 }
@@ -543,7 +529,7 @@ Ensure OAuth client IDs are configured for:
 ### 6.2 Backend Coordination
 
 Confirm with backend team:
-- [ ] `signInWithGoogle` mutation is deployed
+- [ ] `exchangeGoogleIdToken` mutation is deployed
 - [ ] Token validation endpoint is configured
 - [ ] Rate limiting is enabled
 - [ ] Error codes match contract

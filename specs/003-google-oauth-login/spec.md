@@ -2,7 +2,8 @@
 
 **Feature Branch**: `003-google-oauth-login`
 **Created**: 2025-12-22
-**Status**: Draft
+**Status**: Implemented ✅
+**Completed**: 2026-01-06
 **Input**: User description: "Google OAuth Login"
 
 ## User Scenarios & Testing *(mandatory)*
@@ -69,7 +70,7 @@ When a user signs in with Google using an email that already exists in the syste
 
 - **FR-001**: System MUST display a "Sign in with Google" button on the login screen that follows Google's branding guidelines
 - **FR-002**: System MUST initiate Google OAuth 2.0 authentication flow when the user taps the Google sign-in button
-- **FR-003**: System MUST securely exchange the Google OAuth authorization code for an access token via the backend API
+- **FR-003**: System MUST securely exchange the Google idToken for an application access token via the backend API (`exchangeGoogleIdToken` mutation)
 - **FR-004**: System MUST store authentication tokens securely using the existing TokenStorage service
 - **FR-005**: System MUST refresh the GraphQL client with new authentication credentials after successful Google login
 - **FR-006**: System MUST handle OAuth cancellation gracefully and return the user to the login screen

@@ -50,7 +50,7 @@ Flutter mobile app with feature-based architecture:
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
 - [X] T010 Add OAuth error message strings to lib/core/constants/app_strings.dart
-- [X] T011 [P] Create GraphQL mutation constant for signInWithGoogle in lib/features/auth/services/auth_service.dart
+- [X] T011 [P] Create GraphQL mutation constant for exchangeGoogleIdToken in lib/features/auth/services/auth_service.dart
 - [X] T012 Initialize GoogleSignIn instance with scopes in lib/features/auth/services/auth_service.dart
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
@@ -307,11 +307,12 @@ This delivers:
 
 ### Backend Coordination
 
-**GraphQL Mutation Required**: `signInWithGoogle(input: SignInWithGoogleInput!)`
+**GraphQL Mutation Required**: `exchangeGoogleIdToken(input: ExchangeGoogleIdTokenInput!)`
 - Input: `idToken` (String)
-- Output: `accessToken`, `user` (id, email, name, picture)
+- Output: `String` (accessToken directly)
 - Backend validates token with Google's API
 - Backend handles account creation/linking
+- User data obtained from Google Sign-In SDK on client side
 
 **Contract Location**: `specs/003-google-oauth-login/contracts/graphql-api.md`
 
@@ -363,7 +364,7 @@ This delivers:
 1. **Start with MVP**: Execute T001-T026 to deliver functional Google OAuth
 2. **Follow TDD**: Write failing tests BEFORE implementation (constitution requirement)
 3. **Test on Devices**: Verify on real iOS/Android devices (not just emulator)
-4. **Coordinate with Backend**: Ensure `signInWithGoogle` mutation is deployed
+4. **Coordinate with Backend**: Ensure `exchangeGoogleIdToken` mutation is deployed
 5. **Incremental Delivery**: Ship US1 (MVP) → US2 (error handling) → US3 (linking) → Polish
 
 **Recommended First Task**: T001 (add google_sign_in dependency)

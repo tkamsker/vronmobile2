@@ -252,11 +252,11 @@ enum AuthMethod {
 └────────┬────────┘
          │ Send to backend
          ▼
-┌─────────────────┐
-│ GraphQL Service │◄────── Existing service
-│ signInWithGoogle│
-│ mutation        │
-└────────┬────────┘
+┌──────────────────────┐
+│ GraphQL Service      │◄────── Existing service
+│ exchangeGoogleIdToken│
+│ mutation             │
+└────────┬─────────────┘
          │ Validates token with Google
          │ Creates/links account
          ▼

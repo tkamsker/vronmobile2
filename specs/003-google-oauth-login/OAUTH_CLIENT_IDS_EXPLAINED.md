@@ -16,7 +16,7 @@ When setting up Google OAuth, you need to create **different OAuth clients** for
 **Client ID**: `161042226580-8k8rpnr3tc0qj22og5nciep5vr4sn5op.apps.googleusercontent.com`
 
 **Where It's Used**:
-- ✅ Backend server's `signInWithGoogle` mutation
+- ✅ Backend server's `exchangeGoogleIdToken` mutation
 - ✅ Backend token verification with Google's API
 - ❌ **NOT** used in iOS/Android mobile apps
 
@@ -146,7 +146,7 @@ Custom scheme URI are not allowed for WEB client type
    - These tokens are signed with the **iOS Client ID**
 
 5. **iOS App Sends idToken to Backend**
-   - GraphQL mutation: `signInWithGoogle(input: { idToken })`
+   - GraphQL mutation: `exchangeGoogleIdToken(input: { idToken })`
 
 6. **Backend Verifies idToken with Google**
    - Backend uses **Web Client ID**: `161042226580-8k8rpnr3tc0qj22og5nciep5vr4sn5op`
@@ -243,9 +243,9 @@ flutter run -d <ios-device>
 # Test backend token verification
 curl -X POST https://api.vron.stage.motorenflug.at/graphql \
   -H "Content-Type: application/json" \
-  -d '{"query":"mutation { signInWithGoogle(input: { idToken: \"REAL_IDTOKEN_HERE\" }) { accessToken } }"}'
+  -d '{"query":"mutation { exchangeGoogleIdToken(input: { idToken: \"REAL_IDTOKEN_HERE\" }) }"}'
 
-# Expected: Returns accessToken (if valid idToken)
+# Expected: Returns accessToken string (if valid idToken)
 # Expected: Error about invalid token (if test token)
 ```
 

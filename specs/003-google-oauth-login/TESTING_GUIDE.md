@@ -37,13 +37,13 @@ Before testing, verify:
 
 ### 1. Backend Deployment ⚠️ CRITICAL
 
-The backend **must** have the `signInWithGoogle` GraphQL mutation deployed.
+The backend **must** have the `exchangeGoogleIdToken` GraphQL mutation deployed.
 
 **Test Backend Availability**:
 ```bash
 curl -X POST https://api.vron.stage.motorenflug.at/graphql \
   -H "Content-Type: application/json" \
-  -d '{"query":"mutation { signInWithGoogle(input: { idToken: \"test\" }) { accessToken } }"}'
+  -d '{"query":"mutation { exchangeGoogleIdToken(input: { idToken: \"test\" }) }"}'
 ```
 
 **Expected Response**: GraphQL error (invalid token) - NOT "field not found"
@@ -192,7 +192,7 @@ curl -X POST https://api.vron.stage.motorenflug.at/graphql \
 
 **Causes**:
 1. Backend not using correct Web Client ID for verification
-2. Backend's `signInWithGoogle` mutation not deployed
+2. Backend's `exchangeGoogleIdToken` mutation not deployed
 3. Token validation failing on backend
 
 **Solution**:
@@ -354,7 +354,7 @@ Before deploying to production:
 - [ ] Download new GoogleService-Info.plist and google-services.json
 
 ### Backend:
-- [ ] signInWithGoogle mutation deployed to production
+- [ ] exchangeGoogleIdToken mutation deployed to production
 - [ ] Rate limiting configured
 - [ ] Logging and monitoring set up
 - [ ] Production Web Client ID configured
@@ -385,5 +385,5 @@ https://console.cloud.google.com/apis/credentials
 ```bash
 curl -X POST https://api.vron.stage.motorenflug.at/graphql \
   -H "Content-Type: application/json" \
-  -d '{"query":"mutation { signInWithGoogle(input: { idToken: \"test\" }) { accessToken } }"}'
+  -d '{"query":"mutation { exchangeGoogleIdToken(input: { idToken: \"test\" }) }"}'
 ```

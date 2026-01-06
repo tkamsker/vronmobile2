@@ -13,35 +13,23 @@ This document defines the GraphQL mutation contract between the mobile applicati
 
 ---
 
-## Mutation: signInWithGoogle
+## Mutation: exchangeGoogleIdToken
 
 ### Description
-Authenticates a user via Google OAuth by validating the Google idToken and returning application-specific JWT tokens.
+Authenticates a user via Google OAuth by validating the Google idToken and returning an application-specific JWT access token. The mutation returns only the access token string; user profile information is obtained directly from the Google Sign-In SDK.
 
 ### Request
 
 ```graphql
-mutation SignInWithGoogle($input: SignInWithGoogleInput!) {
-  signInWithGoogle(input: $input) {
-    accessToken
-    user {
-      id
-      email
-      name
-      picture
-      authProviders {
-        provider
-        enabled
-      }
-    }
-  }
+mutation ExchangeGoogleIdToken($input: ExchangeGoogleIdTokenInput!) {
+  exchangeGoogleIdToken(input: $input)
 }
 ```
 
 ### Input Type
 
 ```graphql
-input SignInWithGoogleInput {
+input ExchangeGoogleIdTokenInput {
   """
   Google idToken obtained from google_sign_in package
   JWT token signed by Google containing user identity claims
@@ -54,45 +42,15 @@ input SignInWithGoogleInput {
 ### Response Type
 
 ```graphql
-type SignInWithGoogleResponse {
-  """
-  Application JWT access token for authenticating subsequent API requests
-  This is NOT the Google access token - it's the backend's own JWT
-  """
-  accessToken: String!
-
-  """
-  User account information
-  May be newly created or existing account (if email already exists)
-  """
-  user: User!
-}
-
-type User {
-  """Unique user identifier (UUID)"""
-  id: ID!
-
-  """User's email address (from Google account)"""
-  email: String!
-
-  """User's display name (from Google profile)"""
-  name: String
-
-  """User's profile picture URL (from Google profile)"""
-  picture: String
-
-  """List of enabled authentication providers for this account"""
-  authProviders: [AuthProvider!]!
-}
-
-type AuthProvider {
-  """Provider type: 'google', 'email', etc."""
-  provider: String!
-
-  """Whether this provider is enabled for the account"""
-  enabled: Boolean!
-}
+"""
+Returns a String directly (not an object)
+This is the application JWT access token for authenticating subsequent API requests
+This is NOT the Google access token - it's the backend's own JWT
+"""
+String!
 ```
+
+**Note**: User profile data (email, name, picture) is obtained from the Google Sign-In SDK (`GoogleSignInAccount`) on the client side, not from this mutation. The backend creates or links the user account internally based on the validated idToken.
 
 ---
 
@@ -183,7 +141,7 @@ final authCode = base64Encode(utf8.encode(jsonEncode(authPayload)));
     }
   ],
   "data": {
-    "signInWithGoogle": null
+    "exchangeGoogleIdToken": null
   }
 }
 ```
@@ -213,7 +171,7 @@ final authCode = base64Encode(utf8.encode(jsonEncode(authPayload)));
     }
   ],
   "data": {
-    "signInWithGoogle": null
+    "exchangeGoogleIdToken": null
   }
 }
 ```
@@ -227,21 +185,9 @@ final authCode = base64Encode(utf8.encode(jsonEncode(authPayload)));
 **Request**:
 ```graphql
 mutation {
-  signInWithGoogle(input: {
+  exchangeGoogleIdToken(input: {
     idToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6IjE..."
-  }) {
-    accessToken
-    user {
-      id
-      email
-      name
-      picture
-      authProviders {
-        provider
-        enabled
-      }
-    }
-  }
+  })
 }
 ```
 
@@ -249,23 +195,17 @@ mutation {
 ```json
 {
   "data": {
-    "signInWithGoogle": {
-      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "user": {
-        "id": "550e8400-e29b-41d4-a716-446655440000",
-        "email": "newuser@example.com",
-        "name": "John Doe",
-        "picture": "https://lh3.googleusercontent.com/...",
-        "authProviders": [
-          {
-            "provider": "google",
-            "enabled": true
-          }
-        ]
-      }
-    }
+    "exchangeGoogleIdToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
 }
+```
+
+**Note**: User profile data is obtained from Google Sign-In SDK:
+```dart
+// From GoogleSignInAccount
+email: "newuser@example.com"
+name: "John Doe"
+picture: "https://lh3.googleusercontent.com/..."
 ```
 
 ### Example 2: Existing User (Email/Password) Adding Google
@@ -273,19 +213,9 @@ mutation {
 **Request**:
 ```graphql
 mutation {
-  signInWithGoogle(input: {
+  exchangeGoogleIdToken(input: {
     idToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6IjE..."
-  }) {
-    accessToken
-    user {
-      id
-      email
-      authProviders {
-        provider
-        enabled
-      }
-    }
-  }
+  })
 }
 ```
 
@@ -293,41 +223,21 @@ mutation {
 ```json
 {
   "data": {
-    "signInWithGoogle": {
-      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "user": {
-        "id": "existing-user-id-123",
-        "email": "existinguser@example.com",
-        "authProviders": [
-          {
-            "provider": "email",
-            "enabled": true
-          },
-          {
-            "provider": "google",
-            "enabled": true
-          }
-        ]
-      }
-    }
+    "exchangeGoogleIdToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
 }
 ```
+
+**Note**: The backend automatically links the Google account to the existing email/password account if the email matches. The mobile app receives only the access token; account linking is transparent to the client.
 
 ### Example 3: Invalid Token Error
 
 **Request**:
 ```graphql
 mutation {
-  signInWithGoogle(input: {
+  exchangeGoogleIdToken(input: {
     idToken: "invalid_or_expired_token"
-  }) {
-    accessToken
-    user {
-      id
-      email
-    }
-  }
+  })
 }
 ```
 
@@ -344,7 +254,7 @@ mutation {
     }
   ],
   "data": {
-    "signInWithGoogle": null
+    "exchangeGoogleIdToken": null
   }
 }
 ```
@@ -380,7 +290,7 @@ class AuthService {
 
       // 3. Exchange Google token for backend JWT
       final result = await _graphqlService.mutate(
-        _signInWithGoogleMutation,
+        _exchangeGoogleIdTokenMutation,
         variables: {
           'input': {'idToken': googleAuth.idToken},
         },
@@ -391,8 +301,12 @@ class AuthService {
         return AuthResult.failure(error?.message ?? 'Authentication failed');
       }
 
-      final loginData = result.data!['signInWithGoogle'] as Map<String, dynamic>;
-      final accessToken = loginData['accessToken'] as String;
+      // Backend returns String directly (not an object)
+      final accessToken = result.data!['exchangeGoogleIdToken'] as String?;
+
+      if (accessToken == null || accessToken.isEmpty) {
+        return AuthResult.failure('Invalid response from server');
+      }
 
       // 4. Store tokens (same pattern as email/password login)
       final authCode = _createAuthCode(accessToken);
@@ -402,12 +316,11 @@ class AuthService {
       // 5. Refresh GraphQL client
       await _graphqlService.refreshClient();
 
-      // 6. Return success with user data
-      final user = loginData['user'] as Map<String, dynamic>;
+      // 6. Return success with user data from Google Sign-In SDK
       return AuthResult.success({
-        'email': user['email'],
-        'name': user['name'],
-        'picture': user['picture'],
+        'email': googleAccount.email,
+        'name': googleAccount.displayName,
+        'picture': googleAccount.photoUrl,
       });
     } on PlatformException catch (e) {
       // Handle platform-specific errors (Google Sign-In errors)
@@ -417,17 +330,9 @@ class AuthService {
     }
   }
 
-  static const String _signInWithGoogleMutation = '''
-    mutation SignInWithGoogle(\$input: SignInWithGoogleInput!) {
-      signInWithGoogle(input: \$input) {
-        accessToken
-        user {
-          id
-          email
-          name
-          picture
-        }
-      }
+  static const String _exchangeGoogleIdTokenMutation = '''
+    mutation ExchangeGoogleIdToken(\$input: ExchangeGoogleIdTokenInput!) {
+      exchangeGoogleIdToken(input: \$input)
     }
   ''';
 }
@@ -506,7 +411,7 @@ class AuthService {
 **Current Version**: N/A (new endpoint)
 
 **Future Considerations**:
-- If breaking changes needed, use versioned mutation name: `signInWithGoogleV2`
+- If breaking changes needed, use versioned mutation name: `exchangeGoogleIdTokenV2`
 - Document changes in API changelog
 - Support old version during deprecation period
 
