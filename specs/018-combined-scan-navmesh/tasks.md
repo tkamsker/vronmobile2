@@ -27,9 +27,9 @@ Mobile Flutter app with iOS-specific native code:
 
 **Purpose**: Project initialization and basic structure for combined scan feature
 
-- [ ] T001 Verify ScanData model has position fields (positionX, positionY, rotationDegrees, scaleFactor) in lib/features/scanning/models/scan_data.dart (Feature 017 already completed this)
-- [ ] T002 [P] Add BlenderAPI base URL configuration to environment config (stage: https://blenderapi.stage.motorenflug.at)
-- [ ] T003 [P] Verify iOS minimum deployment target is 16.0+ in ios/Podfile for SceneKit support
+- [x] T001 Verify ScanData model has position fields (positionX, positionY, rotationDegrees, scaleFactor) in lib/features/scanning/models/scan_data.dart (Feature 017 already completed this)
+- [x] T002 [P] Add BlenderAPI base URL configuration to environment config (stage: https://blenderapi.stage.motorenflug.at)
+- [x] T003 [P] Verify iOS minimum deployment target is 16.0+ in ios/Podfile for SceneKit support
 
 ---
 
@@ -39,14 +39,14 @@ Mobile Flutter app with iOS-specific native code:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Create CombinedScan model with all fields (id, projectId, scanIds, localCombinedPath, combinedGlbUrl, combinedGlbLocalPath, navmeshSessionId, navmeshUrl, localNavmeshPath, status, createdAt, completedAt, errorMessage) in lib/features/scanning/models/combined_scan.dart
-- [ ] T005 [P] Create CombinedScanStatus enum (combining, uploadingUsdz, processingGlb, glbReady, uploadingToBlender, generatingNavmesh, downloadingNavmesh, completed, failed) in lib/features/scanning/models/combined_scan.dart
-- [ ] T006 [P] Implement toJson() and fromJson() methods for CombinedScan model with all fields
-- [ ] T007 [P] Implement copyWith() method for CombinedScan model
-- [ ] T008 [P] Add helper methods to CombinedScan (isInProgress, canGenerateNavmesh, hasGlb, hasNavmesh, getLocalCombinedFileSize, getLocalNavmeshFileSize, deleteLocalFiles)
-- [ ] T009 Create iOS native USDZCombiner.swift class in ios/Runner/USDZCombiner.swift with combineScans method signature
-- [ ] T010 [P] Create iOS native USDZCombinerPlugin.swift Flutter MethodChannel bridge in ios/Runner/USDZCombinerPlugin.swift
-- [ ] T011 [P] Register USDZCombinerPlugin in ios/Runner/AppDelegate.swift
+- [x] T004 Create CombinedScan model with all fields (id, projectId, scanIds, localCombinedPath, combinedGlbUrl, combinedGlbLocalPath, navmeshSessionId, navmeshUrl, localNavmeshPath, status, createdAt, completedAt, errorMessage) in lib/features/scanning/models/combined_scan.dart
+- [x] T005 [P] Create CombinedScanStatus enum (combining, uploadingUsdz, processingGlb, glbReady, uploadingToBlender, generatingNavmesh, downloadingNavmesh, completed, failed) in lib/features/scanning/models/combined_scan.dart
+- [x] T006 [P] Implement toJson() and fromJson() methods for CombinedScan model with all fields
+- [x] T007 [P] Implement copyWith() method for CombinedScan model
+- [x] T008 [P] Add helper methods to CombinedScan (isInProgress, canGenerateNavmesh, hasGlb, hasNavmesh, getLocalCombinedFileSize, getLocalNavmeshFileSize, deleteLocalFiles)
+- [x] T009 Create iOS native USDZCombiner.swift class in ios/Runner/USDZCombiner.swift with combineScans method signature
+- [x] T010 [P] Create iOS native USDZCombinerPlugin.swift Flutter MethodChannel bridge in ios/Runner/USDZCombinerPlugin.swift
+- [x] T011 [P] Register USDZCombinerPlugin in ios/Runner/AppDelegate.swift
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -65,28 +65,28 @@ Mobile Flutter app with iOS-specific native code:
 > **CRITICAL**: Write these tests FIRST, ensure they FAIL before implementation
 
 **iOS Native Tests**:
-- [ ] T012 [P] [US1] Write XCTest for USDZCombiner.combineScans() with 2 scans in ios/RunnerTests/USDZCombinerTests.swift
-- [ ] T013 [P] [US1] Write XCTest for transform application (position, rotation, scale) in ios/RunnerTests/USDZCombinerTests.swift
-- [ ] T014 [P] [US1] Write XCTest for scene export as USDZ in ios/RunnerTests/USDZCombinerTests.swift
+- [x] T012 [P] [US1] Write XCTest for USDZCombiner.combineScans() with 2 scans in ios/RunnerTests/USDZCombinerTests.swift
+- [x] T013 [P] [US1] Write XCTest for transform application (position, rotation, scale) in ios/RunnerTests/USDZCombinerTests.swift
+- [x] T014 [P] [US1] Write XCTest for scene export as USDZ in ios/RunnerTests/USDZCombinerTests.swift
 
 **Dart Unit Tests**:
-- [ ] T015 [P] [US1] Write unit test for USDZCombinerService.combineScans() method channel calls in test/features/scanning/services/usdz_combiner_service_test.dart
-- [ ] T016 [P] [US1] Write unit test for BlenderAPIService.createSession() in test/features/scanning/services/blenderapi_service_test.dart
-- [ ] T017 [P] [US1] Write unit test for BlenderAPIService.uploadGLB() with progress callbacks in test/features/scanning/services/blenderapi_service_test.dart
-- [ ] T018 [P] [US1] Write unit test for BlenderAPIService.startNavMeshGeneration() with navmesh parameters in test/features/scanning/services/blenderapi_service_test.dart
-- [ ] T019 [P] [US1] Write unit test for BlenderAPIService.pollStatus() until completed in test/features/scanning/services/blenderapi_service_test.dart
-- [ ] T020 [P] [US1] Write unit test for BlenderAPIService.downloadNavMesh() in test/features/scanning/services/blenderapi_service_test.dart
-- [ ] T021 [P] [US1] Write unit test for CombinedScanService.createCombinedScan() orchestration in test/features/scanning/services/combined_scan_service_test.dart
-- [ ] T022 [P] [US1] Write unit test for CombinedScanService.generateNavmesh() complete workflow in test/features/scanning/services/combined_scan_service_test.dart
-- [ ] T023 [P] [US1] Write unit test for CombinedScan model JSON serialization/deserialization in test/features/scanning/models/combined_scan_test.dart
+- [x] T015 [P] [US1] Write unit test for USDZCombinerService.combineScans() method channel calls in test/features/scanning/services/usdz_combiner_service_test.dart
+- [x] T016 [P] [US1] Write unit test for BlenderAPIService.createSession() in test/features/scanning/services/blenderapi_service_test.dart
+- [x] T017 [P] [US1] Write unit test for BlenderAPIService.uploadGLB() with progress callbacks in test/features/scanning/services/blenderapi_service_test.dart
+- [x] T018 [P] [US1] Write unit test for BlenderAPIService.startNavMeshGeneration() with navmesh parameters in test/features/scanning/services/blenderapi_service_test.dart
+- [x] T019 [P] [US1] Write unit test for BlenderAPIService.pollStatus() until completed in test/features/scanning/services/blenderapi_service_test.dart
+- [x] T020 [P] [US1] Write unit test for BlenderAPIService.downloadNavMesh() in test/features/scanning/services/blenderapi_service_test.dart
+- [x] T021 [P] [US1] Write unit test for CombinedScanService.createCombinedScan() orchestration in test/features/scanning/services/combined_scan_service_test.dart
+- [x] T022 [P] [US1] Write unit test for CombinedScanService.generateNavmesh() complete workflow in test/features/scanning/services/combined_scan_service_test.dart
+- [x] T023 [P] [US1] Write unit test for CombinedScan model JSON serialization/deserialization in test/features/scanning/models/combined_scan_test.dart
 
 **Widget Tests**:
-- [ ] T024 [P] [US1] Write widget test for CombineProgressDialog all status states in test/features/scanning/widgets/combine_progress_dialog_test.dart
-- [ ] T025 [P] [US1] Write widget test for ExportCombinedDialog with file size display in test/features/scanning/widgets/export_combined_dialog_test.dart
-- [ ] T026 [P] [US1] Write widget test for Combine button enabled/disabled states in test/features/scanning/screens/project_detail_screen_test.dart
+- [x] T024 [P] [US1] Write widget test for CombineProgressDialog all status states in test/features/scanning/widgets/combine_progress_dialog_test.dart
+- [x] T025 [P] [US1] Write widget test for ExportCombinedDialog with file size display in test/features/scanning/widgets/export_combined_dialog_test.dart
+- [x] T026 [P] [US1] Write widget test for Combine button enabled/disabled states in test/features/scanning/screens/project_detail_screen_test.dart
 
 **Integration Test**:
-- [ ] T027 [US1] Write E2E integration test for complete combine→upload→navmesh→download flow in integration_test/combine_scan_flow_test.dart
+- [x] T027 [US1] Write E2E integration test for complete combine→upload→navmesh→download flow in integration_test/combine_scan_flow_test.dart
 
 ### Implementation for User Story 1
 
