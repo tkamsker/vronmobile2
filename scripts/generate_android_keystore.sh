@@ -106,7 +106,7 @@ echo ""
 
 # Base64 encode
 echo -e "${BLUE}Encoding keystore for CI/CD...${NC}"
-base64 "$KEYSTORE_PATH" > "$KEYSTORE_PATH.base64"
+base64 -i "$KEYSTORE_PATH" > "$KEYSTORE_PATH.base64"
 echo -e "${GREEN}✓ Base64 encoded: $KEYSTORE_PATH.base64${NC}"
 echo ""
 

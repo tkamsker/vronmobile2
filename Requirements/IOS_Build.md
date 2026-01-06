@@ -38,7 +38,7 @@
 ## ---
 if error on ios 
 cd ios && rm -rf Pods Podfile.lock && pod install
-
+cd ..
 flutter clean && flutter pub get
 
 open ios/Runner.xcworkspace
