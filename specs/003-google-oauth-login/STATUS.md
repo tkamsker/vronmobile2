@@ -1,14 +1,36 @@
 # Google OAuth Implementation Status
 
-**Last Updated**: 2025-12-23
+**Last Updated**: 2026-01-06
 **Feature**: 003-google-oauth-login
-**Implementation**: Option B - Token-based SSO (Native Flutter)
+**Previous Implementation**: Option B - Token-based SSO (Native Flutter) - **NOW OBSOLETE**
+**New Implementation**: Redirect-based Mobile OAuth Flow - **REQUIRES COMPLETE REWRITE**
 
 ---
 
-## Summary
+## ⚠️ BREAKING CHANGE NOTICE
 
-The Google OAuth feature has been **fully implemented** following the PRD specifications (Option B - Token-based SSO). All code is complete and tested. However, OAuth will not work until **platform configuration** (Phase 1) is completed.
+**Date**: 2026-01-06
+
+The backend team has changed the OAuth implementation from token-based SSO (Option B) to redirect-based mobile OAuth flow. This is a **BREAKING CHANGE** that requires:
+
+1. **Remove or deprecate** the current implementation using `google_sign_in` package
+2. **Implement** new redirect-based flow with deep link handling
+3. **Replace** `signInWithGoogle` mutation with `exchangeMobileAuthCode` mutation
+4. **Add** deep link URL scheme configuration (Android & iOS)
+5. **Implement** URL launching for OAuth redirect
+6. **Re-test** the entire OAuth flow end-to-end
+
+**Current implementation is NON-FUNCTIONAL** with the new backend API.
+
+See updated specifications:
+- `spec.md` - Updated functional requirements for redirect flow
+- `contracts/graphql-api.md` - Updated GraphQL mutation contract
+
+---
+
+## Summary (Previous Implementation - Now Obsolete)
+
+The Google OAuth feature was **fully implemented** following the PRD specifications (Option B - Token-based SSO). All code was complete and tested. However, this implementation is now **obsolete** and needs to be replaced with the redirect-based flow.
 
 ---
 

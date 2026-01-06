@@ -1,39 +1,34 @@
-# GraphQL API Contract: Google OAuth Authentication
+# GraphQL API Contract: Google OAuth Authentication (Mobile Redirect Flow)
 
 **Date**: 2025-12-22
+**Updated**: 2026-01-06
 **Feature**: 003-google-oauth-login
 **API Version**: To be determined by backend team
 
+**BREAKING CHANGE**: This contract has been updated to reflect the new redirect-based mobile OAuth flow. The old `signInWithGoogle` mutation with `idToken` parameter is being replaced by `exchangeMobileAuthCode` mutation.
+
 ## Overview
 
-This document defines the GraphQL mutation contract between the mobile application and backend API for Google OAuth authentication. The backend is responsible for:
-1. Validating the Google idToken with Google's API
-2. Creating or linking user accounts based on email
-3. Returning application JWT tokens for subsequent API calls
+This document defines the GraphQL mutation contract between the mobile application and backend API for Google OAuth authentication using the redirect-based mobile flow. The backend is responsible for:
+1. Handling the OAuth redirect flow with Google (via `/auth/google` endpoint)
+2. Returning authorization code or error via deep link callback
+3. Validating the authorization code when exchanged via GraphQL mutation
+4. Creating or linking user accounts based on email
+5. Returning application JWT tokens for subsequent API calls
 
 ---
 
-## Mutation: signInWithGoogle
+## New Mutation: exchangeMobileAuthCode
 
 ### Description
-Authenticates a user via Google OAuth by validating the Google idToken and returning application-specific JWT tokens.
+Exchanges a mobile OAuth authorization code for an application access token. The authorization code is obtained from the backend's OAuth redirect callback (deep link) after the user completes Google authentication.
 
 ### Request
 
 ```graphql
-mutation SignInWithGoogle($input: SignInWithGoogleInput!) {
-  signInWithGoogle(input: $input) {
+mutation ExchangeMobileAuthCode($input: ExchangeMobileAuthCodeInput!) {
+  exchangeMobileAuthCode(input: $input) {
     accessToken
-    user {
-      id
-      email
-      name
-      picture
-      authProviders {
-        provider
-        enabled
-      }
-    }
   }
 }
 ```
@@ -41,104 +36,111 @@ mutation SignInWithGoogle($input: SignInWithGoogleInput!) {
 ### Input Type
 
 ```graphql
-input SignInWithGoogleInput {
+input ExchangeMobileAuthCodeInput {
   """
-  Google idToken obtained from google_sign_in package
-  JWT token signed by Google containing user identity claims
-  Backend must validate this token with Google's token verification API
+  Authorization code received from backend OAuth redirect callback
+  This code is extracted from the deep link query parameter: ?code=AUTHORIZATION_CODE
+  Backend must validate this code and ensure it:
+  - Has not been used before (single-use)
+  - Has not expired (typically 5-10 minutes)
+  - Was issued by this backend instance
   """
-  idToken: String!
+  code: String!
 }
 ```
 
 ### Response Type
 
 ```graphql
-type SignInWithGoogleResponse {
+type ExchangeMobileAuthCodeResponse {
   """
   Application JWT access token for authenticating subsequent API requests
-  This is NOT the Google access token - it's the backend's own JWT
+  This is the backend's own JWT, NOT a Google token
+  Format and claims should match the existing email/password login tokens
   """
   accessToken: String!
-
-  """
-  User account information
-  May be newly created or existing account (if email already exists)
-  """
-  user: User!
-}
-
-type User {
-  """Unique user identifier (UUID)"""
-  id: ID!
-
-  """User's email address (from Google account)"""
-  email: String!
-
-  """User's display name (from Google profile)"""
-  name: String
-
-  """User's profile picture URL (from Google profile)"""
-  picture: String
-
-  """List of enabled authentication providers for this account"""
-  authProviders: [AuthProvider!]!
-}
-
-type AuthProvider {
-  """Provider type: 'google', 'email', etc."""
-  provider: String!
-
-  """Whether this provider is enabled for the account"""
-  enabled: Boolean!
 }
 ```
+
+**Note**: Unlike the old `signInWithGoogle` mutation, this mutation returns ONLY the `accessToken`. User information can be fetched separately using the authenticated token if needed (e.g., via a `me` query).
+
+---
+
+## OAuth Redirect Endpoint
+
+### Endpoint: GET /auth/google
+
+This endpoint initiates the OAuth flow with Google and is called by the mobile app via URL redirect.
+
+**URL**: `https://api.vron.stage.motorenflug.at/auth/google`
+
+**Query Parameters**:
+- `role`: User role (e.g., `MERCHANT`)
+- `preferredLanguage`: User's preferred language (`EN`, `DE`, `PT`)
+- `redirectUrl`: URL-encoded deep link where backend should redirect after OAuth completes
+- `fromMobile`: Set to `true` to indicate mobile client (affects callback behavior)
+
+**Example**:
+```
+https://api.vron.stage.motorenflug.at/auth/google?role=MERCHANT&preferredLanguage=EN&redirectUrl=app%3A%2F%2Foauth-callback&fromMobile=true
+```
+
+**Backend Behavior**:
+1. Redirect user to Google's OAuth consent screen
+2. Handle Google's OAuth callback
+3. Validate user with Google
+4. Create/link user account in database
+5. Generate authorization code (single-use, short-lived)
+6. Redirect back to mobile app with result:
+   - Success: `{redirectUrl}?code={AUTHORIZATION_CODE}`
+   - Error: `{redirectUrl}?error={ERROR_CODE}`
 
 ---
 
 ## Backend Responsibilities
 
-### 1. Token Validation
+### 1. Authorization Code Validation
 
-The backend MUST:
-1. Validate the `idToken` with Google's token verification API
-2. Verify the token signature, expiration, and audience
-3. Extract user claims (email, name, picture) from validated token
-
-**Google Token Verification Endpoint**:
-```
-POST https://oauth2.googleapis.com/tokeninfo?id_token={idToken}
-```
-
-**Expected Claims** (from validated idToken):
-- `email`: User's email address
-- `email_verified`: Must be `true`
-- `name`: User's full name
-- `picture`: Profile picture URL
-- `sub`: Google user ID (unique identifier)
-- `aud`: OAuth client ID (must match configured client ID)
-- `exp`: Token expiration (must be in the future)
+The backend MUST validate authorization codes in the `exchangeMobileAuthCode` mutation:
+1. Verify the code was issued by this backend instance
+2. Verify the code has not expired (typically 5-10 minutes from issuance)
+3. Verify the code has not been used before (single-use)
+4. Invalidate the code immediately after successful exchange
 
 ### 2. Account Creation / Linking Logic
 
+This logic occurs during the `/auth/google` redirect flow (BEFORE the code is generated):
+
 ```
-IF user with email exists:
-    IF google provider already linked:
-        UPDATE lastLoginAt
-        RETURN existing user + new JWT
+DURING /auth/google callback from Google:
+    Extract user info from Google (email, name, picture)
+
+    IF user with email exists:
+        IF google provider already linked:
+            UPDATE lastLoginAt
+            GENERATE authorization code linked to user
+        ELSE:
+            ADD google provider to user.authProviders
+            UPDATE lastLoginAt
+            GENERATE authorization code linked to user
     ELSE:
-        ADD google provider to user.authProviders
-        UPDATE lastLoginAt
-        RETURN existing user + new JWT
-ELSE:
-    CREATE new user:
-        - email: from Google token
-        - name: from Google token
-        - picture: from Google token
-        - authProviders: [{ provider: 'google', enabled: true }]
-        - createdAt: now()
-        - lastLoginAt: now()
-    RETURN new user + new JWT
+        CREATE new user:
+            - email: from Google
+            - name: from Google
+            - picture: from Google
+            - authProviders: [{ provider: 'google', enabled: true }]
+            - createdAt: now()
+            - lastLoginAt: now()
+        GENERATE authorization code linked to new user
+
+    REDIRECT to mobile app with code
+
+DURING exchangeMobileAuthCode mutation:
+    Validate code
+    Lookup user associated with code
+    Generate JWT access token for user
+    Invalidate code
+    RETURN accessToken
 ```
 
 ### 3. JWT Token Generation
@@ -147,15 +149,15 @@ The backend MUST:
 1. Generate a JWT `accessToken` with the user's identity
 2. Follow the existing token format (same as email/password login)
 3. Include necessary claims for GraphQL authentication
-4. Set appropriate expiration time
+4. Set appropriate expiration time (consistent with email/password tokens)
 
 **Required JWT Claims** (consistent with existing auth):
 - User identifier (id or email)
-- Merchant role information (as per existing `_createAuthCode`)
+- Merchant role information
 - Token expiration
 - Issuer and audience
 
-**AUTH_CODE Generation**:
+**Mobile App AUTH_CODE Generation**:
 The mobile app will create the `AUTH_CODE` using the same pattern as email/password login:
 ```dart
 final authPayload = {
@@ -165,11 +167,37 @@ final authPayload = {
 final authCode = base64Encode(utf8.encode(jsonEncode(authPayload)));
 ```
 
+### 4. Authorization Code Security
+
+The backend MUST implement these security measures for authorization codes:
+
+1. **Single-Use**: Each code can only be exchanged once
+2. **Short-Lived**: Codes expire after 5-10 minutes
+3. **Cryptographically Secure**: Use secure random generation
+4. **Rate Limiting**: Limit code exchange attempts per IP/device
+5. **Logging**: Log all code generation and exchange attempts
+
 ---
 
 ## Error Responses
 
-### Standard GraphQL Error Format
+### OAuth Redirect Errors
+
+When the `/auth/google` flow fails, the backend redirects to the mobile app with an `error` query parameter:
+
+**Format**: `{redirectUrl}?error={ERROR_CODE}`
+
+**Error Codes**:
+
+| Error Code | Scenario | Mobile Handling |
+|------------|----------|-----------------|
+| `access_denied` | User denied OAuth consent | Show "Sign-in was cancelled" |
+| `server_error` | Backend error during OAuth | Show "Sign-in failed. Please try again later" |
+| `temporarily_unavailable` | Google OAuth unavailable | Show "Google sign-in is temporarily unavailable" |
+
+### GraphQL Mutation Errors
+
+The `exchangeMobileAuthCode` mutation uses standard GraphQL error format:
 
 ```json
 {
@@ -178,26 +206,26 @@ final authCode = base64Encode(utf8.encode(jsonEncode(authPayload)));
       "message": "Human-readable error message",
       "extensions": {
         "code": "ERROR_CODE",
-        "field": "idToken"
+        "field": "code"
       }
     }
   ],
   "data": {
-    "signInWithGoogle": null
+    "exchangeMobileAuthCode": null
   }
 }
 ```
 
-### Error Codes
+### Mutation Error Codes
 
 | Code | Scenario | Mobile Handling |
 |------|----------|-----------------|
-| `INVALID_TOKEN` | idToken is malformed or expired | Show "Authentication failed. Please try again" |
-| `TOKEN_VERIFICATION_FAILED` | Google's API rejected the token | Show "Invalid Google authentication" |
-| `EMAIL_NOT_VERIFIED` | Google account email not verified | Show "Please verify your email with Google" |
-| `NETWORK_ERROR` | Backend couldn't reach Google's API | Show "Network error. Please try again later" |
+| `INVALID_CODE` | Code is malformed, expired, or already used | Show "Authentication failed. Please try again" |
+| `CODE_EXPIRED` | Code has expired (older than 5-10 minutes) | Show "Session expired. Please sign in again" |
+| `CODE_ALREADY_USED` | Code has already been exchanged | Show "Invalid authentication code. Please try again" |
+| `NETWORK_ERROR` | Backend internal error | Show "Network error. Please try again later" |
 | `INTERNAL_ERROR` | Unexpected backend error | Show "Sign-in failed. Please try again later" |
-| `RATE_LIMIT_EXCEEDED` | Too many sign-in attempts | Show "Too many attempts. Please try again in a few minutes" |
+| `RATE_LIMIT_EXCEEDED` | Too many code exchange attempts | Show "Too many attempts. Please try again in a few minutes" |
 
 ### Example Error Response
 
@@ -205,15 +233,15 @@ final authCode = base64Encode(utf8.encode(jsonEncode(authPayload)));
 {
   "errors": [
     {
-      "message": "Invalid or expired Google token",
+      "message": "Invalid or expired authorization code",
       "extensions": {
-        "code": "INVALID_TOKEN",
-        "field": "idToken"
+        "code": "INVALID_CODE",
+        "field": "code"
       }
     }
   ],
   "data": {
-    "signInWithGoogle": null
+    "exchangeMobileAuthCode": null
   }
 }
 ```
@@ -222,25 +250,32 @@ final authCode = base64Encode(utf8.encode(jsonEncode(authPayload)));
 
 ## Request/Response Examples
 
-### Example 1: New User Sign-In
+### Example 1: Complete OAuth Flow
 
-**Request**:
+**Step 1: Mobile app redirects to backend**
+```
+User taps "Sign in with Google"
+App opens: https://api.vron.stage.motorenflug.at/auth/google?role=MERCHANT&preferredLanguage=EN&redirectUrl=app%3A%2F%2Foauth-callback&fromMobile=true
+```
+
+**Step 2: Backend handles OAuth and redirects back**
+```
+Success case:
+app://oauth-callback?code=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9abc123def456
+
+Error case:
+app://oauth-callback?error=access_denied
+```
+
+**Step 3: Mobile app exchanges code for token**
+
+**GraphQL Request**:
 ```graphql
 mutation {
-  signInWithGoogle(input: {
-    idToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6IjE..."
+  exchangeMobileAuthCode(input: {
+    code: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9abc123def456"
   }) {
     accessToken
-    user {
-      id
-      email
-      name
-      picture
-      authProviders {
-        provider
-        enabled
-      }
-    }
   }
 }
 ```
@@ -249,84 +284,22 @@ mutation {
 ```json
 {
   "data": {
-    "signInWithGoogle": {
-      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "user": {
-        "id": "550e8400-e29b-41d4-a716-446655440000",
-        "email": "newuser@example.com",
-        "name": "John Doe",
-        "picture": "https://lh3.googleusercontent.com/...",
-        "authProviders": [
-          {
-            "provider": "google",
-            "enabled": true
-          }
-        ]
-      }
+    "exchangeMobileAuthCode": {
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     }
   }
 }
 ```
 
-### Example 2: Existing User (Email/Password) Adding Google
+### Example 2: Invalid Code Error
 
 **Request**:
 ```graphql
 mutation {
-  signInWithGoogle(input: {
-    idToken: "eyJhbGciOiJSUzI1NiIsImtpZCI6IjE..."
+  exchangeMobileAuthCode(input: {
+    code: "expired_or_invalid_code"
   }) {
     accessToken
-    user {
-      id
-      email
-      authProviders {
-        provider
-        enabled
-      }
-    }
-  }
-}
-```
-
-**Response** (Success - Account Linked):
-```json
-{
-  "data": {
-    "signInWithGoogle": {
-      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "user": {
-        "id": "existing-user-id-123",
-        "email": "existinguser@example.com",
-        "authProviders": [
-          {
-            "provider": "email",
-            "enabled": true
-          },
-          {
-            "provider": "google",
-            "enabled": true
-          }
-        ]
-      }
-    }
-  }
-}
-```
-
-### Example 3: Invalid Token Error
-
-**Request**:
-```graphql
-mutation {
-  signInWithGoogle(input: {
-    idToken: "invalid_or_expired_token"
-  }) {
-    accessToken
-    user {
-      id
-      email
-    }
   }
 }
 ```
@@ -336,16 +309,32 @@ mutation {
 {
   "errors": [
     {
-      "message": "Invalid or expired Google token",
+      "message": "Invalid or expired authorization code",
       "extensions": {
-        "code": "INVALID_TOKEN",
-        "field": "idToken"
+        "code": "INVALID_CODE",
+        "field": "code"
       }
     }
   ],
   "data": {
-    "signInWithGoogle": null
+    "exchangeMobileAuthCode": null
   }
+}
+```
+
+### Example 3: OAuth Redirect Error
+
+**Redirect from backend** (user cancelled):
+```
+app://oauth-callback?error=access_denied
+```
+
+**Mobile app handling**:
+```dart
+if (uri.queryParameters.containsKey('error')) {
+  final error = uri.queryParameters['error'];
+  // Show user-friendly message: "Sign-in was cancelled"
+  return;
 }
 ```
 
@@ -357,32 +346,39 @@ mutation {
 class AuthService {
   // ... existing code ...
 
-  /// Authenticates user with Google OAuth
-  /// Returns AuthResult with success status or error message
-  Future<AuthResult> signInWithGoogle() async {
+  /// Initiates Google OAuth redirect flow
+  Future<void> initiateGoogleOAuth() async {
+    final baseUrl = 'https://api.vron.stage.motorenflug.at/auth/google';
+    final redirectUrl = Uri.encodeComponent('app://oauth-callback');
+    final language = 'EN'; // Get from user preferences
+
+    final oauthUrl = '$baseUrl?role=MERCHANT&preferredLanguage=$language&redirectUrl=$redirectUrl&fromMobile=true';
+
+    // Open in browser or web view
+    await launchUrl(Uri.parse(oauthUrl));
+  }
+
+  /// Handles deep link callback from OAuth redirect
+  /// Called when app receives: app://oauth-callback?code=... or ?error=...
+  Future<AuthResult> handleOAuthCallback(Uri uri) async {
     try {
-      // 1. Initiate Google Sign-In
-      await _googleSignIn.initialize();
-      final GoogleSignInAccount? googleAccount = await _googleSignIn.signIn();
-
-      if (googleAccount == null) {
-        // User canceled
-        return AuthResult.failure('Sign-in was cancelled');
+      // Check for error first
+      if (uri.queryParameters.containsKey('error')) {
+        final error = uri.queryParameters['error'];
+        return AuthResult.failure(_mapOAuthError(error));
       }
 
-      // 2. Get Google authentication tokens
-      final GoogleSignInAuthentication googleAuth =
-          await googleAccount.authentication;
-
-      if (googleAuth.idToken == null) {
-        return AuthResult.failure('Failed to obtain Google credentials');
+      // Extract authorization code
+      final code = uri.queryParameters['code'];
+      if (code == null || code.isEmpty) {
+        return AuthResult.failure('Invalid OAuth callback');
       }
 
-      // 3. Exchange Google token for backend JWT
+      // Exchange code for access token
       final result = await _graphqlService.mutate(
-        _signInWithGoogleMutation,
+        _exchangeMobileAuthCodeMutation,
         variables: {
-          'input': {'idToken': googleAuth.idToken},
+          'input': {'code': code},
         },
       );
 
@@ -391,45 +387,41 @@ class AuthService {
         return AuthResult.failure(error?.message ?? 'Authentication failed');
       }
 
-      final loginData = result.data!['signInWithGoogle'] as Map<String, dynamic>;
-      final accessToken = loginData['accessToken'] as String;
+      final data = result.data!['exchangeMobileAuthCode'] as Map<String, dynamic>;
+      final accessToken = data['accessToken'] as String;
 
-      // 4. Store tokens (same pattern as email/password login)
+      // Store tokens (same pattern as email/password login)
       final authCode = _createAuthCode(accessToken);
       await _tokenStorage.saveAccessToken(accessToken);
       await _tokenStorage.saveAuthCode(authCode);
 
-      // 5. Refresh GraphQL client
+      // Refresh GraphQL client
       await _graphqlService.refreshClient();
 
-      // 6. Return success with user data
-      final user = loginData['user'] as Map<String, dynamic>;
-      return AuthResult.success({
-        'email': user['email'],
-        'name': user['name'],
-        'picture': user['picture'],
-      });
-    } on PlatformException catch (e) {
-      // Handle platform-specific errors (Google Sign-In errors)
-      return AuthResult.failure(_mapPlatformError(e));
+      return AuthResult.success();
     } catch (e) {
       return AuthResult.failure('Network error: ${e.toString()}');
     }
   }
 
-  static const String _signInWithGoogleMutation = '''
-    mutation SignInWithGoogle(\$input: SignInWithGoogleInput!) {
-      signInWithGoogle(input: \$input) {
+  static const String _exchangeMobileAuthCodeMutation = '''
+    mutation ExchangeMobileAuthCode(\$input: ExchangeMobileAuthCodeInput!) {
+      exchangeMobileAuthCode(input: \$input) {
         accessToken
-        user {
-          id
-          email
-          name
-          picture
-        }
       }
     }
   ''';
+
+  String _mapOAuthError(String? errorCode) {
+    switch (errorCode) {
+      case 'access_denied':
+        return 'Sign-in was cancelled';
+      case 'temporarily_unavailable':
+        return 'Google sign-in is temporarily unavailable';
+      default:
+        return 'Sign-in failed. Please try again later';
+    }
+  }
 }
 ```
 

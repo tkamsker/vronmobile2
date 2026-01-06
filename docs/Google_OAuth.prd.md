@@ -406,8 +406,58 @@ Flutter should:
 
 1.  [✅] GraphQL contract defined.
 2.  [✅] Web OAuth integration implemented (`/auth/google` with `redirectUrl`).
-3.  [➡️] Backend team implements the `signInWithGoogle` mutation for native clients.
-4.  [➡️] Flutter team implements either Option A or Option B based on product decision.
+3.  [⚠️] **UPDATED 2026-01-06**: Backend team has implemented redirect-based mobile OAuth flow
+    - Mobile apps now use `/auth/google` endpoint with `fromMobile=true` parameter
+    - Backend returns authorization code via deep link callback
+    - New mutation `exchangeMobileAuthCode` replaces `signInWithGoogle` for mobile clients
+    - See updated specification in `specs/003-google-oauth-login/` for details
+4.  [➡️] Flutter team implements redirect-based mobile OAuth flow (Option A variant for mobile)
 5.  [➡️] Frontend (web) and mobile clients + Backend conduct integration testing on a staging environment.
 6.  [ ] Documentation updated with final backend error formats and monitoring/metrics guidelines.
+
+---
+
+## 10. Mobile Implementation Update (2026-01-06)
+
+**Breaking Change**: The mobile implementation has been updated to use a redirect-based OAuth flow instead of the native SDK token-based approach (Option B).
+
+### New Mobile Flow
+
+1. User taps "Sign in with Google" in Flutter app
+2. App redirects to: `https://api.vron.stage.motorenflug.at/auth/google?role=MERCHANT&preferredLanguage=EN&redirectUrl={DEEP_LINK}&fromMobile=true`
+3. Backend handles OAuth with Google (user sees consent screen)
+4. Backend redirects back to app via deep link:
+   - Success: `{DEEP_LINK}?code={AUTHORIZATION_CODE}`
+   - Error: `{DEEP_LINK}?error={ERROR_CODE}`
+5. App receives deep link callback and extracts code or error
+6. If code received, app calls new GraphQL mutation:
+   ```graphql
+   mutation ExchangeMobileAuthCode($input: ExchangeMobileAuthCodeInput!) {
+     exchangeMobileAuthCode(input: $input) {
+       accessToken
+     }
+   }
+   ```
+7. Backend validates code and returns accessToken
+8. App stores token and completes authentication
+
+### Key Differences from Option B
+
+- **No Google Sign-In SDK required** (can remove `google_sign_in` dependency)
+- **Backend handles OAuth flow** entirely (no client-side token validation)
+- **Uses deep links** for callback instead of in-app token exchange
+- **Authorization code** is single-use and short-lived (5-10 minutes)
+- **Simplified mobile implementation** - no platform-specific OAuth configuration needed
+
+### Migration Path
+
+For existing implementations using Option B:
+1. Remove dependency on `google_sign_in` package (or keep for other features)
+2. Implement deep link handling for OAuth callbacks
+3. Replace `signInWithGoogle` mutation with `exchangeMobileAuthCode`
+4. Update UI to launch browser/web view for OAuth redirect
+5. Update error handling for redirect-based flow
+6. Re-test entire OAuth flow end-to-end
+
+See `specs/003-google-oauth-login/spec.md` and `specs/003-google-oauth-login/contracts/graphql-api.md` for complete updated specifications.
 
