@@ -1,0 +1,21 @@
+# Android Keystore Configuration Template
+#
+# INSTRUCTIONS:
+# 1. Copy this file to: android/key.properties
+# 2. Replace placeholder values with your actual keystore credentials
+# 3. NEVER commit key.properties to git (already in .gitignore)
+#
+# For detailed setup instructions, see:
+# docs/ANDROID_KEYSTORE_SETUP.md
+
+# Keystore password (used when generating the keystore)
+storePassword=YOUR_KEYSTORE_PASSWORD_HERE
+
+# Key password (usually same as storePassword)
+keyPassword=YOUR_KEY_PASSWORD_HERE
+
+# Key alias (default: upload)
+keyAlias=upload
+
+# Keystore file location (relative to android/app/)
+storeFile=upload-keystore.jks

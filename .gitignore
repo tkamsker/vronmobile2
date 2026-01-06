@@ -86,8 +86,6 @@ app.*.map.json
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
 **/android/captures/
-**/android/**/*.jks
-**/android/**/*.keystore
 **/android/.cxx/
 **/android/app/.cxx/
 **/android/app/debug/
@@ -99,6 +97,15 @@ app.*.map.json
 **/android/.externalNativeBuild/
 **/android/.idea/
 **/android/.navigation/
+
+# Android keystore files (CRITICAL: NEVER commit these!)
+**/android/**/*.jks
+**/android/**/*.keystore
+**/android/**/*.jks.base64
+**/android/key.properties
+**/android/app/upload-keystore.jks
+**/android/app/upload-keystore.jks.base64
+android/key.properties
 
 # Flutter plugin artifacts
 .flutter-plugins
