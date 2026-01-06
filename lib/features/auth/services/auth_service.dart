@@ -237,7 +237,7 @@ class AuthService {
 
       // Exchange Google token for backend JWT (same as regular sign-in)
       final result = await _graphqlService.mutate(
-        _signInWithGoogleMutation,
+        _exchangeGoogleIdTokenMutation,
         variables: {
           'input': {'idToken': googleAuth.idToken},
         },

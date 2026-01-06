@@ -33,3 +33,13 @@
   - ⚠️ Flutter can't auto-launch Xcode (macOS permission issue)
 
   The app is ready to run - just needs to be launched via Xcode!
+
+
+## ---
+if error on ios 
+cd ios && rm -rf Pods Podfile.lock && pod install
+
+flutter clean && flutter pub get
+
+open ios/Runner.xcworkspace
+
