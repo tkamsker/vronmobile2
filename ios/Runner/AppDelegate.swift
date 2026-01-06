@@ -135,13 +135,44 @@ class USDZCombiner {
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
+  // Flutter engine shared across scenes
+  lazy var flutterEngine = FlutterEngine(name: "vron_engine")
+
+  // Flutter view controller (scene-managed)
+  var flutterViewController: FlutterViewController?
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    // Initialize Flutter engine
+    flutterEngine.run()
     GeneratedPluginRegistrant.register(with: self)
 
-    let controller = window?.rootViewController as! FlutterViewController
+    // Setup method channels
+    setupMethodChannels()
+
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  // MARK: - UIScene Lifecycle Support
+
+  override func application(
+    _ application: UIApplication,
+    configurationForConnecting connectingSceneSession: UISceneSession,
+    options: UIScene.ConnectionOptions
+  ) -> UISceneConfiguration {
+    return UISceneConfiguration(
+      name: "Default Configuration",
+      sessionRole: connectingSceneSession.role
+    )
+  }
+
+  // MARK: - Method Channel Setup
+
+  private func setupMethodChannels() {
+    // Get or create Flutter view controller for method channels
+    let controller = getFlutterViewController()
 
     // Setup USDZ Combiner method channel for Feature 018: Combined Scan to NavMesh
     let combinerChannel = FlutterMethodChannel(
@@ -265,7 +296,22 @@ class USDZCombiner {
         result(FlutterMethodNotImplemented)
       }
     }
+  }
 
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  // MARK: - Helper Methods
+
+  private func getFlutterViewController() -> FlutterViewController {
+    if let existingController = flutterViewController {
+      return existingController
+    }
+
+    // Create new Flutter view controller
+    let controller = FlutterViewController(
+      engine: flutterEngine,
+      nibName: nil,
+      bundle: nil
+    )
+    flutterViewController = controller
+    return controller
   }
 }
