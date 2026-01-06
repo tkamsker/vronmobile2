@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:app_links/app_links.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:vronmobile2/core/config/env_config.dart';
 import 'package:vronmobile2/core/constants/app_strings.dart';
@@ -26,6 +28,8 @@ class _MainScreenState extends State<MainScreen> {
   final _emailFocusNode = FocusNode();
   final _passwordFocusNode = FocusNode();
   final _authService = AuthService();
+  final _appLinks = AppLinks();
+  StreamSubscription<Uri>? _deepLinkSubscription;
 
   bool _isFormValid = false;
   bool _isSignInLoading = false;
@@ -37,6 +41,81 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _emailController.addListener(_validateForm);
     _passwordController.addListener(_validateForm);
+
+    // Set up deep link listener for OAuth callbacks (T026)
+    _initDeepLinks();
+  }
+
+  /// Initialize deep link listener for OAuth callbacks (T026)
+  Future<void> _initDeepLinks() async {
+    try {
+      // Check if app was opened with a deep link
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        if (kDebugMode) print('🔗 [UI] App opened with deep link: $initialUri');
+        _handleDeepLink(initialUri);
+      }
+
+      // Listen for deep links while app is running
+      _deepLinkSubscription = _appLinks.uriLinkStream.listen(
+        (Uri uri) {
+          if (kDebugMode) print('🔗 [UI] Received deep link: $uri');
+          _handleDeepLink(uri);
+        },
+        onError: (Object error) {
+          if (kDebugMode) print('❌ [UI] Deep link error: $error');
+        },
+      );
+    } catch (e) {
+      if (kDebugMode) print('❌ [UI] Failed to initialize deep links: $e');
+    }
+  }
+
+  /// Handle incoming deep link for OAuth callback (T026)
+  Future<void> _handleDeepLink(Uri uri) async {
+    // Check if this is an OAuth callback
+    if (uri.scheme == EnvConfig.oauthDeepLinkScheme &&
+        uri.host == EnvConfig.oauthDeepLinkHost) {
+      if (kDebugMode) print('🔗 [UI] Processing OAuth callback deep link');
+
+      setState(() {
+        _isGoogleLoading = true;
+      });
+
+      try {
+        // Call AuthService to handle the OAuth callback
+        final result = await _authService.handleOAuthCallback(uri.toString());
+
+        if (!mounted) return;
+
+        if (result.isSuccess) {
+          if (kDebugMode) print('✅ [UI] OAuth authentication successful');
+
+          // Navigate to home screen (T028)
+          final userEmail = result.data?['email'] as String?;
+          Navigator.of(context).pushReplacementNamed(
+            AppRoutes.home,
+            arguments: userEmail,
+          );
+        } else {
+          if (kDebugMode) print('❌ [UI] OAuth authentication failed: ${result.error}');
+          _showError(result.error ?? 'Authentication failed');
+        }
+      } catch (e) {
+        if (kDebugMode) print('❌ [UI] Error handling OAuth callback: $e');
+        if (mounted) {
+          _showError('Error processing authentication: ${e.toString()}');
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isGoogleLoading = false;
+          });
+        }
+      }
+    } else {
+      if (kDebugMode) print('🔗 [UI] Ignoring non-OAuth deep link: $uri');
+    }
   }
 
   @override
@@ -45,6 +124,7 @@ class _MainScreenState extends State<MainScreen> {
     _passwordController.dispose();
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
+    _deepLinkSubscription?.cancel();
     super.dispose();
   }
 
@@ -134,43 +214,34 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _handleGoogleSignIn() async {
-    if (kDebugMode) print('🔘 [UI] Google Sign In button pressed');
+    if (kDebugMode) print('🔘 [UI] Google Sign In button pressed (redirect-based OAuth)');
 
     setState(() {
       _isGoogleLoading = true;
     });
 
     try {
-      if (kDebugMode) print('📡 [UI] Calling Google OAuth service...');
+      if (kDebugMode) print('📡 [UI] Initiating Google OAuth redirect...');
 
-      // Call Google OAuth service
-      final result = await _authService.signInWithGoogle();
+      // Initiate redirect-based OAuth flow (T025)
+      final result = await _authService.initiateGoogleOAuth();
 
       if (kDebugMode) {
         print(
-          '📡 [UI] Google OAuth service returned: ${result.isSuccess ? "SUCCESS" : "FAILURE"}',
+          '📡 [UI] OAuth redirect ${result.isSuccess ? "launched" : "failed"}',
         );
       }
 
       if (!mounted) return;
 
-      if (result.isSuccess) {
-        if (kDebugMode) {
-          print('✅ [UI] Google sign-in successful - navigating to home screen');
-        }
-
-        final userEmail = result.data?['email'] as String?;
-
-        // Navigate to home screen and remove login screen from stack
-        Navigator.of(
-          context,
-        ).pushReplacementNamed(AppRoutes.home, arguments: userEmail);
-
-        if (kDebugMode) print('✅ [UI] Navigated to home screen');
+      if (!result.isSuccess) {
+        if (kDebugMode) print('❌ [UI] OAuth redirect failed: ${result.error}');
+        // Show error if redirect failed to launch
+        _showError(result.error ?? 'Failed to launch Google sign-in');
       } else {
-        if (kDebugMode) print('❌ [UI] Google sign-in failed: ${result.error}');
-        // Sign-in failed - show error message
-        _showError(result.error ?? 'Google sign-in failed');
+        if (kDebugMode) print('✅ [UI] OAuth redirect launched - waiting for callback...');
+        // Note: Actual authentication completes in handleOAuthCallback() via deep link
+        // User will be redirected back to app after completing OAuth flow
       }
     } catch (e) {
       if (kDebugMode) print('❌ [UI] Unexpected error: ${e.toString()}');

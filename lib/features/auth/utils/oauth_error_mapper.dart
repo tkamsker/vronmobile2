@@ -18,6 +18,21 @@ enum OAuthErrorCode {
   /// Backend authentication service error
   backendError,
 
+  /// Invalid or expired authorization code (redirect-based flow)
+  invalidCode,
+
+  /// Authorization code expired (redirect-based flow)
+  codeExpired,
+
+  /// Failed to launch OAuth redirect URL (redirect-based flow)
+  urlLaunchFailed,
+
+  /// Invalid OAuth callback URL (redirect-based flow)
+  invalidCallback,
+
+  /// Code exchange mutation failed (redirect-based flow)
+  codeExchangeFailed,
+
   /// Unknown or unexpected error
   unknown,
 }
@@ -92,6 +107,16 @@ class OAuthErrorMapper {
         return AppStrings.oauthInvalidCredentials;
       case OAuthErrorCode.backendError:
         return AppStrings.oauthBackendError;
+      case OAuthErrorCode.invalidCode:
+        return AppStrings.oauthInvalidCode;
+      case OAuthErrorCode.codeExpired:
+        return AppStrings.oauthCodeExpired;
+      case OAuthErrorCode.urlLaunchFailed:
+        return AppStrings.oauthUrlLaunchFailed;
+      case OAuthErrorCode.invalidCallback:
+        return AppStrings.oauthInvalidCallback;
+      case OAuthErrorCode.codeExchangeFailed:
+        return AppStrings.oauthCodeExchangeFailed;
       case OAuthErrorCode.unknown:
         return AppStrings.oauthAuthenticationFailed;
     }
@@ -107,5 +132,73 @@ class OAuthErrorMapper {
   static String mapGenericError(Exception exception) {
     final errorCode = fromException(exception);
     return getUserMessage(errorCode);
+  }
+
+  /// Map OAuth redirect error code to OAuthErrorCode (T009)
+  /// Handles error codes from backend OAuth redirect callback
+  ///
+  /// Backend error codes:
+  /// - access_denied: User cancelled OAuth consent
+  /// - server_error: Backend error during OAuth
+  /// - temporarily_unavailable: Google OAuth service unavailable
+  static OAuthErrorCode fromRedirectError(String errorCode) {
+    final code = errorCode.toLowerCase();
+
+    if (code == 'access_denied' || code.contains('denied')) {
+      return OAuthErrorCode.cancelled;
+    }
+
+    if (code == 'temporarily_unavailable' || code.contains('unavailable')) {
+      return OAuthErrorCode.serviceUnavailable;
+    }
+
+    if (code == 'server_error' || code.contains('server')) {
+      return OAuthErrorCode.backendError;
+    }
+
+    return OAuthErrorCode.unknown;
+  }
+
+  /// Map OAuth redirect error to user-friendly message (T009)
+  static String mapRedirectError(String errorCode) {
+    final oauthErrorCode = fromRedirectError(errorCode);
+    return getUserMessage(oauthErrorCode);
+  }
+
+  /// Map GraphQL mutation error to OAuthErrorCode (T009)
+  /// Handles errors from exchangeMobileAuthCode mutation
+  ///
+  /// GraphQL error codes:
+  /// - INVALID_CODE: Malformed, expired, or already used code
+  /// - CODE_EXPIRED: Code expired (older than 5-10 minutes)
+  /// - CODE_ALREADY_USED: Code has already been exchanged
+  /// - NETWORK_ERROR: Backend internal error
+  /// - RATE_LIMIT_EXCEEDED: Too many attempts
+  static OAuthErrorCode fromMutationError(String errorCode) {
+    final code = errorCode.toUpperCase();
+
+    if (code == 'INVALID_CODE' || code == 'CODE_ALREADY_USED') {
+      return OAuthErrorCode.invalidCode;
+    }
+
+    if (code == 'CODE_EXPIRED') {
+      return OAuthErrorCode.codeExpired;
+    }
+
+    if (code == 'NETWORK_ERROR' || code.contains('NETWORK')) {
+      return OAuthErrorCode.networkError;
+    }
+
+    if (code.contains('RATE_LIMIT')) {
+      return OAuthErrorCode.backendError;
+    }
+
+    return OAuthErrorCode.codeExchangeFailed;
+  }
+
+  /// Map GraphQL mutation error to user-friendly message (T009)
+  static String mapMutationError(String errorCode) {
+    final oauthErrorCode = fromMutationError(errorCode);
+    return getUserMessage(oauthErrorCode);
   }
 }

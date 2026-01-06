@@ -31,12 +31,12 @@ Flutter mobile app with feature-based architecture:
 
 **Estimated Time**: 20-25 minutes
 
-- [ ] T001 Add `url_launcher: ^6.2.0` dependency to pubspec.yaml for OAuth redirect functionality
-- [ ] T002 Run `flutter pub get` to install url_launcher package
-- [ ] T003 [P] Define deep link URL scheme in android/app/src/main/AndroidManifest.xml with intent filter for OAuth callback
-- [ ] T004 [P] Define deep link URL scheme in ios/Runner/Info.plist with CFBundleURLTypes for OAuth callback
-- [ ] T005 [P] Add OAuth error message strings to lib/core/constants/app_strings.dart for redirect-based errors
-- [ ] T006 [P] Add OAuth endpoint URL configuration to lib/core/config/env_config.dart
+- [X] T001 Add `url_launcher: ^6.2.0` dependency to pubspec.yaml for OAuth redirect functionality
+- [X] T002 Run `flutter pub get` to install url_launcher package
+- [X] T003 [P] Define deep link URL scheme in android/app/src/main/AndroidManifest.xml with intent filter for OAuth callback
+- [X] T004 [P] Define deep link URL scheme in ios/Runner/Info.plist with CFBundleURLTypes for OAuth callback
+- [X] T005 [P] Add OAuth error message strings to lib/core/constants/app_strings.dart for redirect-based errors
+- [X] T006 [P] Add OAuth endpoint URL configuration to lib/core/config/env_config.dart
 
 **Checkpoint**: Dependencies installed, deep links configured - OAuth redirect infrastructure ready
 
@@ -48,9 +48,9 @@ Flutter mobile app with feature-based architecture:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T007 [P] Create GraphQL mutation constant for exchangeMobileAuthCode in lib/features/auth/services/auth_service.dart
-- [ ] T008 [P] Create DeepLinkHandler utility class in lib/features/auth/utils/deep_link_handler.dart for parsing OAuth callbacks
-- [ ] T009 [P] Create OAuthErrorMapper utility in lib/features/auth/utils/oauth_error_mapper.dart for redirect error mapping
+- [X] T007 [P] Create GraphQL mutation constant for exchangeMobileAuthCode in lib/features/auth/services/auth_service.dart
+- [X] T008 [P] Create DeepLinkHandler utility class in lib/features/auth/utils/deep_link_handler.dart for parsing OAuth callbacks
+- [X] T009 [P] Create OAuthErrorMapper utility in lib/features/auth/utils/oauth_error_mapper.dart for redirect error mapping
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -86,17 +86,17 @@ Flutter mobile app with feature-based architecture:
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] Implement initiateGoogleOAuth() method in lib/features/auth/services/auth_service.dart to construct and launch OAuth URL
-- [ ] T019 [US1] Implement handleOAuthCallback() method in lib/features/auth/services/auth_service.dart to process deep link callbacks
-- [ ] T020 [US1] Implement DeepLinkHandler.parseOAuthCallback() in lib/features/auth/utils/deep_link_handler.dart
-- [ ] T021 [US1] Implement DeepLinkHandler.extractAuthorizationCode() in lib/features/auth/utils/deep_link_handler.dart
-- [ ] T022 [US1] Implement exchangeMobileAuthCode GraphQL mutation call in lib/features/auth/services/auth_service.dart
-- [ ] T023 [US1] Implement token storage logic (saveAccessToken, saveAuthCode) after code exchange in auth_service.dart
-- [ ] T024 [US1] Implement GraphQL client refresh after token storage in auth_service.dart
-- [ ] T025 [US1] Add _handleGoogleSignIn() method to lib/features/auth/screens/main_screen.dart for URL redirect
-- [ ] T026 [US1] Configure deep link handler to route OAuth callbacks to handleOAuthCallback() in main_screen.dart
-- [ ] T027 [US1] Wire OAuthButton to _handleGoogleSignIn() in lib/features/auth/screens/main_screen.dart
-- [ ] T028 [US1] Add navigation to home screen on successful authentication in main_screen.dart
+- [X] T018 [US1] Implement initiateGoogleOAuth() method in lib/features/auth/services/auth_service.dart to construct and launch OAuth URL
+- [X] T019 [US1] Implement handleOAuthCallback() method in lib/features/auth/services/auth_service.dart to process deep link callbacks
+- [X] T020 [US1] Implement DeepLinkHandler.parseOAuthCallback() in lib/features/auth/utils/deep_link_handler.dart
+- [X] T021 [US1] Implement DeepLinkHandler.extractAuthorizationCode() in lib/features/auth/utils/deep_link_handler.dart
+- [X] T022 [US1] Implement exchangeMobileAuthCode GraphQL mutation call in lib/features/auth/services/auth_service.dart
+- [X] T023 [US1] Implement token storage logic (saveAccessToken, saveAuthCode) after code exchange in auth_service.dart
+- [X] T024 [US1] Implement GraphQL client refresh after token storage in auth_service.dart
+- [X] T025 [US1] Add _handleGoogleSignIn() method to lib/features/auth/screens/main_screen.dart for URL redirect
+- [X] T026 [US1] Configure deep link handler to route OAuth callbacks to handleOAuthCallback() in main_screen.dart
+- [X] T027 [US1] Wire OAuthButton to _handleGoogleSignIn() in lib/features/auth/screens/main_screen.dart
+- [X] T028 [US1] Add navigation to home screen on successful authentication in main_screen.dart
 - [ ] T029 [US1] Verify all US1 tests now PASS (Red → Green)
 
 **Refactor Checkpoint** (TDD): Refactor if needed while keeping tests green

@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:vronmobile2/core/config/env_config.dart';
 import 'package:vronmobile2/core/services/graphql_service.dart';
 import 'package:vronmobile2/core/services/token_storage.dart';
+import 'package:vronmobile2/features/auth/utils/deep_link_handler.dart';
 import 'package:vronmobile2/features/auth/utils/oauth_error_mapper.dart';
 
 /// Result wrapper for authentication operations
@@ -53,8 +56,9 @@ class AuthService {
     }
   ''';
 
-  /// GraphQL mutation for Google OAuth login (T011)
+  /// GraphQL mutation for Google OAuth login (T011) - OLD/DEPRECATED
   /// Enhanced for T044: Backend returns authProviders to show account linking status
+  /// NOTE: This mutation is deprecated for redirect-based OAuth flow
   static const String _signInWithGoogleMutation = '''
     mutation SignInWithGoogle(\$input: SignInWithGoogleInput!) {
       signInWithGoogle(input: \$input) {
@@ -69,6 +73,17 @@ class AuthService {
             enabled
           }
         }
+      }
+    }
+  ''';
+
+  /// GraphQL mutation for mobile OAuth code exchange (T007)
+  /// New redirect-based OAuth flow: Exchange authorization code for access token
+  /// Backend validates code (single-use, expires in 5-10 minutes)
+  static const String _exchangeMobileAuthCodeMutation = '''
+    mutation ExchangeMobileAuthCode(\$input: ExchangeMobileAuthCodeInput!) {
+      exchangeMobileAuthCode(input: \$input) {
+        accessToken
       }
     }
   ''';
@@ -541,5 +556,164 @@ class AuthService {
       // Fallback for unknown errors
       return AuthResult.failure(OAuthErrorMapper.getUserMessage(OAuthErrorCode.unknown));
     }
+  }
+
+  // ============================================================================
+  // REDIRECT-BASED OAUTH FLOW (NEW - Feature 003)
+  // ============================================================================
+
+  /// Initiates Google OAuth redirect flow (T018)
+  /// Constructs OAuth URL and launches in system browser/web view
+  /// Returns AuthResult with success if redirect launched, failure if URL launch failed
+  Future<AuthResult> initiateGoogleOAuth() async {
+    try {
+      if (kDebugMode) print('🔐 [AUTH] Initiating Google OAuth redirect flow');
+
+      // Construct OAuth URL with query parameters
+      final callbackUrl = Uri.encodeComponent(EnvConfig.oauthCallbackUrl);
+      final oauthUrl = Uri.parse(
+        '${EnvConfig.oauthGoogleEndpoint}?role=customer&language=de&redirectUrl=$callbackUrl&fromMobile=true'
+      );
+
+      if (kDebugMode) print('🔐 [AUTH] OAuth URL: $oauthUrl');
+
+      // Launch URL in system browser/web view
+      final launched = await launchUrl(
+        oauthUrl,
+        mode: LaunchMode.externalApplication,
+      );
+
+      if (!launched) {
+        if (kDebugMode) print('❌ [AUTH] Failed to launch OAuth URL');
+        return AuthResult.failure(
+          OAuthErrorMapper.getUserMessage(OAuthErrorCode.urlLaunchFailed)
+        );
+      }
+
+      if (kDebugMode) print('✅ [AUTH] OAuth redirect launched successfully');
+
+      // Return success - actual authentication will complete in handleOAuthCallback
+      return AuthResult.success({'status': 'redirect_initiated'});
+    } catch (e) {
+      if (kDebugMode) print('❌ [AUTH] Failed to launch OAuth URL: $e');
+      return AuthResult.failure(OAuthErrorMapper.getUserMessage(OAuthErrorCode.urlLaunchFailed));
+    }
+  }
+
+  /// Handles OAuth callback from deep link (T019)
+  /// Processes the authorization code or error from backend redirect
+  /// Returns AuthResult with success if code exchange successful
+  Future<AuthResult> handleOAuthCallback(String deepLinkUrl) async {
+    try {
+      if (kDebugMode) print('🔐 [AUTH] Handling OAuth callback: $deepLinkUrl');
+
+      // Parse the deep link callback
+      final result = DeepLinkHandler.parseOAuthCallback(deepLinkUrl);
+
+      // Handle invalid callback
+      if (!result.isSuccess && result.error != null) {
+        if (kDebugMode) print('❌ [AUTH] Invalid OAuth callback: ${result.error}');
+
+        // Check if it's a backend error or invalid callback
+        if (result.error!.startsWith('invalid_callback:')) {
+          return AuthResult.failure(
+            OAuthErrorMapper.getUserMessage(OAuthErrorCode.invalidCallback)
+          );
+        }
+
+        // Map backend error codes to user messages
+        return AuthResult.failure(
+          OAuthErrorMapper.mapRedirectError(result.error!)
+        );
+      }
+
+      // Extract authorization code
+      final authCode = result.code;
+      if (authCode == null || authCode.isEmpty) {
+        if (kDebugMode) print('❌ [AUTH] Missing authorization code in callback');
+        return AuthResult.failure(
+          OAuthErrorMapper.getUserMessage(OAuthErrorCode.invalidCode)
+        );
+      }
+
+      if (kDebugMode) print('🔐 [AUTH] Authorization code received, exchanging for tokens...');
+
+      // Exchange code for access token (T022)
+      return await _exchangeMobileAuthCode(authCode);
+    } catch (e) {
+      if (kDebugMode) print('❌ [AUTH] OAuth callback handling failed: $e');
+      return AuthResult.failure(OAuthErrorMapper.getUserMessage(OAuthErrorCode.invalidCallback));
+    }
+  }
+
+  /// Exchanges mobile authorization code for access token (T022)
+  /// Internal helper method called by handleOAuthCallback
+  Future<AuthResult> _exchangeMobileAuthCode(String authorizationCode) async {
+    try {
+      if (kDebugMode) print('🔐 [AUTH] Exchanging authorization code for access token');
+
+      // Execute GraphQL mutation
+      final result = await _graphqlService.mutate(
+        _exchangeMobileAuthCodeMutation,
+        variables: {
+          'input': {
+            'code': authorizationCode,
+          }
+        },
+      );
+
+      if (result.hasException) {
+        if (kDebugMode) print('❌ [AUTH] Code exchange mutation failed: ${result.exception}');
+
+        // Extract error code from GraphQL exception
+        final errorCode = _extractGraphQLErrorCode(result.exception.toString());
+        return AuthResult.failure(
+          OAuthErrorMapper.mapMutationError(errorCode)
+        );
+      }
+
+      // Extract access token from response
+      final accessToken = result.data?['exchangeMobileAuthCode']?['accessToken'] as String?;
+
+      if (accessToken == null || accessToken.isEmpty) {
+        if (kDebugMode) print('❌ [AUTH] No access token in mutation response');
+        return AuthResult.failure(
+          OAuthErrorMapper.getUserMessage(OAuthErrorCode.codeExchangeFailed)
+        );
+      }
+
+      if (kDebugMode) print('✅ [AUTH] Access token received, storing...');
+
+      // Store access token (T023)
+      await _tokenStorage.saveAccessToken(accessToken);
+
+      // Refresh GraphQL client with new token (T024)
+      _graphqlService.refreshClient();
+
+      if (kDebugMode) print('✅ [AUTH] OAuth authentication completed successfully');
+
+      return AuthResult.success({
+        'accessToken': accessToken,
+        'authMethod': 'google_oauth_redirect',
+      });
+    } catch (e) {
+      if (kDebugMode) print('❌ [AUTH] Code exchange failed: $e');
+      return AuthResult.failure(
+        OAuthErrorMapper.getUserMessage(OAuthErrorCode.codeExchangeFailed)
+      );
+    }
+  }
+
+  /// Extracts error code from GraphQL exception string
+  /// Helper method for mapping backend errors to user-friendly messages
+  String _extractGraphQLErrorCode(String exceptionString) {
+    // Common GraphQL error patterns
+    if (exceptionString.contains('INVALID_CODE')) return 'INVALID_CODE';
+    if (exceptionString.contains('CODE_EXPIRED')) return 'CODE_EXPIRED';
+    if (exceptionString.contains('CODE_ALREADY_USED')) return 'CODE_ALREADY_USED';
+    if (exceptionString.contains('NETWORK_ERROR')) return 'NETWORK_ERROR';
+    if (exceptionString.contains('RATE_LIMIT')) return 'RATE_LIMIT_EXCEEDED';
+
+    return 'UNKNOWN';
   }
 }
