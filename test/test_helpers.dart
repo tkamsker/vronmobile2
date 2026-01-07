@@ -12,8 +12,9 @@ Future<void> setupTestEnvironment() async {
   final prefs = await SharedPreferences.getInstance();
 
   // Initialize global guestSessionManager for tests
-  app.guestSessionManager = GuestSessionManager(prefs: prefs);
-  await app.guestSessionManager.initialize();
+  final guestManager = GuestSessionManager(prefs: prefs);
+  await guestManager.initialize();
+  app.guestSessionManager = guestManager;
 }
 
 /// Reset test environment between tests

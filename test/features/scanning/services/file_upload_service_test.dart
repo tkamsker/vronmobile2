@@ -28,9 +28,8 @@ void main() {
         );
         final mockResult = FilePickerResult([mockFile]);
 
-        when(
-          mockFilePicker.pickFiles(type: FileType.any),
-        ).thenAnswer((_) async => mockResult);
+        when(() => mockFilePicker.pickFiles(type: FileType.any))
+            .thenAnswer((_) async => mockResult);
 
         // Act
         final result = await service.pickAndValidateGLB();
@@ -53,9 +52,8 @@ void main() {
         );
         final mockResult = FilePickerResult([mockFile]);
 
-        when(
-          mockFilePicker.pickFiles(type: FileType.any),
-        ).thenAnswer((_) async => mockResult);
+        when(() => mockFilePicker.pickFiles(type: FileType.any))
+            .thenAnswer((_) async => mockResult);
 
         // Act
         final result = await service.pickAndValidateGLB();
@@ -74,9 +72,8 @@ void main() {
         );
         final mockResult = FilePickerResult([mockFile]);
 
-        when(
-          mockFilePicker.pickFiles(type: FileType.any),
-        ).thenAnswer((_) async => mockResult);
+        when(() => mockFilePicker.pickFiles(type: FileType.any))
+            .thenAnswer((_) async => mockResult);
 
         // Act
         final result = await service.pickAndValidateGLB();
@@ -94,9 +91,8 @@ void main() {
         );
         final mockResult = FilePickerResult([mockFile]);
 
-        when(
-          mockFilePicker.pickFiles(type: FileType.any),
-        ).thenAnswer((_) async => mockResult);
+        when(() => mockFilePicker.pickFiles(type: FileType.any))
+            .thenAnswer((_) async => mockResult);
 
         // Act
         final result = await service.pickAndValidateGLB();
@@ -108,9 +104,8 @@ void main() {
 
       test('should return null when user cancels file picker', () async {
         // Arrange
-        when(
-          mockFilePicker.pickFiles(type: FileType.any),
-        ).thenAnswer((_) async => null);
+        when(() => mockFilePicker.pickFiles(type: FileType.any))
+            .thenAnswer((_) async => null);
 
         // Act
         final result = await service.pickAndValidateGLB();
@@ -128,9 +123,8 @@ void main() {
         );
         final mockResult = FilePickerResult([mockFile]);
 
-        when(
-          mockFilePicker.pickFiles(type: FileType.any),
-        ).thenAnswer((_) async => mockResult);
+        when(() => mockFilePicker.pickFiles(type: FileType.any))
+            .thenAnswer((_) async => mockResult);
 
         // Act
         final result = await service.pickAndValidateGLB();
