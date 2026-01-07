@@ -40,12 +40,12 @@ dependencies:
   flutter_dotenv: ^6.0.0
   cached_network_image: ^3.3.0
   intl: ^0.20.0
-  shared_preferences: ^2.2.2
+  shared_preferences: ^2.3.2
   google_sign_in: ^7.0.0
   flutter_roomplan: ^1.0.7
   file_picker: ^10.3.8
   path_provider: ^2.1.5
-  http: ^1.1.0
+  http: ^1.2.2
   native_ar_viewer: ^0.0.2
   model_viewer_plus: ^1.10.0
   device_info_plus: ^12.0.0

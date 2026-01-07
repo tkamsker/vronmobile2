@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
+// SharedPreferences temporarily disabled for iOS 18 debugging
+// import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vronmobile2/core/theme/app_theme.dart';
 import 'package:vronmobile2/core/navigation/routes.dart';
 import 'package:vronmobile2/core/config/env_config.dart';
@@ -16,8 +18,8 @@ import 'package:vronmobile2/features/guest/services/guest_session_manager.dart';
 import 'package:vronmobile2/features/scanning/screens/scanning_screen.dart';
 import 'package:vronmobile2/features/scanning/screens/lidar_router_screen.dart';
 
-/// Global guest session manager instance
-late GuestSessionManager guestSessionManager;
+/// Global guest session manager instance (nullable for iOS 18 debugging)
+GuestSessionManager? guestSessionManager;
 
 void main() async {
   // Ensure Flutter is initialized before loading environment
@@ -29,10 +31,13 @@ void main() async {
   // Load environment configuration from .env file
   await EnvConfig.initialize();
 
-  // Initialize guest session manager
-  final prefs = await SharedPreferences.getInstance();
-  guestSessionManager = GuestSessionManager(prefs: prefs);
-  await guestSessionManager.initialize();
+  // TEMPORARILY DISABLED: Guest session manager initialization
+  // Skip guest mode for now to isolate black screen issue
+  // TODO: Re-enable after fixing SharedPreferences iOS 18 compatibility
+  if (kDebugMode) {
+    print('⚠️ [GUEST] Guest session manager initialization skipped for debugging');
+  }
+  guestSessionManager = null; // Will be initialized later when SharedPreferences works
 
   runApp(const VronApp());
 }

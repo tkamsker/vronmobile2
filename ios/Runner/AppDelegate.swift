@@ -145,18 +145,38 @@ class USDZCombiner {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // Initialize Flutter engine
-    flutterEngine.run()
+    NSLog("📱 [AppDelegate] didFinishLaunchingWithOptions - initializing Flutter engine")
+    print("📱 [AppDelegate] didFinishLaunchingWithOptions - initializing Flutter engine")
+    
+    // Initialize Flutter engine (returns false if already running)
+    let engineStarted = flutterEngine.run()
+    if engineStarted {
+      NSLog("✅ [AppDelegate] Flutter engine started")
+      print("✅ [AppDelegate] Flutter engine started")
+    } else {
+      NSLog("⚠️ [AppDelegate] Flutter engine was already running")
+      print("⚠️ [AppDelegate] Flutter engine was already running")
+    }
+    
     GeneratedPluginRegistrant.register(with: self)
 
     // Setup method channels
     setupMethodChannels()
 
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    // Call super - FlutterAppDelegate will handle window creation automatically
+    // (UIScene is temporarily disabled in Info.plist)
+    let result = super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    
+    NSLog("✅ [AppDelegate] didFinishLaunchingWithOptions completed")
+    print("✅ [AppDelegate] didFinishLaunchingWithOptions completed")
+    
+    return result
   }
 
-  // MARK: - UIScene Lifecycle Support
-
+  // MARK: - UIScene Lifecycle Support (TEMPORARILY DISABLED)
+  
+  // UIScene methods commented out - using traditional AppDelegate window management
+  /*
   override func application(
     _ application: UIApplication,
     configurationForConnecting connectingSceneSession: UISceneSession,
@@ -167,6 +187,7 @@ class USDZCombiner {
       sessionRole: connectingSceneSession.role
     )
   }
+  */
 
   // MARK: - Method Channel Setup
 
