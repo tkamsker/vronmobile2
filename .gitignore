@@ -12,6 +12,9 @@
 .swiftpm/
 migrate_working_dir/
 .env
+.env.stage
+.env.main
+.env.backup
 .auth_token
 
 # IntelliJ related
