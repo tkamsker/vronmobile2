@@ -121,3 +121,8 @@ android/key.properties
 *.app
 *.dSYM.zip
 *.dSYM
+
+# Node.js / semantic-release
+node_modules/
+package-lock.json
+npm-debug.log*
