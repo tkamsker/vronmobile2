@@ -26,6 +26,8 @@ jobs:
         with:
           channel: ${{ env.FLUTTER_VERSION }}
       - run: flutter pub get
+      - name: Generate build info
+        run: ./scripts/generate_build_info.sh
       - run: flutter analyze
       - run: flutter test
 
@@ -48,6 +50,9 @@ jobs:
 
       - name: Flutter pub get
         run: flutter pub get
+
+      - name: Generate build info
+        run: ./scripts/generate_build_info.sh
 
       - name: Run tests
         run: |
@@ -102,6 +107,9 @@ jobs:
 
       - name: Flutter pub get
         run: flutter pub get
+
+      - name: Generate build info
+        run: ./scripts/generate_build_info.sh
 
       - name: Run tests
         run: |
