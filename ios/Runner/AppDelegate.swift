@@ -157,8 +157,11 @@ class USDZCombiner {
       NSLog("⚠️ [AppDelegate] Flutter engine was already running")
       print("⚠️ [AppDelegate] Flutter engine was already running")
     }
-    
-    GeneratedPluginRegistrant.register(with: self)
+
+    // Register plugins with the Flutter engine (not self) when using custom engine
+    GeneratedPluginRegistrant.register(with: flutterEngine)
+    NSLog("✅ [AppDelegate] Plugins registered with Flutter engine")
+    print("✅ [AppDelegate] Plugins registered with Flutter engine")
 
     // Setup method channels
     setupMethodChannels()

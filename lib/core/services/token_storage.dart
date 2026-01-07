@@ -10,7 +10,14 @@ class TokenStorage {
   final FlutterSecureStorage _storage;
 
   TokenStorage({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? const FlutterSecureStorage(
+          aOptions: AndroidOptions(
+            encryptedSharedPreferences: true,
+          ),
+          iOptions: IOSOptions(
+            accessibility: KeychainAccessibility.first_unlock,
+          ),
+        );
 
   /// Saves the access token securely
   Future<void> saveAccessToken(String token) async {
