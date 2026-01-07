@@ -141,6 +141,23 @@ class USDZCombiner {
   // Flutter view controller (scene-managed)
   var flutterViewController: FlutterViewController?
 
+  // Expose window for plugins that need it (like flutter_roomplan)
+  // When using SceneDelegate, we need to access the window from the active scene
+  override var window: UIWindow? {
+    get {
+      if #available(iOS 13.0, *) {
+        return UIApplication.shared.connectedScenes
+          .compactMap { $0 as? UIWindowScene }
+          .flatMap { $0.windows }
+          .first { $0.isKeyWindow }
+      }
+      return nil
+    }
+    set {
+      // No-op: window is managed by SceneDelegate
+    }
+  }
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -195,13 +212,13 @@ class USDZCombiner {
   // MARK: - Method Channel Setup
 
   private func setupMethodChannels() {
-    // Get or create Flutter view controller for method channels
-    let controller = getFlutterViewController()
+    // Use engine's binaryMessenger directly (works with SceneDelegate)
+    let messenger = flutterEngine.binaryMessenger
 
     // Setup USDZ Combiner method channel for Feature 018: Combined Scan to NavMesh
     let combinerChannel = FlutterMethodChannel(
       name: "com.vron.usdz_combiner",
-      binaryMessenger: controller.binaryMessenger
+      binaryMessenger: messenger
     )
 
     let combiner = USDZCombiner()
@@ -262,7 +279,7 @@ class USDZCombiner {
     // Future implementation will use server-side conversion.
     let conversionChannel = FlutterMethodChannel(
       name: "com.vron.mobile/usdz_converter",
-      binaryMessenger: controller.binaryMessenger
+      binaryMessenger: messenger
     )
 
     conversionChannel.setMethodCallHandler { (call, result) in
@@ -281,7 +298,7 @@ class USDZCombiner {
     // Setup method channel for room outline extraction
     let outlineChannel = FlutterMethodChannel(
       name: "com.vron.mobile/outline_extractor",
-      binaryMessenger: controller.binaryMessenger
+      binaryMessenger: messenger
     )
 
     let extractor = RoomOutlineExtractor()
