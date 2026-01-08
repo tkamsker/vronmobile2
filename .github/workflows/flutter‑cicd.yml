@@ -31,8 +31,15 @@ jobs:
           VRON_API_URI: ${{ secrets.VRON_API_URI_STAGE }}
           VRON_MERCHANTS_URL: ${{ secrets.VRON_MERCHANTS_URL_STAGE }}
           APP_COOKIE_DOMAIN: ${{ secrets.APP_COOKIE_DOMAIN }}
+          ENV: ${{ secrets.ENV }}
+          DEBUG: ${{ secrets.DEBUG }}
           BLENDER_API_BASE_URL: ${{ secrets.BLENDER_API_BASE_URL_STAGE }}
           BLENDER_API_KEY: ${{ secrets.BLENDER_API_KEY_STAGE }}
+          BLENDER_API_TIMEOUT_SECONDS: ${{ secrets.BLENDER_API_TIMEOUT_SECONDS }}
+          BLENDER_API_POLL_INTERVAL_SECONDS: ${{ secrets.BLENDER_API_POLL_INTERVAL_SECONDS }}
+          ROOM_ROTATION_DEGREES: ${{ secrets.ROOM_ROTATION_DEGREES }}
+          DOOR_CONNECTION_THRESHOLD: ${{ secrets.DOOR_CONNECTION_THRESHOLD }}
+          CANVAS_GRID_SIZE: ${{ secrets.CANVAS_GRID_SIZE }}
         run: |
           chmod +x ./scripts/generate-env.sh
           ./scripts/generate-env.sh
@@ -66,8 +73,15 @@ jobs:
           VRON_API_URI: ${{ secrets.VRON_API_URI_STAGE }}
           VRON_MERCHANTS_URL: ${{ secrets.VRON_MERCHANTS_URL_STAGE }}
           APP_COOKIE_DOMAIN: ${{ secrets.APP_COOKIE_DOMAIN }}
+          ENV: ${{ secrets.ENV }}
+          DEBUG: ${{ secrets.DEBUG }}
           BLENDER_API_BASE_URL: ${{ secrets.BLENDER_API_BASE_URL_STAGE }}
           BLENDER_API_KEY: ${{ secrets.BLENDER_API_KEY_STAGE }}
+          BLENDER_API_TIMEOUT_SECONDS: ${{ secrets.BLENDER_API_TIMEOUT_SECONDS }}
+          BLENDER_API_POLL_INTERVAL_SECONDS: ${{ secrets.BLENDER_API_POLL_INTERVAL_SECONDS }}
+          ROOM_ROTATION_DEGREES: ${{ secrets.ROOM_ROTATION_DEGREES }}
+          DOOR_CONNECTION_THRESHOLD: ${{ secrets.DOOR_CONNECTION_THRESHOLD }}
+          CANVAS_GRID_SIZE: ${{ secrets.CANVAS_GRID_SIZE }}
         run: |
           chmod +x ./scripts/generate-env.sh
           ./scripts/generate-env.sh
@@ -132,8 +146,15 @@ jobs:
           VRON_API_URI: ${{ secrets.VRON_API_URI_MAIN }}
           VRON_MERCHANTS_URL: ${{ secrets.VRON_MERCHANTS_URL_MAIN }}
           APP_COOKIE_DOMAIN: ${{ secrets.APP_COOKIE_DOMAIN }}
+          ENV: ${{ secrets.ENV }}
+          DEBUG: ${{ secrets.DEBUG }}
           BLENDER_API_BASE_URL: ${{ secrets.BLENDER_API_BASE_URL_MAIN }}
           BLENDER_API_KEY: ${{ secrets.BLENDER_API_KEY_MAIN }}
+          BLENDER_API_TIMEOUT_SECONDS: ${{ secrets.BLENDER_API_TIMEOUT_SECONDS }}
+          BLENDER_API_POLL_INTERVAL_SECONDS: ${{ secrets.BLENDER_API_POLL_INTERVAL_SECONDS }}
+          ROOM_ROTATION_DEGREES: ${{ secrets.ROOM_ROTATION_DEGREES }}
+          DOOR_CONNECTION_THRESHOLD: ${{ secrets.DOOR_CONNECTION_THRESHOLD }}
+          CANVAS_GRID_SIZE: ${{ secrets.CANVAS_GRID_SIZE }}
         run: |
           chmod +x ./scripts/generate-env.sh
           ./scripts/generate-env.sh
