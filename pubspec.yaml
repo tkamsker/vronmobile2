@@ -98,6 +98,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+    - .env
     - lib/core/i18n/en.json
     - lib/core/i18n/de.json
     - lib/core/i18n/pt.json
