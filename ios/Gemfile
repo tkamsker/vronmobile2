@@ -1,5 +1,9 @@
 source "https://rubygems.org"
 
+# Bundler version compatible with fastlane
+# fastlane 2.220 requires bundler < 3.0.0
+gem "bundler", "~> 2.5.0"
+
 # Fastlane for iOS automation (building, signing, uploading to TestFlight/App Store)
 gem "fastlane", "~> 2.220"
 

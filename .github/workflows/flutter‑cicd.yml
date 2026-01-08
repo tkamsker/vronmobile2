@@ -108,6 +108,11 @@ jobs:
           path: ${{ env.ANDROID_AAB_BUILD_DIR }}/stageRelease/*.aab
 
       # iOS stage build + TestFlight upload via fastlane
+      - name: Setup Bundler
+        run: |
+          gem install bundler:2.5.22
+          bundle --version
+
       - name: Install Ruby gems
         working-directory: ios
         run: bundle install
@@ -178,6 +183,11 @@ jobs:
         with:
           name: android-prod-aab
           path: ${{ env.ANDROID_AAB_BUILD_DIR }}/prodRelease/*.aab
+
+      - name: Setup Bundler
+        run: |
+          gem install bundler:2.5.22
+          bundle --version
 
       - name: Install Ruby gems
         working-directory: ios

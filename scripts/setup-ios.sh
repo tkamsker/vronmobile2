@@ -43,11 +43,20 @@ echo "✅ [iOS Setup] Found: $RUBY_VERSION"
 # 3. Check for Bundler
 if ! command -v bundle &> /dev/null; then
   echo "⚠️  [iOS Setup] Bundler not found, installing..."
-  gem install bundler
-  echo "✅ [iOS Setup] Bundler installed"
+  gem install bundler:2.5.22
+  echo "✅ [iOS Setup] Bundler 2.5.22 installed"
 else
   BUNDLER_VERSION=$(bundle -v)
-  echo "✅ [iOS Setup] Found: $BUNDLER_VERSION"
+  BUNDLER_MAJOR=$(echo "$BUNDLER_VERSION" | grep -oE '[0-9]+' | head -1)
+
+  if [ "$BUNDLER_MAJOR" -ge 4 ]; then
+    echo "⚠️  [iOS Setup] Bundler $BUNDLER_MAJOR.x detected (incompatible with fastlane)"
+    echo "   Installing Bundler 2.5.22..."
+    gem install bundler:2.5.22
+    echo "✅ [iOS Setup] Bundler 2.5.22 installed"
+  else
+    echo "✅ [iOS Setup] Found: $BUNDLER_VERSION"
+  fi
 fi
 
 # 4. Create Gemfile if it doesn't exist
@@ -56,6 +65,10 @@ if [ ! -f "$GEMFILE_PATH" ]; then
   echo "📝 [iOS Setup] Creating ios/Gemfile..."
   cat > "$GEMFILE_PATH" <<'EOF'
 source "https://rubygems.org"
+
+# Bundler version compatible with fastlane
+# fastlane 2.220 requires bundler < 3.0.0
+gem "bundler", "~> 2.5.0"
 
 # Fastlane for iOS automation (building, signing, uploading to TestFlight/App Store)
 gem "fastlane", "~> 2.220"
