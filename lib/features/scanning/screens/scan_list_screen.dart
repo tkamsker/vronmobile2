@@ -157,7 +157,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Current Project header with ADD Project link
+                  // Current Project header with ADD/UPDATE Project link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -171,12 +171,14 @@ class _ScanListScreenState extends State<ScanListScreen> {
                       TextButton.icon(
                         onPressed: _showAddProjectDialog,
                         icon: Icon(
-                          Icons.add_circle_outline,
+                          _selectedProject != null
+                              ? Icons.edit_outlined
+                              : Icons.add_circle_outline,
                           color: Colors.blue.shade600,
                           size: 20,
                         ),
                         label: Text(
-                          'ADD Project',
+                          _selectedProject != null ? 'UPDATE Project' : 'ADD Project',
                           style: TextStyle(
                             color: Colors.blue.shade600,
                             fontSize: 16,
@@ -476,25 +478,78 @@ class _ScanListScreenState extends State<ScanListScreen> {
     );
   }
 
-  void _showAddProjectDialog() {
-    // Check if we have combined GLB files available
+  void _showAddProjectDialog() async {
+    // Check if we have GLB and navmesh files available
     File? worldFile;
     File? meshFile;
 
-    // If combined scan is complete, use those files as defaults
+    print('🔍 [PROJECT] Checking for GLB and navmesh files...');
+
+    // Priority 1: If combined scan is complete, use those files as defaults
     if (_combinedScan?.status == CombinedScanStatus.completed) {
+      print('✅ [PROJECT] Found completed combined scan');
       if (_combinedScan!.combinedGlbLocalPath != null) {
         final glbFile = File(_combinedScan!.combinedGlbLocalPath!);
-        if (glbFile.existsSync()) {
+        if (await glbFile.exists()) {
           worldFile = glbFile;
+          print('✅ [PROJECT] Using combined GLB: ${glbFile.path}');
         }
       }
       if (_combinedScan!.localNavmeshPath != null) {
         final navmeshFile = File(_combinedScan!.localNavmeshPath!);
-        if (navmeshFile.existsSync()) {
+        if (await navmeshFile.exists()) {
           meshFile = navmeshFile;
+          print('✅ [PROJECT] Using combined navmesh: ${navmeshFile.path}');
         }
       }
+    }
+
+    // Priority 2: Check for single scan GLB and navmesh files
+    if (worldFile == null || meshFile == null) {
+      final scans = _sessionManager.scans;
+      print('🔍 [PROJECT] Checking ${scans.length} single scans for GLB/navmesh files...');
+
+      for (final scan in scans) {
+        // Check for GLB file
+        if (worldFile == null && scan.glbLocalPath != null) {
+          final glbFile = File(scan.glbLocalPath!);
+          if (await glbFile.exists()) {
+            worldFile = glbFile;
+            print('✅ [PROJECT] Found single scan GLB: ${glbFile.path}');
+          }
+        }
+
+        // Check for navmesh file (stored in scans/navmesh/<scan_id>_navmesh.glb)
+        if (meshFile == null) {
+          try {
+            final documentsDirectory = (await getApplicationDocumentsDirectory()).path;
+            final navmeshPath = '$documentsDirectory/scans/navmesh/${scan.id}_navmesh.glb';
+            final navmeshFile = File(navmeshPath);
+            if (await navmeshFile.exists()) {
+              meshFile = navmeshFile;
+              print('✅ [PROJECT] Found single scan navmesh: ${navmeshFile.path}');
+            }
+          } catch (e) {
+            print('⚠️ [PROJECT] Error checking navmesh for scan ${scan.id}: $e');
+          }
+        }
+
+        // Break if we found both files
+        if (worldFile != null && meshFile != null) {
+          break;
+        }
+      }
+    }
+
+    // Log final status
+    if (worldFile != null && meshFile != null) {
+      print('✅ [PROJECT] Auto-populating dialog with GLB and navmesh files');
+    } else if (worldFile != null) {
+      print('⚠️ [PROJECT] Found GLB but no navmesh file');
+    } else if (meshFile != null) {
+      print('⚠️ [PROJECT] Found navmesh but no GLB file');
+    } else {
+      print('ℹ️ [PROJECT] No GLB or navmesh files found - user will need to select manually');
     }
 
     showDialog(
