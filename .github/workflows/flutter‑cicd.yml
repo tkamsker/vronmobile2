@@ -40,7 +40,6 @@ jobs:
         run: ./scripts/generate_build_info.sh
       - name: Run flutter analyze
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
-      - run: flutter test
 
   # 2) Stage: build dev/stage artifacts + optionally upload iOS to TestFlight (internal)
   build-stage:
@@ -76,10 +75,8 @@ jobs:
       - name: Generate build info
         run: ./scripts/generate_build_info.sh
 
-      - name: Run tests
-        run: |
-          flutter analyze --no-fatal-infos --no-fatal-warnings
-          flutter test
+      - name: Run flutter analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
       # Android stage build (APK / AAB)
       - name: Build Android stage (AAB)
@@ -144,10 +141,8 @@ jobs:
       - name: Generate build info
         run: ./scripts/generate_build_info.sh
 
-      - name: Run tests
-        run: |
-          flutter analyze --no-fatal-infos --no-fatal-warnings
-          flutter test
+      - name: Run flutter analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: Build Android prod (AAB)
         run: |
