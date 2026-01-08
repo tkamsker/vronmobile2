@@ -93,19 +93,29 @@ jobs:
       - name: Run flutter analyze
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
-      # Android stage build (APK / AAB)
-      - name: Build Android stage (AAB)
-        run: |
-          flutter build appbundle \
-            --flavor stage \
-            --release \
-            --dart-define=BUILD_NUMBER=${BUILD_NUMBER}
+      # ============================================================================
+      # ANDROID BUILD - TEMPORARILY DISABLED
+      # TODO: Re-enable when Android signing and build issues are resolved
+      # Uncomment the steps below to restore Android builds
+      # ============================================================================
 
-      - name: Upload Android stage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-stage-aab
-          path: ${{ env.ANDROID_AAB_BUILD_DIR }}/stageRelease/*.aab
+      # # Android stage build (APK / AAB)
+      # - name: Build Android stage (AAB)
+      #   run: |
+      #     flutter build appbundle \
+      #       --flavor stage \
+      #       --release \
+      #       --dart-define=BUILD_NUMBER=${BUILD_NUMBER}
+
+      # - name: Upload Android stage artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: android-stage-aab
+      #     path: ${{ env.ANDROID_AAB_BUILD_DIR }}/stageRelease/*.aab
+
+      # ============================================================================
+      # END ANDROID BUILD
+      # ============================================================================
 
       # iOS stage build + TestFlight upload via fastlane
       - name: Setup Bundler
@@ -171,18 +181,28 @@ jobs:
       - name: Run flutter analyze
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
-      - name: Build Android prod (AAB)
-        run: |
-          flutter build appbundle \
-            --flavor prod \
-            --release \
-            --dart-define=BUILD_NUMBER=${BUILD_NUMBER}
+      # ============================================================================
+      # ANDROID BUILD - TEMPORARILY DISABLED
+      # TODO: Re-enable when Android signing and build issues are resolved
+      # Uncomment the steps below to restore Android builds
+      # ============================================================================
 
-      - name: Upload Android prod artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-prod-aab
-          path: ${{ env.ANDROID_AAB_BUILD_DIR }}/prodRelease/*.aab
+      # - name: Build Android prod (AAB)
+      #   run: |
+      #     flutter build appbundle \
+      #       --flavor prod \
+      #       --release \
+      #       --dart-define=BUILD_NUMBER=${BUILD_NUMBER}
+
+      # - name: Upload Android prod artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: android-prod-aab
+      #     path: ${{ env.ANDROID_AAB_BUILD_DIR }}/prodRelease/*.aab
+
+      # ============================================================================
+      # END ANDROID BUILD
+      # ============================================================================
 
       - name: Setup Bundler
         run: |
