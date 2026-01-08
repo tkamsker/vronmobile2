@@ -121,11 +121,11 @@ jobs:
       - name: Setup Bundler
         run: |
           gem install bundler:2.5.22
-          bundle --version
+          bundle _2.5.22_ --version
 
       - name: Install Ruby gems
         working-directory: ios
-        run: bundle install
+        run: bundle _2.5.22_ install
 
       - name: Build & upload iOS stage to TestFlight
         working-directory: ios
@@ -207,11 +207,11 @@ jobs:
       - name: Setup Bundler
         run: |
           gem install bundler:2.5.22
-          bundle --version
+          bundle _2.5.22_ --version
 
       - name: Install Ruby gems
         working-directory: ios
-        run: bundle install
+        run: bundle _2.5.22_ install
 
       - name: Build & upload iOS prod to TestFlight
         working-directory: ios

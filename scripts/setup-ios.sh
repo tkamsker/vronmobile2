@@ -66,11 +66,9 @@ if [ ! -f "$GEMFILE_PATH" ]; then
   cat > "$GEMFILE_PATH" <<'EOF'
 source "https://rubygems.org"
 
-# Bundler version compatible with fastlane
-# fastlane 2.220 requires bundler < 3.0.0
-gem "bundler", "~> 2.5.0"
-
 # Fastlane for iOS automation (building, signing, uploading to TestFlight/App Store)
+# Note: Requires Bundler 2.5.x (< 3.0.0)
+# Bundler version is managed by CI/CD workflow and setup scripts
 gem "fastlane", "~> 2.220"
 
 # Plugins
@@ -85,7 +83,7 @@ fi
 # 5. Install Ruby dependencies via Bundler
 echo "📦 [iOS Setup] Installing Ruby gems..."
 cd "$PROJECT_ROOT/ios"
-bundle install
+bundle _2.5.22_ install
 echo "✅ [iOS Setup] Ruby gems installed"
 
 # 6. Check for CocoaPods
