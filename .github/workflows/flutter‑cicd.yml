@@ -12,7 +12,8 @@ on:
 
 env:
   FLUTTER_VERSION: 'stable'
-  ANDROID_BUILD_DIR: build/app/outputs/flutter-apk
+  ANDROID_APK_BUILD_DIR: build/app/outputs/flutter-apk
+  ANDROID_AAB_BUILD_DIR: build/app/outputs/bundle
   IOS_BUILD_DIR: build/ios/ipa
 
 jobs:
@@ -104,7 +105,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-stage-aab
-          path: ${{ env.ANDROID_BUILD_DIR }}/*.aab
+          path: ${{ env.ANDROID_AAB_BUILD_DIR }}/stageRelease/*.aab
 
       # iOS stage build + TestFlight upload via fastlane
       - name: Install Ruby gems
@@ -176,7 +177,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-prod-aab
-          path: ${{ env.ANDROID_BUILD_DIR }}/*.aab
+          path: ${{ env.ANDROID_AAB_BUILD_DIR }}/prodRelease/*.aab
 
       - name: Install Ruby gems
         working-directory: ios

@@ -1,0 +1,112 @@
+# Fastfile for VRonMobile2 iOS automation
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+
+default_platform(:ios)
+
+platform :ios do
+  # Description: Build and upload iOS app to TestFlight
+  # Parameters:
+  #   - build_number: Build number for the app (required)
+  #   - flavor: Build flavor (stage/prod, required)
+  desc "Build and upload to TestFlight"
+  lane :build_upload_testflight do |options|
+    build_number = options[:build_number]
+    flavor = options[:flavor] || "stage"
+
+    # Validate parameters
+    UI.user_error!("build_number is required") unless build_number
+    UI.user_error!("flavor must be 'stage' or 'prod'") unless ["stage", "prod"].include?(flavor)
+
+    # Configuration based on flavor
+    scheme = flavor == "stage" ? "Runner-Stage" : "Runner"
+    app_identifier = flavor == "stage" ? "com.example.vronmobile2.stage" : "com.example.vronmobile2"
+
+    puts "🚀 Building iOS #{flavor} app..."
+    puts "   Scheme: #{scheme}"
+    puts "   App ID: #{app_identifier}"
+    puts "   Build Number: #{build_number}"
+
+    # Setup App Store Connect API
+    api_key = app_store_connect_api_key(
+      key_id: ENV["ASC_KEY_ID"],
+      issuer_id: ENV["ASC_ISSUER_ID"],
+      key_content: ENV["ASC_KEY"]
+    )
+
+    # Sync certificates and provisioning profiles using match
+    match(
+      type: "appstore",
+      app_identifier: app_identifier,
+      readonly: true,
+      git_private_key: ENV["MATCH_GIT_PRIVATE_KEY"]
+    )
+
+    # Increment build number
+    increment_build_number(
+      build_number: build_number,
+      xcodeproj: "Runner.xcodeproj"
+    )
+
+    # Build the app
+    build_app(
+      scheme: scheme,
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          app_identifier => "match AppStore #{app_identifier}"
+        }
+      }
+    )
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true,
+      skip_submission: true,
+      distribute_external: flavor == "prod", # Only external testing for prod
+      groups: flavor == "stage" ? ["Internal Testers"] : ["External Testers"],
+      changelog: "Build #{build_number} - #{flavor} release"
+    )
+
+    puts "✅ Successfully uploaded to TestFlight!"
+  end
+
+  # Description: Build iOS app locally (for development/testing)
+  # Parameters:
+  #   - flavor: Build flavor (stage/prod, default: stage)
+  desc "Build iOS app locally"
+  lane :build_local do |options|
+    flavor = options[:flavor] || "stage"
+    scheme = flavor == "stage" ? "Runner-Stage" : "Runner"
+
+    puts "🔨 Building iOS #{flavor} app locally..."
+
+    build_app(
+      scheme: scheme,
+      export_method: "development",
+      skip_codesigning: true,
+      skip_archive: true
+    )
+
+    puts "✅ Build complete!"
+  end
+
+  # Description: Setup code signing (match)
+  desc "Setup code signing"
+  lane :setup_signing do
+    match(
+      type: "appstore",
+      readonly: true
+    )
+  end
+
+  # Description: Run tests
+  desc "Run tests"
+  lane :test do
+    run_tests(
+      scheme: "Runner",
+      devices: ["iPhone 15 Pro"]
+    )
+  end
+end
