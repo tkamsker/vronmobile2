@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:native_ar_viewer/native_ar_viewer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/scan_data.dart';
@@ -388,16 +387,14 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
         ).replace(fragment: 'allowsContentScaling=0');
 
         if (!await canLaunchUrl(uri)) {
-          // Fallback to native_ar_viewer if url_launcher doesn't work
-          await NativeArViewer.launchAR(_currentScanData.localPath);
-        } else {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          throw Exception('Cannot launch AR viewer - URL not supported');
         }
 
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
         print('✅ [USDZ] AR viewer launched successfully in object mode');
       } else {
-        // Android fallback (though LiDAR is iOS-only)
-        await NativeArViewer.launchAR(_currentScanData.localPath);
+        // LiDAR scanning is iOS-only, Android not supported
+        throw Exception('AR viewing is only supported on iOS devices');
       }
     } catch (e) {
       print('❌ [USDZ] Failed to launch AR viewer: $e');
