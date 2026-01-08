@@ -9,14 +9,17 @@ The project uses `.env` files to manage environment-specific configuration (API 
 ## File Structure
 
 ```
-.env.example        # Template with all required variables (committed)
-.env.stage          # Stage environment config (gitignored)
-.env.main           # Production environment config (gitignored)
-.env                # Active config loaded by flutter_dotenv (gitignored)
-.env.backup         # Auto-created backup when switching (gitignored)
+.env.example               # Template with all required variables (committed)
+.env.stage                 # Stage environment config (gitignored)
+.env.main                  # Production environment config (gitignored)
+.env                       # Active config loaded by flutter_dotenv (gitignored)
+.env.backup                # Auto-created backup when switching (gitignored)
 scripts/
-  generate-env.sh   # CI/CD script to generate .env from GitHub Secrets
-  switch-env.sh     # Local script to switch between environments
+  generate-env.sh          # CI/CD script to generate .env from GitHub Secrets
+  switch-env.sh            # Local script to switch between environments
+  setup-github-secrets.sh  # Set GitHub Secrets from .env files
+  list-github-secrets.sh   # List configured GitHub Secrets
+  delete-github-secrets.sh # Delete all VRon GitHub Secrets
 ```
 
 ## Local Development Setup
@@ -109,10 +112,56 @@ The CI/CD pipeline requires the following GitHub Secrets to be configured:
 
 ### Adding Secrets to GitHub
 
+#### Option 1: Automated Script (Recommended)
+
+Use the provided script to set all secrets from your `.env.stage` and `.env.main` files:
+
+```bash
+# 1. Install GitHub CLI (if not already installed)
+brew install gh
+
+# 2. Authenticate with GitHub
+gh auth login
+
+# 3. Ensure .env.stage and .env.main are configured
+./scripts/switch-env.sh stage  # Verify stage config
+./scripts/switch-env.sh main   # Verify main config
+
+# 4. Run the secrets setup script
+./scripts/setup-github-secrets.sh
+```
+
+The script will:
+- Read values from `.env.stage` and `.env.main`
+- Show you what will be set (with masked API keys)
+- Ask for confirmation
+- Set all required secrets in GitHub Actions
+
+#### Option 2: Manual Setup
+
 1. Go to your GitHub repository
 2. Navigate to **Settings → Secrets and variables → Actions**
 3. Click **New repository secret**
 4. Add each secret with its corresponding value
+
+### Managing Secrets
+
+**List all secrets:**
+```bash
+./scripts/list-github-secrets.sh
+```
+
+**Delete all secrets:**
+```bash
+./scripts/delete-github-secrets.sh
+```
+
+**Update secrets:**
+```bash
+# Edit .env.stage or .env.main with new values
+# Then re-run the setup script
+./scripts/setup-github-secrets.sh
+```
 
 ### Testing CI/CD Locally
 
