@@ -8,6 +8,7 @@ import '../models/conversion_result.dart';
 import '../services/scan_upload_service.dart';
 import '../services/scan_session_manager.dart';
 import '../services/blender_api_service.dart';
+import '../services/blenderapi_service.dart';
 import 'scanning_screen.dart';
 import 'glb_preview_screen.dart';
 
@@ -37,6 +38,7 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
   bool _isConverting = false;
   late final ScanUploadService _uploadService;
   late final BlenderApiService _blenderApiService;
+  late final BlenderAPIService _blenderAPIService; // For navmesh generation
   final ScanSessionManager _sessionManager = ScanSessionManager();
   ConversionResult? _conversionResult;
   late ScanData _currentScanData;
@@ -49,6 +51,7 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
     super.initState();
     _uploadService = widget.uploadService ?? ScanUploadService();
     _blenderApiService = BlenderApiService();
+    _blenderAPIService = BlenderAPIService(); // Initialize navmesh service
     _currentScanData = widget.scanData;
     _glbLocalPath = widget.scanData.glbLocalPath;
     _checkForExistingGlb();
@@ -647,61 +650,191 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
     print('🗺️ [USDZ] Create Navmesh requested');
 
     if (_glbLocalPath == null) {
+      print('❌ [USDZ] Cannot create navmesh: GLB file not found');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('GLB file not found'),
+          content: Text('GLB file must be converted first'),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
+    // Validate GLB file exists
+    final glbFile = File(_glbLocalPath!);
+    if (!await glbFile.exists()) {
+      print('❌ [USDZ] GLB file does not exist: $_glbLocalPath');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('GLB file not found on device'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    print('📊 [USDZ] GLB file validated: ${glbFile.path}');
+    print('📊 [USDZ] GLB file size: ${await glbFile.length()} bytes');
+
+    // Show progress dialog
+    if (!mounted) return;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.route, color: Colors.green.shade600, size: 28),
-            const SizedBox(width: 12),
-            const Text('Create Navmesh'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'This will use the GLB file to create a navigation mesh for your project.',
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'GLB: ${_glbLocalPath!.split('/').last}',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade600,
-                fontFamily: 'monospace',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _saveToProject();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green.shade600,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Proceed to Save'),
-          ),
-        ],
+      barrierDismissible: false,
+      builder: (context) => _NavmeshProgressDialog(
+        onCancel: () {
+          Navigator.of(context).pop();
+        },
       ),
     );
+
+    String? sessionId;
+    try {
+      print('🔄 [NAVMESH] Starting navmesh generation workflow');
+      print('   Input GLB: ${glbFile.path}');
+
+      // Step 1: Create BlenderAPI session
+      print('🔄 [NAVMESH] Step 1/5: Creating BlenderAPI session...');
+      sessionId = await _blenderAPIService.createSession();
+      print('✅ [NAVMESH] Session created: $sessionId');
+
+      // Step 2: Upload GLB file
+      print('🔄 [NAVMESH] Step 2/5: Uploading GLB file (${await glbFile.length()} bytes)...');
+      await _blenderAPIService.uploadGLB(
+        sessionId: sessionId,
+        glbFile: glbFile,
+        onProgress: (progress) {
+          print('📤 [NAVMESH] Upload progress: ${(progress * 100).toInt()}%');
+        },
+      );
+      print('✅ [NAVMESH] GLB uploaded successfully');
+
+      // Step 3: Start navmesh generation
+      print('🔄 [NAVMESH] Step 3/5: Starting navmesh generation...');
+      final inputFilename = glbFile.path.split('/').last;
+      final outputFilename = 'navmesh_$inputFilename';
+
+      await _blenderAPIService.startNavMeshGeneration(
+        sessionId: sessionId,
+        inputFilename: inputFilename,
+        outputFilename: outputFilename,
+        navmeshParams: BlenderAPIService.unityStandardNavMeshParams,
+      );
+      print('✅ [NAVMESH] NavMesh generation started');
+      print('   Output filename: $outputFilename');
+
+      // Step 4: Poll for completion
+      print('🔄 [NAVMESH] Step 4/5: Polling for completion...');
+      final status = await _blenderAPIService.pollStatus(
+        sessionId: sessionId,
+      );
+      print('✅ [NAVMESH] NavMesh generation completed with status: $status');
+
+      // Step 5: Download navmesh
+      print('🔄 [NAVMESH] Step 5/5: Downloading navmesh...');
+      final documentsDirectory = (await getApplicationDocumentsDirectory()).path;
+      final navmeshPath = '$documentsDirectory/scans/navmesh/${_currentScanData.id}_navmesh.glb';
+
+      // Ensure directory exists
+      final navmeshDir = Directory('$documentsDirectory/scans/navmesh');
+      if (!await navmeshDir.exists()) {
+        await navmeshDir.create(recursive: true);
+        print('📁 [NAVMESH] Created navmesh directory');
+      }
+
+      await _blenderAPIService.downloadNavMesh(
+        sessionId: sessionId,
+        filename: outputFilename,
+        outputPath: navmeshPath,
+      );
+      print('✅ [NAVMESH] NavMesh downloaded to: $navmeshPath');
+
+      // Update scan data with navmesh path (store in session, ScanData doesn't have navmeshLocalPath)
+      // Note: ScanData model doesn't have navmeshLocalPath field, navmesh is stored separately
+      print('✅ [NAVMESH] NavMesh file saved to: $navmeshPath');
+
+      if (!mounted) return;
+      Navigator.of(context).pop(); // Close progress dialog
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green.shade400),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text('NavMesh created successfully!'),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green.shade700,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+
+      print('✅ [NAVMESH] NavMesh generation workflow completed successfully');
+    } catch (e, stackTrace) {
+      print('❌ [NAVMESH] NavMesh generation failed: $e');
+      print('   Stack trace: $stackTrace');
+
+      if (!mounted) return;
+      Navigator.of(context).pop(); // Close progress dialog
+
+      // Show error dialog
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.error, color: Colors.red, size: 28),
+              SizedBox(width: 12),
+              Text('NavMesh Generation Failed'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Failed to create navigation mesh:'),
+              const SizedBox(height: 8),
+              Text(
+                e.toString(),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _createNavmesh(); // Retry
+              },
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      // Always cleanup session
+      if (sessionId != null) {
+        try {
+          print('🧹 [NAVMESH] Cleaning up BlenderAPI session...');
+          await _blenderAPIService.deleteSession(sessionId: sessionId);
+          print('✅ [NAVMESH] Session deleted');
+        } catch (e) {
+          print('⚠️ [NAVMESH] Failed to delete session: $e');
+        }
+      }
+    }
   }
 
   Future<void> _previewGLB() async {
@@ -924,5 +1057,86 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
       // New scan completed, return to scan list
       Navigator.of(context).pop(result);
     }
+  }
+}
+
+/// Progress dialog for navmesh generation
+class _NavmeshProgressDialog extends StatelessWidget {
+  final VoidCallback onCancel;
+
+  const _NavmeshProgressDialog({required this.onCancel});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Row(
+        children: [
+          SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          SizedBox(width: 16),
+          Text('Generating NavMesh'),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Creating navigation mesh from GLB file...'),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildStep('1. Create BlenderAPI session'),
+                _buildStep('2. Upload GLB file'),
+                _buildStep('3. Generate NavMesh'),
+                _buildStep('4. Poll for completion'),
+                _buildStep('5. Download NavMesh'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'This may take 1-2 minutes depending on model complexity',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey.shade600,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: onCancel,
+          child: const Text('Cancel'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStep(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(Icons.check_circle_outline, size: 16, color: Colors.blue.shade700),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
