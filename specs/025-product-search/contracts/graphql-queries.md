@@ -1,6 +1,6 @@
 # API Contracts: Product Search and Filtering
 
-**Feature**: 005-product-search | **Date**: 2024-12-22 | **Phase**: Design
+**Feature**: 025-product-search | **Date**: 2024-12-22 | **Phase**: Design
 
 ## Overview
 
@@ -741,5 +741,5 @@ Product(
 - **ProductService Implementation**: `lib/features/products/services/product_service.dart` (lines 42-157)
 - **GraphQL Documentation**: `Requirements/GraphqlProducts.md`
 - **Test Script**: `test_searchproduct.sh`
-- **Research Findings**: `specs/005-product-search/research.md` (Section 1: GraphQL Query Capabilities)
-- **Data Models**: `specs/005-product-search/data-model.md`
+- **Research Findings**: `specs/025-product-search/research.md` (Section 1: GraphQL Query Capabilities)
+- **Data Models**: `specs/025-product-search/data-model.md`

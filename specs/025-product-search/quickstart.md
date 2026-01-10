@@ -1,6 +1,6 @@
 # Quickstart Guide: Product Search and Filtering
 
-**Feature**: 005-product-search | **Date**: 2024-12-22 | **Phase**: Design
+**Feature**: 025-product-search | **Date**: 2024-12-22 | **Phase**: Design
 
 ## Overview
 
@@ -24,7 +24,7 @@ This guide provides step-by-step instructions for integrating product search and
 
 ```dart
 import 'package:flutter/foundation.dart';
-import '../005-product-search/product.dart';
+import '../025-product-search/product.dart';
 
 class ProductFilter {
   final String? searchQuery;
@@ -93,8 +93,8 @@ class ProductFilter {
 **File**: `lib/features/products/models/product_search_result.dart`
 
 ```dart
-import '../005-product-search/product.dart';
-import '../005-product-search/product_filter.dart';
+import '../025-product-search/product.dart';
+import '../025-product-search/product_filter.dart';
 
 class ProductSearchResult {
   final List<Product> products;
@@ -825,11 +825,11 @@ After completing basic search integration:
 
 ## References
 
-- **Data Models**: `specs/005-product-search/data-model.md`
-- **API Contracts**: `specs/005-product-search/contracts/graphql-queries.md`
-- **Research**: `specs/005-product-search/research.md`
-- **Spec**: `specs/005-product-search/spec.md`
-- **Plan**: `specs/005-product-search/plan.md`
+- **Data Models**: `specs/025-product-search/data-model.md`
+- **API Contracts**: `specs/025-product-search/contracts/graphql-queries.md`
+- **Research**: `specs/025-product-search/research.md`
+- **Spec**: `specs/025-product-search/spec.md`
+- **Plan**: `specs/025-product-search/plan.md`
 
 ---
 

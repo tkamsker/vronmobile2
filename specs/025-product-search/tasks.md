@@ -1,6 +1,6 @@
 # Tasks: Product Search and Filtering
 
-**Input**: Design documents from `/specs/005-product-search/`
+**Input**: Design documents from `/specs/025-product-search/`
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/, quickstart.md
 
 **Tests**: Tests are included following TDD approach as required by the constitution (Test-First Development is NON-NEGOTIABLE).

@@ -1,8 +1,9 @@
 # Feature Specification: Settings Screen
 
-**Feature Branch**: `021-settings-screen`
+**Feature Branch**: `022-settings-screen`
 **Created**: 2025-12-20
-**Status**: Draft
+**Status**: ✅ Complete
+**Completed**: 2026-01-10
 
 ## User Scenarios & Testing *(mandatory)*
 

@@ -1,7 +1,7 @@
 # Research: Product Search and Filtering
 
 **Date**: 2024-12-22
-**Feature**: 005-product-search
+**Feature**: 025-product-search
 **Purpose**: Validate technical assumptions and determine implementation approach
 
 ## 1. GraphQL Query Capabilities
