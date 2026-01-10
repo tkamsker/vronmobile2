@@ -1,6 +1,6 @@
 # Data Model: Product Search and Filtering
 
-**Feature**: 005-product-search | **Date**: 2024-12-22 | **Phase**: Design
+**Feature**: 025-product-search | **Date**: 2024-12-22 | **Phase**: Design
 
 ## Overview
 
@@ -542,4 +542,4 @@ test('loading factory creates loading state', () {
 - **Existing Models**: `lib/features/products/models/product.dart`
 - **Service Layer**: `lib/features/products/services/product_service.dart`
 - **GraphQL Query**: VRonGetProducts (see `contracts/graphql-queries.md`)
-- **Research**: `specs/005-product-search/research.md` (State Management section)
+- **Research**: `specs/025-product-search/research.md` (State Management section)

@@ -290,8 +290,8 @@ Extract from Figma:
 Once 001-main-screen-login is complete and all tests pass:
 
 1. Merge to main branch
-2. Move to UC2: Email & Password Authentication (`002-email-password-auth`)
-3. Or move to UC6: Create Account (`006-create-account`)
+2. Move to UC2: Email & Password Authentication (`026-email-password-auth`)
+3. Or move to UC6: Create Account (`027-create-account`)
 4. Or move to UC7: Guest Mode (`007-guest-mode`)
 
 Dependencies from spec:

@@ -4,7 +4,7 @@ Auto-generated from all feature plans. Last updated: 2025-12-20
 
 ## Active Technologies
 - Backend GraphQL API (PostgreSQL), local caching via shared_preferences (003-projectdetail)
-- Session-only state management using StatefulWidget or Provider (no persistence across app restarts) (005-product-search)
+- Session-only state management using StatefulWidget or Provider (no persistence across app restarts) (025-product-search)
 - Dart 3.10+ / Flutter 3.x, Swift 5.x (iOS native code for USDZ combination) (018-combined-scan-navmesh)
 
 - Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0) (001-main-screen-login)

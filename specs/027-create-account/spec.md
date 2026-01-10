@@ -1,6 +1,6 @@
 # Feature Specification: Create Account
 
-**Feature Branch**: `006-create-account`
+**Feature Branch**: `027-create-account`
 **Created**: 2025-12-20
 **Status**: Draft
 **Input**: User description: "User registration with email and password"
