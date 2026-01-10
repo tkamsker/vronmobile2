@@ -1,0 +1,10 @@
+source "https://rubygems.org"
+
+# Fastlane for iOS automation (building, signing, uploading to TestFlight/App Store)
+# Note: Requires Bundler 2.5.x (< 3.0.0)
+# Bundler version is managed by CI/CD workflow and setup scripts
+gem "fastlane", "~> 2.220"
+
+# Plugins
+plugins_path = File.join(File.dirname(__FILE__), 'fastlane', 'Pluginfile')
+eval_gemfile(plugins_path) if File.exist?(plugins_path)

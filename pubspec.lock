@@ -165,10 +165,10 @@ packages:
     dependency: transitive
     description:
       name: code_builder
-      sha256: "11654819532ba94c34de52ff5feb52bd81cba1de00ef2ed622fd50295f9d4243"
+      sha256: "6a6cab2ba4680d6423f34a9b972a4c9a94ebe1b62ecec4e1a1f2cba91fd1319d"
       url: "https://pub.dev"
     source: hosted
-    version: "4.11.0"
+    version: "4.11.1"
   collection:
     dependency: transitive
     description:
@@ -258,7 +258,7 @@ packages:
     source: hosted
     version: "7.0.3"
   fake_async:
-    dependency: "direct dev"
+    dependency: transitive
     description:
       name: fake_async
       sha256: "5368f224a74523e8d2e7399ea1638b37aecfca824a3cc4dfdf77bf1fa905ac44"
@@ -269,10 +269,10 @@ packages:
     dependency: transitive
     description:
       name: ffi
-      sha256: "289279317b4b16eb2bb7e271abccd4bf84ec9bdcbe999e278a94b804f5630418"
+      sha256: d07d37192dbf97461359c1518788f203b0c9102cfd2c35a716b823741219542c
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.4"
+    version: "2.1.5"
   file:
     dependency: transitive
     description:
@@ -332,7 +332,7 @@ packages:
     source: hosted
     version: "0.21.3+1"
   flutter_json_view:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       name: flutter_json_view
       sha256: "7acbb6768eccfbc4081bf87bb7ffbe628d6ccfcbdd51b1e713030c44aa3daf49"
@@ -603,7 +603,7 @@ packages:
     source: hosted
     version: "3.2.2"
   http_parser:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: http_parser
       sha256: "178d74305e7866013777bab2c3d8726205dc5a4dd935297175b19a23a2e66571"
@@ -759,14 +759,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.10.0"
-  native_ar_viewer:
-    dependency: "direct main"
-    description:
-      name: native_ar_viewer
-      sha256: "083e2c02bf79fd2322b593eb46e0a59866a261d8cea507c06a8cfab5d95d3691"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.0.2"
   nm:
     dependency: transitive
     description:
@@ -816,7 +808,7 @@ packages:
     source: hosted
     version: "3.2.1"
   path:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: path
       sha256: "75cca69d1490965be98c73ceaea117e8a04dd21217b37b292c9ddbec0d955bc5"

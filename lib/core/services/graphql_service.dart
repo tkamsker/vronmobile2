@@ -64,7 +64,7 @@ class GraphQLService {
     Map<String, dynamic>? variables,
   }) async {
     // Guest mode check - block all backend calls
-    if (guestSessionManager.isGuestMode) {
+    if (guestSessionManager?.isGuestMode ?? false) {
       if (kDebugMode) {
         print('❌ [GUEST] Backend query blocked: $query');
         throw StateError('Backend operation not allowed in guest mode: $query');
@@ -99,7 +99,7 @@ class GraphQLService {
         mutation.contains('SignIn');
 
     // Guest mode check - block all backend calls EXCEPT authentication
-    if (guestSessionManager.isGuestMode && !isAuthMutation) {
+    if ((guestSessionManager?.isGuestMode ?? false) && !isAuthMutation) {
       if (kDebugMode) {
         print('❌ [GUEST] Backend mutation blocked: $mutation');
         throw StateError(
@@ -119,7 +119,7 @@ class GraphQLService {
       );
     }
 
-    if (kDebugMode && guestSessionManager.isGuestMode && isAuthMutation) {
+    if (kDebugMode && (guestSessionManager?.isGuestMode ?? false) && isAuthMutation) {
       print('✅ [GUEST] Allowing authentication mutation in guest mode');
     }
 
@@ -150,7 +150,7 @@ class GraphQLService {
     void Function(double progress)? onProgress,
   }) async {
     // Guest mode check - block file uploads in guest mode
-    if (guestSessionManager.isGuestMode) {
+    if (guestSessionManager?.isGuestMode ?? false) {
       if (kDebugMode) {
         print('❌ [GUEST] File upload blocked in guest mode');
       }

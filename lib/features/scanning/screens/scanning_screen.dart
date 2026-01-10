@@ -56,7 +56,7 @@ class _ScanningScreenState extends State<ScanningScreen> {
 
       // For guest mode, auto-launch if supported
       // For logged-in mode, user will press "Scan another room" button
-      if (capability.isScanningSupportpported && guestSessionManager.isGuestMode) {
+      if (capability.isScanningSupportpported && (guestSessionManager?.isGuestMode ?? false)) {
         print('🎯 [SCANNING] Guest mode: Auto-launching native RoomPlan UI...');
         // Small delay to ensure UI is ready
         await Future.delayed(const Duration(milliseconds: 300));
@@ -108,7 +108,7 @@ class _ScanningScreenState extends State<ScanningScreen> {
 
       if (mounted) {
         // Check if user is in guest mode or logged-in
-        final isGuestMode = guestSessionManager.isGuestMode;
+        final isGuestMode = guestSessionManager?.isGuestMode ?? false;
 
         setState(() {
           _isScanning = false;

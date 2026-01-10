@@ -157,7 +157,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Current Project header with ADD Project link
+                  // Current Project header with ADD Project and Edit buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -168,20 +168,43 @@ class _ScanListScreenState extends State<ScanListScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      TextButton.icon(
-                        onPressed: _showAddProjectDialog,
-                        icon: Icon(
-                          Icons.add_circle_outline,
-                          color: Colors.blue.shade600,
-                          size: 20,
-                        ),
-                        label: Text(
-                          'ADD Project',
-                          style: TextStyle(
-                            color: Colors.blue.shade600,
-                            fontSize: 16,
+                      Row(
+                        children: [
+                          // Edit button - loads scan data into active project
+                          if (_selectedProject != null)
+                            TextButton.icon(
+                              onPressed: _loadScanDataIntoProject,
+                              icon: Icon(
+                                Icons.edit_outlined,
+                                color: Colors.green.shade600,
+                                size: 20,
+                              ),
+                              label: Text(
+                                'Edit',
+                                style: TextStyle(
+                                  color: Colors.green.shade600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          const SizedBox(width: 8),
+                          // ADD Project button
+                          TextButton.icon(
+                            onPressed: _showAddProjectDialog,
+                            icon: Icon(
+                              Icons.add_circle_outline,
+                              color: Colors.blue.shade600,
+                              size: 20,
+                            ),
+                            label: Text(
+                              'ADD Project',
+                              style: TextStyle(
+                                color: Colors.blue.shade600,
+                                fontSize: 16,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
@@ -476,25 +499,205 @@ class _ScanListScreenState extends State<ScanListScreen> {
     );
   }
 
-  void _showAddProjectDialog() {
-    // Check if we have combined GLB files available
+  /// Load scan data into the currently selected project
+  Future<void> _loadScanDataIntoProject() async {
+    if (_selectedProject == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a project first'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final scans = _sessionManager.scans;
+    if (scans.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No scans available to load'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: Row(
+          children: [
+            Icon(Icons.edit_outlined, color: Colors.green.shade400),
+            const SizedBox(width: 12),
+            const Text(
+              'Load Scans into Project',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Load ${scans.length} scan${scans.length > 1 ? 's' : ''} into:',
+              style: TextStyle(color: Colors.grey.shade300),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade900.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.blue.shade700.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.folder, color: Colors.blue.shade400, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _selectedProject!.name,
+                      style: TextStyle(
+                        color: Colors.blue.shade200,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'This will upload all scans to the selected project.',
+              style: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey.shade400),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green.shade600,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Load Scans'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    // TODO: Implement scan upload/association logic
+    // For now, show a success message
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green.shade400),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Loading ${scans.length} scan${scans.length > 1 ? 's' : ''} into ${_selectedProject!.name}...',
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green.shade700,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  void _showAddProjectDialog() async {
+    // Check if we have GLB and navmesh files available
     File? worldFile;
     File? meshFile;
 
-    // If combined scan is complete, use those files as defaults
+    print('🔍 [PROJECT] Checking for GLB and navmesh files...');
+
+    // Priority 1: If combined scan is complete, use those files as defaults
     if (_combinedScan?.status == CombinedScanStatus.completed) {
+      print('✅ [PROJECT] Found completed combined scan');
       if (_combinedScan!.combinedGlbLocalPath != null) {
         final glbFile = File(_combinedScan!.combinedGlbLocalPath!);
-        if (glbFile.existsSync()) {
+        if (await glbFile.exists()) {
           worldFile = glbFile;
+          print('✅ [PROJECT] Using combined GLB: ${glbFile.path}');
         }
       }
       if (_combinedScan!.localNavmeshPath != null) {
         final navmeshFile = File(_combinedScan!.localNavmeshPath!);
-        if (navmeshFile.existsSync()) {
+        if (await navmeshFile.exists()) {
           meshFile = navmeshFile;
+          print('✅ [PROJECT] Using combined navmesh: ${navmeshFile.path}');
         }
       }
+    }
+
+    // Priority 2: Check for single scan GLB and navmesh files
+    if (worldFile == null || meshFile == null) {
+      final scans = _sessionManager.scans;
+      print('🔍 [PROJECT] Checking ${scans.length} single scans for GLB/navmesh files...');
+
+      for (final scan in scans) {
+        // Check for GLB file
+        if (worldFile == null && scan.glbLocalPath != null) {
+          final glbFile = File(scan.glbLocalPath!);
+          if (await glbFile.exists()) {
+            worldFile = glbFile;
+            print('✅ [PROJECT] Found single scan GLB: ${glbFile.path}');
+          }
+        }
+
+        // Check for navmesh file (stored in scans/navmesh/<scan_id>_navmesh.glb)
+        if (meshFile == null) {
+          try {
+            final documentsDirectory = (await getApplicationDocumentsDirectory()).path;
+            final navmeshPath = '$documentsDirectory/scans/navmesh/${scan.id}_navmesh.glb';
+            final navmeshFile = File(navmeshPath);
+            if (await navmeshFile.exists()) {
+              meshFile = navmeshFile;
+              print('✅ [PROJECT] Found single scan navmesh: ${navmeshFile.path}');
+            }
+          } catch (e) {
+            print('⚠️ [PROJECT] Error checking navmesh for scan ${scan.id}: $e');
+          }
+        }
+
+        // Break if we found both files
+        if (worldFile != null && meshFile != null) {
+          break;
+        }
+      }
+    }
+
+    // Log final status
+    if (worldFile != null && meshFile != null) {
+      print('✅ [PROJECT] Auto-populating dialog with GLB and navmesh files');
+    } else if (worldFile != null) {
+      print('⚠️ [PROJECT] Found GLB but no navmesh file');
+    } else if (meshFile != null) {
+      print('⚠️ [PROJECT] Found navmesh but no GLB file');
+    } else {
+      print('ℹ️ [PROJECT] No GLB or navmesh files found - user will need to select manually');
     }
 
     showDialog(

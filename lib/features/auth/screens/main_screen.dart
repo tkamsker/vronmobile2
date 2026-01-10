@@ -108,8 +108,8 @@ class _MainScreenState extends State<MainScreen> {
           final userEmail = result.data?['email'] as String?;
 
           // Disable guest mode if user was in guest mode
-          if (guestSessionManager.isGuestMode) {
-            await guestSessionManager.disableGuestMode();
+          if (guestSessionManager?.isGuestMode ?? false) {
+            await guestSessionManager?.disableGuestMode();
             if (kDebugMode) print('✅ [UI] Guest mode disabled after login');
           }
 
@@ -170,8 +170,8 @@ class _MainScreenState extends State<MainScreen> {
         final userEmail = result.data?['email'] as String?;
 
         // Disable guest mode if user was in guest mode
-        if (guestSessionManager.isGuestMode) {
-          await guestSessionManager.disableGuestMode();
+        if (guestSessionManager?.isGuestMode ?? false) {
+          await guestSessionManager?.disableGuestMode();
           if (kDebugMode) {
             print('✅ [UI] Guest mode disabled after Google sign-in');
           }
@@ -257,8 +257,12 @@ class _MainScreenState extends State<MainScreen> {
     try {
       if (kDebugMode) print('🔐 [GUEST] Enabling guest mode...');
 
-      // Enable guest mode
-      await guestSessionManager.enableGuestMode();
+      // Enable guest mode (skip if guestSessionManager not initialized)
+      if (guestSessionManager != null) {
+        await guestSessionManager!.enableGuestMode();
+      } else {
+        if (kDebugMode) print('⚠️ [GUEST] Guest mode disabled - SharedPreferences not available');
+      }
 
       if (kDebugMode) print('✅ [GUEST] Guest mode enabled');
 

@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+// SharedPreferences temporarily disabled for iOS 18 debugging
+// import 'package:shared_preferences/shared_preferences.dart';
 
 /// Service for managing internationalization (i18n) and translations
 class I18nService extends ChangeNotifier {
@@ -25,21 +26,13 @@ class I18nService extends ChangeNotifier {
 
   /// Initialize i18n service and load saved language preference
   Future<void> initialize() async {
-    if (kDebugMode) print('🌍 [I18N] Initializing i18n service...');
+    if (kDebugMode) print('🌍 [I18N] Initializing i18n service (SharedPreferences disabled for iOS 18 debugging)...');
 
-    // Load saved language preference
-    final prefs = await SharedPreferences.getInstance();
-    final savedLanguage = prefs.getString(_languagePreferenceKey);
-
-    if (savedLanguage != null && supportedLanguages.contains(savedLanguage)) {
-      _currentLanguage = savedLanguage;
-      if (kDebugMode) {
-        print('🌍 [I18N] Loaded saved language: $_currentLanguage');
-      }
-    } else {
-      if (kDebugMode) {
-        print('🌍 [I18N] Using default language: $_currentLanguage');
-      }
+    // TEMPORARILY DISABLED: Skip SharedPreferences to isolate black screen issue
+    // Always use default language for now
+    _currentLanguage = defaultLanguage;
+    if (kDebugMode) {
+      print('🌍 [I18N] Using default language: $_currentLanguage (SharedPreferences disabled)');
     }
 
     // Load translations for current language
@@ -105,9 +98,11 @@ class I18nService extends ChangeNotifier {
     // Load new translations
     await _loadTranslations(languageCode);
 
+    // TEMPORARILY DISABLED: Skip SharedPreferences persistence
+    // TODO: Re-enable after fixing iOS 18 compatibility
     // Save preference
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_languagePreferenceKey, languageCode);
+    // final prefs = await SharedPreferences.getInstance();
+    // await prefs.setString(_languagePreferenceKey, languageCode);
 
     // Notify listeners to rebuild UI
     notifyListeners();

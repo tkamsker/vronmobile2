@@ -12,6 +12,9 @@
 .swiftpm/
 migrate_working_dir/
 .env
+.env.stage
+.env.main
+.env.backup
 .auth_token
 
 # IntelliJ related
@@ -121,3 +124,8 @@ android/key.properties
 *.app
 *.dSYM.zip
 *.dSYM
+
+# Node.js / semantic-release
+node_modules/
+package-lock.json
+npm-debug.log*

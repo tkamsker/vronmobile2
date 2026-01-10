@@ -16,15 +16,15 @@ import 'package:vronmobile2/features/scanning/models/stitched_model.dart';
 /// - Save to project (requires authentication)
 class StitchedModelPreviewScreen extends StatefulWidget {
   final StitchedModel stitchedModel;
-  final bool isIOS;
+  final bool? isIOS;
   final bool isGuestMode;
 
   const StitchedModelPreviewScreen({
     super.key,
     required this.stitchedModel,
-    bool? isIOS,
+    this.isIOS,
     this.isGuestMode = false,
-  }) : isIOS = isIOS ?? Platform.isIOS;
+  });
 
   @override
   State<StitchedModelPreviewScreen> createState() =>
@@ -77,7 +77,7 @@ class _StitchedModelPreviewScreenState
 
   /// Handles "View in AR" button tap (iOS only)
   Future<void> _viewInAR() async {
-    if (!widget.isIOS) {
+    if (!(widget.isIOS ?? Platform.isIOS)) {
       return;
     }
 
@@ -295,9 +295,9 @@ class _StitchedModelPreviewScreenState
                 Semantics(
                   label: 'View stitched model in augmented reality',
                   button: true,
-                  enabled: widget.isIOS,
+                  enabled: widget.isIOS ?? Platform.isIOS,
                   child: ElevatedButton.icon(
-                    onPressed: widget.isIOS ? _viewInAR : null,
+                    onPressed: (widget.isIOS ?? Platform.isIOS) ? _viewInAR : null,
                     icon: const Icon(Icons.view_in_ar),
                     label: const Text('View in AR'),
                   ),

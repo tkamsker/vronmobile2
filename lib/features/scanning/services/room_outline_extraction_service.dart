@@ -15,8 +15,10 @@ class RoomOutlineExtractionService {
   /// Returns RoomOutline with projected vertices or null if extraction fails
   Future<RoomOutline?> extractOutline(ScanData scan) async {
     try {
-      // Use GLB path if available, otherwise USDZ
-      final String filePath = scan.glbLocalPath ?? scan.localPath;
+      // IMPORTANT: Always use USDZ path for outline extraction
+      // iOS SceneKit (native extractor) only supports USDZ format
+      // GLB files are for NavMesh generation only
+      final String filePath = scan.localPath;
 
       if (filePath == null || filePath.isEmpty) {
         print('❌ No file path available for scan ${scan.id}');

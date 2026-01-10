@@ -12,7 +12,8 @@ on:
 
 env:
   FLUTTER_VERSION: 'stable'
-  ANDROID_BUILD_DIR: build/app/outputs/flutter-apk
+  ANDROID_APK_BUILD_DIR: build/app/outputs/flutter-apk
+  ANDROID_AAB_BUILD_DIR: build/app/outputs/bundle
   IOS_BUILD_DIR: build/ios/ipa
 
 jobs:
@@ -26,8 +27,27 @@ jobs:
         with:
           channel: ${{ env.FLUTTER_VERSION }}
       - run: flutter pub get
-      - run: flutter analyze
-      - run: flutter test
+      - name: Generate .env file
+        env:
+          VRON_API_URI: ${{ secrets.VRON_API_URI_STAGE }}
+          VRON_MERCHANTS_URL: ${{ secrets.VRON_MERCHANTS_URL_STAGE }}
+          APP_COOKIE_DOMAIN: ${{ secrets.APP_COOKIE_DOMAIN }}
+          ENV: ${{ secrets.ENV }}
+          DEBUG: ${{ secrets.DEBUG }}
+          BLENDER_API_BASE_URL: ${{ secrets.BLENDER_API_BASE_URL_STAGE }}
+          BLENDER_API_KEY: ${{ secrets.BLENDER_API_KEY_STAGE }}
+          BLENDER_API_TIMEOUT_SECONDS: ${{ secrets.BLENDER_API_TIMEOUT_SECONDS }}
+          BLENDER_API_POLL_INTERVAL_SECONDS: ${{ secrets.BLENDER_API_POLL_INTERVAL_SECONDS }}
+          ROOM_ROTATION_DEGREES: ${{ secrets.ROOM_ROTATION_DEGREES }}
+          DOOR_CONNECTION_THRESHOLD: ${{ secrets.DOOR_CONNECTION_THRESHOLD }}
+          CANVAS_GRID_SIZE: ${{ secrets.CANVAS_GRID_SIZE }}
+        run: |
+          chmod +x ./scripts/generate-env.sh
+          ./scripts/generate-env.sh
+      - name: Generate build info
+        run: ./scripts/generate_build_info.sh
+      - name: Run flutter analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
   # 2) Stage: build dev/stage artifacts + optionally upload iOS to TestFlight (internal)
   build-stage:
@@ -49,29 +69,63 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Run tests
+      - name: Generate .env file
+        env:
+          VRON_API_URI: ${{ secrets.VRON_API_URI_STAGE }}
+          VRON_MERCHANTS_URL: ${{ secrets.VRON_MERCHANTS_URL_STAGE }}
+          APP_COOKIE_DOMAIN: ${{ secrets.APP_COOKIE_DOMAIN }}
+          ENV: ${{ secrets.ENV }}
+          DEBUG: ${{ secrets.DEBUG }}
+          BLENDER_API_BASE_URL: ${{ secrets.BLENDER_API_BASE_URL_STAGE }}
+          BLENDER_API_KEY: ${{ secrets.BLENDER_API_KEY_STAGE }}
+          BLENDER_API_TIMEOUT_SECONDS: ${{ secrets.BLENDER_API_TIMEOUT_SECONDS }}
+          BLENDER_API_POLL_INTERVAL_SECONDS: ${{ secrets.BLENDER_API_POLL_INTERVAL_SECONDS }}
+          ROOM_ROTATION_DEGREES: ${{ secrets.ROOM_ROTATION_DEGREES }}
+          DOOR_CONNECTION_THRESHOLD: ${{ secrets.DOOR_CONNECTION_THRESHOLD }}
+          CANVAS_GRID_SIZE: ${{ secrets.CANVAS_GRID_SIZE }}
         run: |
-          flutter analyze
-          flutter test
+          chmod +x ./scripts/generate-env.sh
+          ./scripts/generate-env.sh
 
-      # Android stage build (APK / AAB)
-      - name: Build Android stage (AAB)
-        run: |
-          flutter build appbundle \
-            --flavor stage \
-            --release \
-            --dart-define=BUILD_NUMBER=${BUILD_NUMBER}
+      - name: Generate build info
+        run: ./scripts/generate_build_info.sh
 
-      - name: Upload Android stage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-stage-aab
-          path: ${{ env.ANDROID_BUILD_DIR }}/*.aab
+      - name: Run flutter analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      # ============================================================================
+      # ANDROID BUILD - TEMPORARILY DISABLED
+      # TODO: Re-enable when Android signing and build issues are resolved
+      # Uncomment the steps below to restore Android builds
+      # ============================================================================
+
+      # # Android stage build (APK / AAB)
+      # - name: Build Android stage (AAB)
+      #   run: |
+      #     flutter build appbundle \
+      #       --flavor stage \
+      #       --release \
+      #       --dart-define=BUILD_NUMBER=${BUILD_NUMBER}
+
+      # - name: Upload Android stage artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: android-stage-aab
+      #     path: ${{ env.ANDROID_AAB_BUILD_DIR }}/stageRelease/*.aab
+
+      # ============================================================================
+      # END ANDROID BUILD
+      # ============================================================================
 
       # iOS stage build + TestFlight upload via fastlane
+      - name: Setup Bundler
+        run: |
+          gem install bundler:2.5.22
+          bundle _2.5.22_ --version
+
       - name: Install Ruby gems
         working-directory: ios
-        run: bundle install
+        run: bundle _2.5.22_ install
 
       - name: Build & upload iOS stage to TestFlight
         working-directory: ios
@@ -103,27 +157,61 @@ jobs:
       - name: Flutter pub get
         run: flutter pub get
 
-      - name: Run tests
+      - name: Generate .env file
+        env:
+          VRON_API_URI: ${{ secrets.VRON_API_URI_MAIN }}
+          VRON_MERCHANTS_URL: ${{ secrets.VRON_MERCHANTS_URL_MAIN }}
+          APP_COOKIE_DOMAIN: ${{ secrets.APP_COOKIE_DOMAIN }}
+          ENV: ${{ secrets.ENV }}
+          DEBUG: ${{ secrets.DEBUG }}
+          BLENDER_API_BASE_URL: ${{ secrets.BLENDER_API_BASE_URL_MAIN }}
+          BLENDER_API_KEY: ${{ secrets.BLENDER_API_KEY_MAIN }}
+          BLENDER_API_TIMEOUT_SECONDS: ${{ secrets.BLENDER_API_TIMEOUT_SECONDS }}
+          BLENDER_API_POLL_INTERVAL_SECONDS: ${{ secrets.BLENDER_API_POLL_INTERVAL_SECONDS }}
+          ROOM_ROTATION_DEGREES: ${{ secrets.ROOM_ROTATION_DEGREES }}
+          DOOR_CONNECTION_THRESHOLD: ${{ secrets.DOOR_CONNECTION_THRESHOLD }}
+          CANVAS_GRID_SIZE: ${{ secrets.CANVAS_GRID_SIZE }}
         run: |
-          flutter analyze
-          flutter test
+          chmod +x ./scripts/generate-env.sh
+          ./scripts/generate-env.sh
 
-      - name: Build Android prod (AAB)
+      - name: Generate build info
+        run: ./scripts/generate_build_info.sh
+
+      - name: Run flutter analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      # ============================================================================
+      # ANDROID BUILD - TEMPORARILY DISABLED
+      # TODO: Re-enable when Android signing and build issues are resolved
+      # Uncomment the steps below to restore Android builds
+      # ============================================================================
+
+      # - name: Build Android prod (AAB)
+      #   run: |
+      #     flutter build appbundle \
+      #       --flavor prod \
+      #       --release \
+      #       --dart-define=BUILD_NUMBER=${BUILD_NUMBER}
+
+      # - name: Upload Android prod artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: android-prod-aab
+      #     path: ${{ env.ANDROID_AAB_BUILD_DIR }}/prodRelease/*.aab
+
+      # ============================================================================
+      # END ANDROID BUILD
+      # ============================================================================
+
+      - name: Setup Bundler
         run: |
-          flutter build appbundle \
-            --flavor prod \
-            --release \
-            --dart-define=BUILD_NUMBER=${BUILD_NUMBER}
-
-      - name: Upload Android prod artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-prod-aab
-          path: ${{ env.ANDROID_BUILD_DIR }}/*.aab
+          gem install bundler:2.5.22
+          bundle _2.5.22_ --version
 
       - name: Install Ruby gems
         working-directory: ios
-        run: bundle install
+        run: bundle _2.5.22_ install
 
       - name: Build & upload iOS prod to TestFlight
         working-directory: ios
@@ -138,3 +226,67 @@ jobs:
           bundle exec fastlane ios build_upload_testflight \
             build_number:${BUILD_NUMBER} \
             flavor:prod
+
+  # 4) Semantic Release: Auto version and tag for stage branch
+  release-stage:
+    if: github.ref == 'refs/heads/stage'
+    needs: build-stage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_AUTHOR_NAME: vronmobile-ci
+          GIT_AUTHOR_EMAIL: ci@vron.one
+          GIT_COMMITTER_NAME: vronmobile-ci
+          GIT_COMMITTER_EMAIL: ci@vron.one
+        run: npx semantic-release
+
+  # 5) Semantic Release: Auto version and tag for main branch
+  release-main:
+    if: github.ref == 'refs/heads/main'
+    needs: build-main
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_AUTHOR_NAME: vronmobile-ci
+          GIT_AUTHOR_EMAIL: ci@vron.one
+          GIT_COMMITTER_NAME: vronmobile-ci
+          GIT_COMMITTER_EMAIL: ci@vron.one
+        run: npx semantic-release

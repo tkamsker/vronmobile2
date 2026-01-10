@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
+// SharedPreferences temporarily disabled for iOS 18 debugging
+// import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vronmobile2/core/theme/app_theme.dart';
 import 'package:vronmobile2/core/navigation/routes.dart';
 import 'package:vronmobile2/core/config/env_config.dart';
@@ -16,33 +18,28 @@ import 'package:vronmobile2/features/guest/services/guest_session_manager.dart';
 import 'package:vronmobile2/features/scanning/screens/scanning_screen.dart';
 import 'package:vronmobile2/features/scanning/screens/lidar_router_screen.dart';
 
-/// Global guest session manager instance
-late GuestSessionManager guestSessionManager;
+/// Global guest session manager instance (nullable for iOS 18 debugging)
+GuestSessionManager? guestSessionManager;
 
 void main() async {
   // Ensure Flutter is initialized before loading environment
   WidgetsFlutterBinding.ensureInitialized();
-  print('✅ [INIT] Flutter binding initialized');
 
   // Initialize i18n service (load translations and saved language preference)
   await I18nService().initialize();
-  print('✅ [INIT] I18N service initialized');
 
   // Load environment configuration from .env file
   await EnvConfig.initialize();
-  print('✅ [INIT] EnvConfig loaded from .env');
 
-  // Initialize guest session manager
-  final prefs = await SharedPreferences.getInstance();
-  print('✅ [INIT] SharedPreferences instance obtained');
+  // TEMPORARILY DISABLED: Guest session manager initialization
+  // Skip guest mode for now to isolate black screen issue
+  // TODO: Re-enable after fixing SharedPreferences iOS 18 compatibility
+  if (kDebugMode) {
+    print('⚠️ [GUEST] Guest session manager initialization skipped for debugging');
+  }
+  guestSessionManager = null; // Will be initialized later when SharedPreferences works
 
-  guestSessionManager = GuestSessionManager(prefs: prefs);
-  await guestSessionManager.initialize();
-  print('✅ [INIT] GuestSessionManager initialized');
-
-  print('✅ [INIT] Starting VronApp...');
   runApp(const VronApp());
-  print('✅ [INIT] VronApp started - rendering UI');
 }
 
 class VronApp extends StatelessWidget {
@@ -50,12 +47,10 @@ class VronApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('🎨 [UI] VronApp build() called');
     // Listen to i18n service for language changes and rebuild UI
     return ListenableBuilder(
       listenable: I18nService(),
       builder: (context, child) {
-        print('🎨 [UI] ListenableBuilder building MaterialApp');
         return MaterialApp(
           title: 'VRON',
           theme: AppTheme.lightTheme,

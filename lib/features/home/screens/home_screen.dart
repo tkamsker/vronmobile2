@@ -136,8 +136,13 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onFilterChanged(String filter) {
     HapticFeedback.selectionClick();
     if (kDebugMode) print('🏠 [HOME] Filter changed to: $filter');
+
+    // Clear search when switching filters to show all results for selected filter
+    _searchController.clear();
+
     setState(() {
       _selectedFilter = filter;
+      _searchQuery = ''; // Clear search query
       _applyFilters();
     });
   }

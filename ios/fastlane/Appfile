@@ -1,0 +1,15 @@
+# Appfile for VRonMobile2
+# This file contains the configuration for fastlane
+
+# Your Apple Developer Portal team ID
+# Can be found at https://developer.apple.com/account/#/membership
+team_id ENV["DEVELOPER_TEAM_ID"] || "FCYQ88VMMP"
+
+# Your Apple ID email
+apple_id ENV["APPLE_ID"] || "your-apple-id@example.com"
+
+# App identifier for production
+app_identifier("com.example.vronmobile2")
+
+# For more information about the Appfile, see:
+#     https://docs.fastlane.tools/advanced/#appfile

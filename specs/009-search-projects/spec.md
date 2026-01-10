@@ -4,6 +4,7 @@
 **Created**: 2025-12-20
 **Status**: ✅ Complete
 **Completed**: 2026-01-10
+**Updated**: 2026-01-10 - Fixed filter buttons to clear search query
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -25,6 +26,7 @@ User types in search bar to filter projects by name.
 - No search results found
 - Search with special characters
 - Very long search queries
+- Filter buttons (All, Active, BYO, Archived) must clear active search query to show all results for that filter
 
 ## Requirements *(mandatory)*
 
@@ -34,6 +36,7 @@ User types in search bar to filter projects by name.
 - **FR-002**: System MUST call projects query with search parameter
 - **FR-003**: System MUST debounce search input (300ms)
 - **FR-004**: System MUST display "no results" message when no matches
+- **FR-005**: System MUST clear search query when filter button is pressed (All, Active, BYO, Archived)
 
 ### GraphQL Contract
 
