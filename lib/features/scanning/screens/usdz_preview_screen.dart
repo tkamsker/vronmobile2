@@ -11,6 +11,8 @@ import '../services/blender_api_service.dart';
 import '../services/blenderapi_service.dart';
 import 'scanning_screen.dart';
 import 'glb_preview_screen.dart';
+import '../../../main.dart' show guestSessionManager;
+import '../../../core/navigation/routes.dart';
 
 /// USDZ Preview Screen (Requirements/USDZ_Preview.jpg)
 ///
@@ -83,8 +85,17 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
         ? rawHeight
         : null;
 
+    // Check if in guest mode
+    final isGuestMode = guestSessionManager?.isGuestMode ?? false;
+
     return Scaffold(
       appBar: AppBar(
+        leading: isGuestMode
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => _navigateBackInGuestMode(),
+              )
+            : null,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -934,7 +945,25 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
     Navigator.of(context).pop({'action': 'save', 'scan': updatedScanData});
   }
 
+  /// Navigate back to main screen in guest mode
+  void _navigateBackInGuestMode() {
+    final isGuestMode = guestSessionManager?.isGuestMode ?? false;
+
+    if (isGuestMode) {
+      print('🔙 [GUEST] Navigating back to main screen from preview');
+      // Clear navigation stack and return to main screen (login)
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        AppRoutes.main,
+        (route) => false,
+      );
+    } else {
+      // Regular back navigation
+      Navigator.of(context).pop();
+    }
+  }
+
   /// Delete scan and all associated files (USDZ and GLB if exists)
+  /// In guest mode, navigates to main screen instead of back
   Future<void> _deleteScan() async {
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
@@ -1030,8 +1059,18 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
           ),
         );
 
-        // Navigate back with delete action
-        Navigator.of(context).pop({'action': 'delete', 'scan': _currentScanData});
+        // Check if guest mode - navigate to main screen instead of back
+        final isGuestMode = guestSessionManager?.isGuestMode ?? false;
+        if (isGuestMode) {
+          print('🔙 [GUEST] Delete: Navigating to main screen');
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.main,
+            (route) => false,
+          );
+        } else {
+          // Navigate back with delete action
+          Navigator.of(context).pop({'action': 'delete', 'scan': _currentScanData});
+        }
       }
     } catch (e) {
       print('❌ [USDZ] Error deleting scan: $e');
