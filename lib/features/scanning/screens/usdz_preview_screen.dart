@@ -985,19 +985,28 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'This will permanently delete:',
+              'This will permanently delete all files associated with this scan:',
               style: TextStyle(color: Colors.white),
             ),
             const SizedBox(height: 12),
             Text(
-              '• USDZ file',
+              '• USDZ scan file',
               style: TextStyle(color: Colors.grey.shade300),
             ),
             if (_glbLocalPath != null)
               Text(
-                '• GLB file',
+                '• GLB converted file',
                 style: TextStyle(color: Colors.grey.shade300),
               ),
+            Text(
+              '• NavMesh file (if created)',
+              style: TextStyle(color: Colors.grey.shade300),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'The scan will also be removed from the session.',
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 12),
+            ),
             const SizedBox(height: 16),
             Text(
               'This action cannot be undone.',
@@ -1030,13 +1039,18 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
     }
 
     try {
-      print('🗑️ [USDZ] Deleting scan files...');
+      print('🗑️ [USDZ] Deleting all scan files for scan ID: ${_currentScanData.id}');
+
+      int filesDeleted = 0;
 
       // Delete USDZ file
       final usdzFile = File(_currentScanData.localPath);
       if (await usdzFile.exists()) {
         await usdzFile.delete();
+        filesDeleted++;
         print('✅ [USDZ] Deleted USDZ file: ${_currentScanData.localPath}');
+      } else {
+        print('⚠️ [USDZ] USDZ file not found: ${_currentScanData.localPath}');
       }
 
       // Delete GLB file if it exists
@@ -1044,12 +1058,41 @@ class _UsdzPreviewScreenState extends State<UsdzPreviewScreen> {
         final glbFile = File(_glbLocalPath!);
         if (await glbFile.exists()) {
           await glbFile.delete();
+          filesDeleted++;
           print('✅ [USDZ] Deleted GLB file: $_glbLocalPath');
+        } else {
+          print('⚠️ [USDZ] GLB file not found: $_glbLocalPath');
         }
       }
 
-      // Remove scan from session manager
-      _sessionManager.removeScan(_currentScanData.id);
+      // Delete NavMesh file if it exists
+      try {
+        final documentsDirectory = await getApplicationDocumentsDirectory();
+        final navmeshPath = '${documentsDirectory.path}/scans/navmesh/${_currentScanData.id}_navmesh.glb';
+        final navmeshFile = File(navmeshPath);
+
+        if (await navmeshFile.exists()) {
+          await navmeshFile.delete();
+          filesDeleted++;
+          print('✅ [USDZ] Deleted NavMesh file: $navmeshPath');
+        } else {
+          print('ℹ️ [USDZ] NavMesh file not found (may not have been created): $navmeshPath');
+        }
+      } catch (e) {
+        print('⚠️ [USDZ] Error checking/deleting NavMesh file: $e');
+      }
+
+      // Remove scan from session manager array
+      print('🗑️ [USDZ] Removing scan from session manager...');
+      final removed = _sessionManager.removeScan(_currentScanData.id);
+
+      if (removed) {
+        print('✅ [USDZ] Scan removed from session manager array');
+      } else {
+        print('⚠️ [USDZ] Scan was not found in session manager array');
+      }
+
+      print('✅ [USDZ] Deletion complete: $filesDeleted file(s) deleted');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

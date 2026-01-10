@@ -23,9 +23,19 @@ class ScanSessionManager {
   }
 
   /// Remove a scan from the session
-  void removeScan(String scanId) {
+  /// Returns true if scan was found and removed, false otherwise
+  bool removeScan(String scanId) {
+    final initialLength = _scans.length;
     _scans.removeWhere((scan) => scan.id == scanId);
-    print('📊 [SESSION] Removed scan $scanId, remaining: ${_scans.length}');
+    final removed = _scans.length < initialLength;
+
+    if (removed) {
+      print('📊 [SESSION] Removed scan $scanId, remaining: ${_scans.length}');
+    } else {
+      print('⚠️ [SESSION] Scan $scanId not found in session');
+    }
+
+    return removed;
   }
 
   /// Get a specific scan by ID
