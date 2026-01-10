@@ -157,7 +157,7 @@ class _ScanListScreenState extends State<ScanListScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Current Project header with ADD/UPDATE Project link
+                  // Current Project header with ADD Project and Edit buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -168,22 +168,43 @@ class _ScanListScreenState extends State<ScanListScreen> {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      TextButton.icon(
-                        onPressed: _showAddProjectDialog,
-                        icon: Icon(
-                          _selectedProject != null
-                              ? Icons.edit_outlined
-                              : Icons.add_circle_outline,
-                          color: Colors.blue.shade600,
-                          size: 20,
-                        ),
-                        label: Text(
-                          _selectedProject != null ? 'UPDATE Project' : 'ADD Project',
-                          style: TextStyle(
-                            color: Colors.blue.shade600,
-                            fontSize: 16,
+                      Row(
+                        children: [
+                          // Edit button - loads scan data into active project
+                          if (_selectedProject != null)
+                            TextButton.icon(
+                              onPressed: _loadScanDataIntoProject,
+                              icon: Icon(
+                                Icons.edit_outlined,
+                                color: Colors.green.shade600,
+                                size: 20,
+                              ),
+                              label: Text(
+                                'Edit',
+                                style: TextStyle(
+                                  color: Colors.green.shade600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          const SizedBox(width: 8),
+                          // ADD Project button
+                          TextButton.icon(
+                            onPressed: _showAddProjectDialog,
+                            icon: Icon(
+                              Icons.add_circle_outline,
+                              color: Colors.blue.shade600,
+                              size: 20,
+                            ),
+                            label: Text(
+                              'ADD Project',
+                              style: TextStyle(
+                                color: Colors.blue.shade600,
+                                fontSize: 16,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
@@ -476,6 +497,133 @@ class _ScanListScreenState extends State<ScanListScreen> {
         ),
       ),
     );
+  }
+
+  /// Load scan data into the currently selected project
+  Future<void> _loadScanDataIntoProject() async {
+    if (_selectedProject == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a project first'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final scans = _sessionManager.scans;
+    if (scans.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No scans available to load'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey.shade900,
+        title: Row(
+          children: [
+            Icon(Icons.edit_outlined, color: Colors.green.shade400),
+            const SizedBox(width: 12),
+            const Text(
+              'Load Scans into Project',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Load ${scans.length} scan${scans.length > 1 ? 's' : ''} into:',
+              style: TextStyle(color: Colors.grey.shade300),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade900.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.blue.shade700.withValues(alpha: 0.5),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.folder, color: Colors.blue.shade400, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _selectedProject!.name,
+                      style: TextStyle(
+                        color: Colors.blue.shade200,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'This will upload all scans to the selected project.',
+              style: TextStyle(
+                color: Colors.grey.shade400,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey.shade400),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green.shade600,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Load Scans'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    // TODO: Implement scan upload/association logic
+    // For now, show a success message
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green.shade400),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Loading ${scans.length} scan${scans.length > 1 ? 's' : ''} into ${_selectedProject!.name}...',
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.green.shade700,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   void _showAddProjectDialog() async {

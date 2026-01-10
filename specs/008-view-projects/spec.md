@@ -3,7 +3,7 @@
 **Feature Branch**: `008-view-projects`
 **Created**: 2025-12-24
 **Status**: Implementation Completion
-**Updated**: Based on codebase analysis
+**Updated**: 2026-01-10 - Added scan data loading UI changes
 
 ## Overview
 
@@ -129,6 +129,13 @@ User can search products within a specific project.
 - **FR-019**: System MUST display search results count
 - **FR-020**: System MUST handle empty search results gracefully
 
+**Scan Data Management (US5)**:
+- **FR-021**: System MUST display "ADD Project" button on scan list screen at all times
+- **FR-022**: System MUST display "Edit" button on scan list screen when project is selected
+- **FR-023**: System MUST show confirmation dialog before loading scans into project
+- **FR-024**: System MUST validate that scans exist before allowing edit action
+- **FR-025**: System MUST associate all captured scans with selected project on confirmation
+
 ### Non-Functional Requirements
 
 - **NFR-001**: Project creation MUST complete within 3 seconds on normal network
@@ -179,6 +186,21 @@ User can search products within a specific project.
 3. **Product linking**: Existing product creation flow supports pre-filling project context
 4. **Sorting**: All project data needed for sorting is available in current fetchProjects() response
 5. **Search**: Product search is client-side (no backend query needed for initial implementation)
+
+### User Story 5 - Load Scans into Project (Priority: P2)
+
+User can load captured scan data into an active project from the scan list screen.
+
+**Why this priority**: Enables users to associate scans with projects for organization and management.
+
+**Independent Test**: In scan list with selected project, tap "Edit" button, confirm dialog, verify scans are loaded into project.
+
+**Acceptance Scenarios**:
+
+1. **Given** user has selected a project and captured scans, **When** user taps "Edit" button, **Then** confirmation dialog displays showing project name and scan count
+2. **Given** confirmation dialog displayed, **When** user confirms, **Then** scans are uploaded/associated with selected project
+3. **Given** no project selected, **When** user taps "Edit" button, **Then** error message prompts to select project first
+4. **Given** no scans captured, **When** "Edit" button would appear, **Then** button is hidden
 
 ## Out of Scope
 
