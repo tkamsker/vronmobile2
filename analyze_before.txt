@@ -1,0 +1,399 @@
+Analyzing vronmobile2...                                        
+
+warning • The value of the field '_languagePreferenceKey' isn't used • lib/core/i18n/i18n_service.dart:25:23 • unused_field
+   info • Don't invoke 'print' in production code • lib/core/services/graphql_service.dart:72:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/core/services/graphql_service.dart:109:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/core/services/graphql_service.dart:123:7 • avoid_print
+   info • 'encryptedSharedPreferences' is deprecated and shouldn't be used. EncryptedSharedPreferences is deprecated and will be removed in v11. The Jetpack Security library is deprecated by Google. Your data will be automatically migrated to custom ciphers on first access. Remove this parameter - it will be ignored • lib/core/services/token_storage.dart:15:13 • deprecated_member_use
+   info • Don't use 'BuildContext's across async gaps • lib/features/auth/screens/main_screen.dart:118:13 • use_build_context_synchronously
+   info • Don't use 'BuildContext's across async gaps • lib/features/auth/screens/main_screen.dart:182:11 • use_build_context_synchronously
+warning • The value of the local variable 'error' isn't used • lib/features/auth/services/auth_service.dart:407:17 • unused_local_variable
+   info • The imported package 'path' isn't a dependency of the importing package • lib/features/guest/utils/guest_storage_helper.dart:4:8 • depend_on_referenced_packages
+   info • The imported package 'http_parser' isn't a dependency of the importing package • lib/features/home/services/byo_project_service.dart:4:8 • depend_on_referenced_packages
+   info • The constant name 'ACTIVE' isn't a lowerCamelCase identifier • lib/features/products/models/product.dart:2:22 • constant_identifier_names
+   info • The constant name 'DRAFT' isn't a lowerCamelCase identifier • lib/features/products/models/product.dart:2:30 • constant_identifier_names
+warning • The value of the field '_isExporting' isn't used • lib/features/projects/screens/project_detail_screen.dart:57:8 • unused_field
+   info • The private field _uploadProgress could be 'final' • lib/features/projects/screens/project_detail_screen.dart:58:10 • prefer_final_fields
+   info • Don't invoke 'print' in production code • lib/features/projects/screens/project_detail_screen.dart:101:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/projects/screens/project_detail_screen.dart:103:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/projects/screens/project_detail_screen.dart:182:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/projects/screens/project_detail_screen.dart:186:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/projects/screens/project_detail_screen.dart:189:7 • avoid_print
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/projects/screens/project_detail_screen.dart:191:30 • use_build_context_synchronously
+   info • Don't invoke 'print' in production code • lib/features/projects/screens/project_detail_screen.dart:207:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/projects/screens/project_detail_screen.dart:211:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/projects/screens/project_detail_screen.dart:215:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/projects/screens/project_detail_screen.dart:228:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/projects/screens/project_detail_screen.dart:235:7 • avoid_print
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/projects/screens/project_detail_screen.dart:240:30 • use_build_context_synchronously
+   info • Don't invoke 'print' in production code • lib/features/projects/screens/project_detail_screen.dart:249:7 • avoid_print
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/features/projects/screens/project_detail_screen.dart:256:30 • use_build_context_synchronously
+   info • Don't invoke 'print' in production code • lib/features/projects/screens/project_detail_screen.dart:658:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/projects/screens/project_detail_screen.dart:693:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/models/lidar_capability.dart:28:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/models/lidar_capability.dart:31:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/models/lidar_capability.dart:41:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/models/lidar_capability.dart:48:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/models/lidar_capability.dart:49:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/models/lidar_capability.dart:50:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/models/lidar_capability.dart:51:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/models/lidar_capability.dart:52:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/models/lidar_capability.dart:55:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/models/lidar_capability.dart:66:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/models/lidar_capability.dart:76:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/models/lidar_capability.dart:90:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/models/lidar_capability.dart:93:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/models/lidar_capability.dart:95:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/models/lidar_capability.dart:99:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/room_layout_canvas_screen.dart:58:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/room_layout_canvas_screen.dart:77:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/room_layout_canvas_screen.dart:79:7 • avoid_print
+warning • The declaration '_handleDoorPlacement' isn't referenced • lib/features/scanning/screens/room_layout_canvas_screen.dart:144:8 • unused_element
+   info • Don't use 'BuildContext's across async gaps • lib/features/scanning/screens/room_stitch_progress_screen.dart:116:20 • use_build_context_synchronously
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/save_to_project_screen.dart:81:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/save_to_project_screen.dart:88:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/save_to_project_screen.dart:104:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/save_to_project_screen.dart:124:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:73:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:634:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:638:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:643:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:650:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:658:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:666:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:678:15 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:681:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:694:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:696:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:698:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:700:7 • avoid_print
+   info • Don't use 'BuildContext's across async gaps • lib/features/scanning/screens/scan_list_screen.dart:704:7 • use_build_context_synchronously
+warning • The declaration '_formatTime' isn't referenced • lib/features/scanning/screens/scan_list_screen.dart:1556:10 • unused_element
+warning • The declaration '_formatFileSize' isn't referenced • lib/features/scanning/screens/scan_list_screen.dart:1560:10 • unused_element
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:1639:7 • avoid_print
+warning • The declaration '_viewGlbPreview' isn't referenced • lib/features/scanning/screens/scan_list_screen.dart:1643:16 • unused_element
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:1646:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:1725:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:1800:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:1801:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:1824:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:1828:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:1839:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:1841:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:1919:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scan_list_screen.dart:1921:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:41:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:48:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:50:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:60:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:68:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:94:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:97:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:106:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:107:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:120:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:125:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:129:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:132:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:137:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:138:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:221:19 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:234:19 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:241:21 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:252:23 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:257:27 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:259:27 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:262:25 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/scanning_screen.dart:380:5 • avoid_print
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/features/scanning/screens/stitched_model_preview_screen.dart:126:13 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/features/scanning/screens/stitched_model_preview_screen.dart:126:19 • deprecated_member_use
+warning • The value of the field '_uploadService' isn't used • lib/features/scanning/screens/usdz_preview_screen.dart:41:32 • unused_field
+warning • The value of the field '_conversionResult' isn't used • lib/features/scanning/screens/usdz_preview_screen.dart:45:21 • unused_field
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:386:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:408:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:414:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:427:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:462:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:491:7 • avoid_print
+warning • The declaration '_showConversionInfoDialog' isn't referenced • lib/features/scanning/screens/usdz_preview_screen.dart:503:8 • unused_element
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:661:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:664:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:677:7 • avoid_print
+   info • Don't use 'BuildContext's across async gaps • lib/features/scanning/screens/usdz_preview_screen.dart:678:28 • use_build_context_synchronously
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:687:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:688:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:705:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:706:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:709:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:711:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:714:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:719:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:722:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:725:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:735:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:736:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:739:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:743:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:746:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:754:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:762:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:766:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:788:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:790:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:791:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:841:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:843:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:845:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:852:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:875:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:925:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:927:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:953:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:1042:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:1051:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:1053:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:1062:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:1064:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:1077:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:1079:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:1082:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:1086:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:1090:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:1092:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:1095:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:1108:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/screens/usdz_preview_screen.dart:1119:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:50:15 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:118:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:121:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:190:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:279:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:347:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:401:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:488:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:522:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:529:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:635:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:648:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:742:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:743:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:744:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_client.dart:777:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_service.dart:72:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_service.dart:73:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_service.dart:85:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_service.dart:90:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_service.dart:95:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_service.dart:109:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_service.dart:118:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blender_api_service.dart:123:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:42:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:65:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:100:7 • avoid_print
+   info • Unnecessary braces in a string interpolation • lib/features/scanning/services/blenderapi_service.dart:100:27 • unnecessary_brace_in_string_interps
+   info • Unnecessary braces in a string interpolation • lib/features/scanning/services/blenderapi_service.dart:100:40 • unnecessary_brace_in_string_interps
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:130:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:163:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:164:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:165:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:187:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:213:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:239:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:242:13 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:285:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:305:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:325:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:339:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/blenderapi_service.dart:343:7 • avoid_print
+warning • Unused import: 'package:path_provider/path_provider.dart' • lib/features/scanning/services/combined_scan_service.dart:2:8 • unused_import
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:69:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:70:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:181:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:188:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:195:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:202:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:205:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:208:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:223:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:226:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:230:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:233:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:247:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:258:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:272:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/combined_scan_service.dart:274:9 • avoid_print
+   info • The imported package 'connectivity_plus' isn't a dependency of the importing package • lib/features/scanning/services/connectivity_service.dart:3:8 • depend_on_referenced_packages
+warning • The value of the field '_testDirectory' isn't used • lib/features/scanning/services/connectivity_service.dart:36:17 • unused_field
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:93:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:126:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:128:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:146:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:161:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:169:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:177:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:181:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:192:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:194:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:197:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:208:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:232:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:234:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:243:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/connectivity_service.dart:245:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/device_info_service.dart:91:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/device_info_service.dart:100:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/device_info_service.dart:104:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/device_info_service.dart:111:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/error_log_service.dart:75:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/error_log_service.dart:129:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/error_log_service.dart:179:7 • avoid_print
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/features/scanning/services/export_service.dart:34:26 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/features/scanning/services/export_service.dart:34:32 • deprecated_member_use
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/features/scanning/services/export_service.dart:66:26 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/features/scanning/services/export_service.dart:66:32 • deprecated_member_use
+warning • The operand can't be 'null', so the condition is always 'false' • lib/features/scanning/services/export_service.dart:127:20 • unnecessary_null_comparison
+warning • Dead code • lib/features/scanning/services/export_service.dart:127:29 • dead_code
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • lib/features/scanning/services/export_service.dart:135:28 • deprecated_member_use
+   info • 'shareXFiles' is deprecated and shouldn't be used. Use SharePlus.instance.share() instead • lib/features/scanning/services/export_service.dart:135:34 • deprecated_member_use
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/file_upload_service.dart:86:7 • avoid_print
+warning • The operand can't be 'null', so the condition is always 'false' • lib/features/scanning/services/room_outline_extraction_service.dart:23:20 • unnecessary_null_comparison
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/room_outline_extraction_service.dart:24:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/room_outline_extraction_service.dart:31:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/room_outline_extraction_service.dart:35:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/room_outline_extraction_service.dart:44:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/room_outline_extraction_service.dart:57:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/room_outline_extraction_service.dart:76:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/room_outline_extraction_service.dart:79:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/room_outline_extraction_service.dart:94:9 • avoid_print
+warning • The value of the local variable 'metadata' isn't used • lib/features/scanning/services/room_stitching_service.dart:192:27 • unused_local_variable
+warning • The declaration '_translateErrorCode' isn't referenced • lib/features/scanning/services/room_stitching_service.dart:282:10 • unused_element
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scan_session_manager.dart:22:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scan_session_manager.dart:33:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scan_session_manager.dart:35:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scan_session_manager.dart:53:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scan_session_manager.dart:71:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scan_session_manager.dart:73:7 • avoid_print
+warning • The value of the field '_currentScan' isn't used • lib/features/scanning/services/scanning_service.dart:12:13 • unused_field
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scanning_service.dart:61:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scanning_service.dart:63:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scanning_service.dart:66:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scanning_service.dart:69:11 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scanning_service.dart:76:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scanning_service.dart:78:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scanning_service.dart:81:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scanning_service.dart:83:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scanning_service.dart:86:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scanning_service.dart:92:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scanning_service.dart:97:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scanning_service.dart:102:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scanning_service.dart:103:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/scanning_service.dart:104:7 • avoid_print
+warning • This default clause is covered by the previous cases • lib/features/scanning/services/scanning_service.dart:239:7 • unreachable_switch_default
+warning • Dead code • lib/features/scanning/services/session_investigation_service.dart:67:9 • dead_code
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/session_tracker.dart:41:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/session_tracker.dart:53:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/session_tracker.dart:76:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/session_tracker.dart:80:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/session_tracker.dart:92:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/session_tracker.dart:95:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/session_tracker.dart:101:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/session_tracker.dart:125:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/session_tracker.dart:129:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/session_tracker.dart:139:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/session_tracker.dart:141:9 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/session_tracker.dart:155:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/session_tracker.dart:171:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/usdz_converter_service.dart:29:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/usdz_converter_service.dart:39:5 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/usdz_converter_service.dart:69:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/usdz_converter_service.dart:81:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/usdz_converter_service.dart:85:7 • avoid_print
+   info • Don't invoke 'print' in production code • lib/features/scanning/services/usdz_converter_service.dart:88:7 • avoid_print
+   info • Parameter 'key' could be a super parameter • lib/features/scanning/widgets/combine_progress_dialog.dart:15:9 • use_super_parameters
+   info • Parameter 'key' could be a super parameter • lib/features/scanning/widgets/export_combined_dialog.dart:15:9 • use_super_parameters
+   info • The imported package 'path' isn't a dependency of the importing package • test/features/guest/utils/guest_storage_helper_test.dart:3:8 • depend_on_referenced_packages
+warning • The value of the local variable 'dialogClosed' isn't used • test/features/guest/widgets/account_creation_dialog_test.dart:103:12 • unused_local_variable
+warning • The value of the local variable 'signUpButton' isn't used • test/features/guest/widgets/guest_mode_banner_test.dart:111:13 • unused_local_variable
+warning • The value of the local variable 'scanData' isn't used • test/features/scanning/models/scan_data_test.dart:114:13 • unused_local_variable
+warning • The value of the local variable 'scanData' isn't used • test/features/scanning/models/scan_data_test.dart:128:13 • unused_local_variable
+warning • The value of the local variable 'scanData' isn't used • test/features/scanning/models/scan_data_test.dart:144:13 • unused_local_variable
+warning • The value of the local variable 'callCount' isn't used • test/features/scanning/screens/room_stitch_progress_screen_test.dart:183:13 • unused_local_variable
+   info • 'Share' is deprecated and shouldn't be used. Use SharePlus instead • test/features/scanning/screens/stitched_model_preview_screen_test.dart:11:48 • deprecated_member_use
+warning • The value of the local variable 'requestCount' isn't used • test/features/scanning/services/blender_api_client_test.dart:267:11 • unused_local_variable
+warning • Unused import: 'dart:io' • test/features/scanning/services/combined_scan_service_test.dart:1:8 • unused_import
+   info • Don't invoke 'print' in production code • test/features/scanning/services/connectivity_service_test.dart:43:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/features/scanning/services/connectivity_service_test.dart:62:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/features/scanning/services/connectivity_service_test.dart:99:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/features/scanning/services/connectivity_service_test.dart:158:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/features/scanning/services/connectivity_service_test.dart:194:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/features/scanning/services/connectivity_service_test.dart:262:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/features/scanning/services/connectivity_service_test.dart:288:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/features/scanning/services/connectivity_service_test.dart:303:7 • avoid_print
+warning • The value of the local variable 'executionCount' isn't used • test/features/scanning/services/connectivity_service_test.dart:308:11 • unused_local_variable
+   info • Don't invoke 'print' in production code • test/features/scanning/services/connectivity_service_test.dart:343:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/features/scanning/services/connectivity_service_test.dart:397:9 • avoid_print
+   info • The imported package 'fake_async' isn't a dependency of the importing package • test/features/scanning/services/retry_policy_service_test.dart:2:8 • depend_on_referenced_packages
+warning • The value of the local variable 'startTime' isn't used • test/features/scanning/services/retry_policy_service_test.dart:134:17 • unused_local_variable
+warning • The value of the local variable 'jobId' isn't used • test/features/scanning/services/room_stitching_service_test.dart:349:15 • unused_local_variable
+warning • The value of the local variable 'mockResponse' isn't used • test/features/scanning/services/room_stitching_service_test.dart:369:15 • unused_local_variable
+warning • The value of the local variable 'resultUrl' isn't used • test/features/scanning/services/room_stitching_service_test.dart:379:15 • unused_local_variable
+warning • The value of the local variable 'filename' isn't used • test/features/scanning/services/room_stitching_service_test.dart:391:15 • unused_local_variable
+warning • The value of the local variable 'resultUrl' isn't used • test/features/scanning/services/room_stitching_service_test.dart:401:15 • unused_local_variable
+warning • The value of the local variable 'filename' isn't used • test/features/scanning/services/room_stitching_service_test.dart:414:15 • unused_local_variable
+warning • The value of the local variable 'service' isn't used • test/features/scanning/services/scanning_service_test.dart:6:26 • unused_local_variable
+warning • The value of the local variable 'combinedGlbSize' isn't used • test/features/scanning/widgets/export_combined_dialog_test.dart:29:13 • unused_local_variable
+warning • The value of the local variable 'navmeshSize' isn't used • test/features/scanning/widgets/export_combined_dialog_test.dart:30:13 • unused_local_variable
+   info • Don't invoke 'print' in production code • test/features/scanning/widgets/offline_banner_test.dart:75:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/features/scanning/widgets/offline_banner_test.dart:101:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/features/scanning/widgets/offline_banner_test.dart:128:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/features/scanning/widgets/offline_banner_test.dart:156:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:138:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:139:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:140:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:141:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:142:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:199:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:200:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:201:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:202:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:203:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:239:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:240:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:241:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:369:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:370:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:371:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:372:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:375:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:417:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:418:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:419:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:460:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:461:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:462:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:491:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:492:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:584:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:585:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:586:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:587:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:670:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:671:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:672:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:673:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:737:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:738:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:739:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:740:7 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:815:11 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:816:11 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:817:11 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:818:11 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:876:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:877:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:878:9 • avoid_print
+   info • Don't invoke 'print' in production code • test/integration/error_handling_flow_test.dart:879:9 • avoid_print
+warning • The value of the local variable 'storageService' isn't used • test/integration/file_upload_flow_test.dart:13:29 • unused_local_variable
+warning • The value of the local variable 'testScanData' isn't used • test/integration/file_upload_flow_test.dart:42:15 • unused_local_variable
+
+395 issues found. (ran in 1.9s)

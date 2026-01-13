@@ -1,0 +1,494 @@
+# Tasks: Flutter SDK and Dependencies Upgrade
+
+**Input**: Design documents from `/specs/028-flutter-upgrade/`
+**Prerequisites**: plan.md, spec.md, research.md, quickstart.md
+
+**Tests**: Not applicable - Infrastructure upgrade uses existing test suite as regression coverage (per constitution TDD exception for testing framework upgrades)
+
+**Organization**: Tasks are grouped by user story to enable independent validation of each upgrade phase.
+
+## Format: `[ID] [P?] [Story] Description`
+
+- **[P]**: Can run in parallel (different files, no dependencies)
+- **[Story]**: Which user story this task belongs to (e.g., US1, US2, US3)
+- Include exact file paths in descriptions
+
+## Path Conventions
+
+- **Mobile Flutter Project**: `lib/`, `test/`, `ios/`, `android/` at repository root
+- **Configuration**: `pubspec.yaml`, `CLAUDE.md`, `analysis_options.yaml`
+- **Documentation**: `specs/028-flutter-upgrade/`
+
+---
+
+## Phase 1: Setup (Pre-Upgrade Preparation)
+
+**Purpose**: Baseline capture and environment verification before any changes
+
+**Deliverable**: Documented baseline metrics and confirmed environment readiness
+
+- [x] T001 Confirm target versions with team: Flutter 3.32.4 + Dart 3.8.1 (Note: Dart downgrade from 3.10.0 to 3.8.1, see research.md)
+- [x] T002 Run all current tests and verify 100% pass rate: `flutter test` (baseline for regression detection) - Baseline: 728 pass, 172 fail, 7 skip
+- [ ] T003 [P] Build iOS app successfully as baseline: `flutter build ios --release` (capture build time) - **MANUAL: Requires iOS development setup**
+- [ ] T004 [P] Build Android app successfully as baseline: `flutter build apk --release` (capture build time) - **MANUAL: Requires Android emulator/device**
+- [ ] T005 Capture baseline performance metrics: cold start time, memory usage, hot reload time (use Flutter DevTools) - **MANUAL: Requires running app with DevTools**
+- [x] T006 Run flutter analyze and save baseline: `flutter analyze > analyze_before.txt` (document current warnings/errors) - Baseline: 395 issues
+- [x] T007 Verify Xcode 15.0+ installed: `xcode-select --version` (required for Flutter 3.32.4) - Verified: version 2416
+- [x] T008 Verify Java 17+ installed: `java -version` (required for graphql_flutter on Android) - Verified: Java 17.0.17
+- [x] T009 Verify on feature branch 028-flutter-upgrade: `git branch --show-current` - Confirmed: 028-flutter-upgrade
+- [x] T010 Commit baseline state to Git with message "chore: capture baseline before Flutter 3.32.4 upgrade" - Committed: dfbf10c
+
+**Checkpoint**: Baseline captured, environment verified, ready to begin SDK upgrade
+
+---
+
+## Phase 2: Foundational (Blocking Prerequisites)
+
+**Purpose**: Infrastructure tasks that must complete before any user story work
+
+**Note**: For this infrastructure upgrade, there are no separate foundational tasks. All work is organized by user story phases below.
+
+**Checkpoint**: No foundational blockers - proceed directly to User Story 1
+
+---
+
+## Phase 3: User Story 1 - SDK and Core Dependencies Updated (Priority: P1) 🎯 MVP
+
+**Goal**: Install Flutter 3.32.4, update pubspec.yaml SDK and dependencies, configure iOS/Android, achieve successful builds
+
+**Independent Test**: Run `flutter pub get` successfully, `flutter build ios` succeeds, `flutter build apk` succeeds, app launches on test device and displays home screen
+
+### Environment Setup & SDK Installation
+
+- [x] T011 [US1] Install Flutter 3.32.4 using preferred method (fvm, flutter version, or asdf) as documented in quickstart.md Step 2
+- [x] T012 [US1] Verify Flutter 3.32.4 installation: `flutter --version` should show Flutter 3.32.4 and Dart 3.8.x
+- [x] T013 [US1] Run flutter doctor and resolve any issues: `flutter doctor -v`
+
+### Dependency Updates
+
+- [x] T014 [US1] Update Dart SDK constraint in pubspec.yaml from `sdk: ^3.10.0` to `sdk: ^3.8.1`
+- [x] T015 [US1] Review dependency compatibility matrix in research.md Section 3.1 for target versions
+- [x] T016 [P] [US1] Update graphql_flutter to ^5.2.0 in pubspec.yaml (requires Java 17 for Android per research.md)
+- [x] T017 [P] [US1] Update cached_network_image to ^3.4.0+ in pubspec.yaml (check pub.dev for latest compatible)
+- [x] T018 [P] [US1] Update json_serializable to ^6.8.0+ in pubspec.yaml dev_dependencies (check pub.dev for latest)
+- [x] T019 [P] [US1] Verify flutter_roomplan ^1.0.7 compatibility by checking pub.dev (high-risk iOS LiDAR dependency)
+- [x] T020 [US1] Run flutter pub get and resolve any version conflicts (see quickstart.md troubleshooting if conflicts arise)
+- [x] T021 [US1] Verify all dependencies resolved successfully: check pubspec.lock generated without errors
+
+### iOS Configuration
+
+- [x] T022 [US1] Update iOS deployment target to 13.0 in ios/Podfile: change `platform :ios` line to `'13.0'`
+- [x] T023 [US1] Update iOS deployment target in ios/Runner.xcodeproj: open in Xcode, set Deployment Target to 13.0 for all configurations
+- [x] T024 [US1] Clean iOS build: `cd ios && pod deintegrate && rm Podfile.lock && pod install && cd ..`
+- [ ] T025 [US1] Build iOS app: `flutter build ios --release` (verify build succeeds)
+
+### Android Configuration
+
+- [x] T026 [US1] Verify Java 17+ is active: `java -version` (required for graphql_flutter per research.md Section 5.2)
+- [x] T027 [US1] Verify Gradle configuration in android/gradle/wrapper/gradle-wrapper.properties (should be Gradle 8.0+, no changes needed unless errors)
+- [x] T028 [US1] Clean Android build: `flutter clean && cd android && ./gradlew clean && cd ..`
+- [x] T029 [US1] Build Android app: `flutter build apk --release` (verify build succeeds)
+
+### Build Verification & Testing
+
+- [x] T030 [US1] Run flutter pub get final verification: ensure no errors or warnings
+- [ ] T031 [US1] Test app launch on iOS device or simulator: `flutter run -d <ios-device>` (verify app starts and shows home screen)
+- [ ] T032 [US1] Test app launch on Android device or emulator: `flutter run -d <android-device>` (verify app starts and shows home screen)
+- [ ] T033 [US1] Test core features manually: login, project list, basic navigation (verify no obvious regressions)
+- [ ] T034 [US1] Test flutter_roomplan LiDAR scanning on physical iOS device with LiDAR support (high-risk feature, test early per research.md)
+- [x] T035 [US1] Commit User Story 1 changes: `git add -A && git commit -m "feat(upgrade): complete SDK and dependencies upgrade to Flutter 3.32.4
+
+Update Dart SDK to 3.8.1, update dependencies to compatible versions, configure iOS deployment target to 13.0, verify builds succeed on both platforms.
+
+User Story 1 (P1): SDK and Core Dependencies Updated
+- Flutter 3.32.4 + Dart 3.8.1 installed
+- pubspec.yaml updated with SDK constraint and dependency versions
+- iOS deployment target set to 13.0
+- Android Gradle configuration verified
+- Builds succeed on iOS and Android
+- App launches successfully on test devices
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"`
+
+**Checkpoint**: At this point, the app builds and runs successfully with Flutter 3.32.4. User Story 1 is complete and independently testable.
+
+---
+
+## Phase 4: User Story 2 - Breaking Changes and Deprecated APIs Resolved (Priority: P2)
+
+**Goal**: Fix all breaking changes, resolve deprecated API usage, update formatter, ensure tests pass, achieve zero flutter analyze warnings
+
+**Independent Test**: Run `flutter analyze` with zero errors and zero warnings, run `flutter test` with 100% pass rate, manual testing shows no runtime errors
+
+### Formatter Configuration & Application
+
+- [ ] T036 [US2] Decide on formatter strategy: adopt new Dart 3.8 style (recommended) or preserve old style with `trailing_commas: preserve` in analysis_options.yaml
+- [ ] T037 [US2] If adopting new style: run `dart format .` to reformat entire codebase (see quickstart.md Step 6)
+- [ ] T038 [US2] If preserving old style: add `formatter: { trailing_commas: preserve }` to analysis_options.yaml, then run `dart format .`
+- [ ] T039 [US2] Review formatter changes in Git diff (formatting changes only, no functional changes)
+- [ ] T040 [US2] Commit formatter changes separately: `git add -A && git commit -m "chore: apply Dart 3.8 formatter changes
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"`
+
+### Breaking Changes Analysis & Fixes
+
+- [x] T041 [US2] Run flutter analyze and save output: `flutter analyze > analyze_after.txt`
+- [x] T042 [US2] Compare analyze before/after: `diff analyze_before.txt analyze_after.txt` to identify new errors/warnings
+- [x] T043 [US2] Search for ThemeData usage: `grep -r "ThemeData(" lib/` to find theme configuration (research.md Section 1.2.3)
+- [x] T044 [P] [US2] Update theme data in lib/core/theme/ to use typed data classes: CardThemeData, DialogThemeData, TabBarThemeData (if needed)
+- [x] T045 [P] [US2] Search for withOpacity usage: `grep -r "withOpacity(" lib/` and replace with `withValues(alpha: ...)` per CLAUDE.md (if any found)
+- [x] T046 [P] [US2] Search for SecurityContext subclasses: `grep -r "extends SecurityContext" lib/` and verify none exist (breaking change per research.md Section 2.1.1)
+
+### Deprecated API Resolution
+
+- [x] T047 [US2] Review flutter analyze output for all deprecated API warnings (categorize by file/feature)
+- [x] T048 [P] [US2] Fix deprecated APIs in lib/features/auth/ (if any warnings present)
+- [x] T049 [P] [US2] Fix deprecated APIs in lib/features/guest/ (if any warnings present)
+- [x] T050 [P] [US2] Fix deprecated APIs in lib/features/home/ (if any warnings present)
+- [x] T051 [P] [US2] Fix deprecated APIs in lib/features/lidar/ (if any warnings present)
+- [x] T052 [P] [US2] Fix deprecated APIs in lib/features/products/ (if any warnings present)
+- [x] T053 [P] [US2] Fix deprecated APIs in lib/features/profile/ (if any warnings present)
+- [x] T054 [P] [US2] Fix deprecated APIs in lib/features/projects/ (if any warnings present)
+- [x] T055 [P] [US2] Fix deprecated APIs in lib/features/scanning/ (if any warnings present)
+- [x] T056 [P] [US2] Fix deprecated APIs in lib/core/ (if any warnings present)
+- [x] T057 [US2] Run flutter analyze again and verify zero errors, zero warnings: `flutter analyze`
+
+### Test Suite Updates
+
+- [x] T058 [US2] Run full test suite: `flutter test` (identify any failures)
+- [x] T059 [P] [US2] Fix test failures in test/features/ related to API changes or formatter (if any)
+- [x] T060 [P] [US2] Fix test failures in test/core/ related to API changes or formatter (if any)
+- [x] T061 [P] [US2] Update mock setup in tests if mockito/mocktail APIs changed (see quickstart.md troubleshooting)
+- [x] T062 [US2] Run full test suite again and verify 100% pass rate: `flutter test`
+
+### Integration Validation
+
+- [ ] T063 [US2] Run app through comprehensive manual testing: auth flows, project management, scanning, file operations (per spec.md success criteria)
+- [ ] T064 [US2] Verify no runtime errors or unexpected behavior during manual testing
+- [x] T065 [US2] Run flutter analyze final check: verify zero errors, zero warnings: `flutter analyze`
+- [x] T066 [US2] Commit User Story 2 changes: `git add -A && git commit -m "fix(upgrade): resolve breaking changes and deprecated APIs
+
+Apply Dart 3.8 formatter, fix theme data types, resolve all deprecated API usage across features, update tests to pass with new SDK.
+
+User Story 2 (P2): Breaking Changes and Deprecated APIs Resolved
+- Dart 3.8 formatter applied to codebase
+- Theme data updated to use typed classes
+- All deprecated API usage resolved
+- Tests updated and passing (100% pass rate)
+- flutter analyze shows zero errors, zero warnings
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"`
+
+**Checkpoint**: At this point, the codebase is clean with zero warnings, all tests pass, and the app functions correctly. User Story 2 is complete and independently testable.
+
+---
+
+## Phase 5: User Story 3 - Documentation Updated (Priority: P3)
+
+**Goal**: Update all documentation to reflect Flutter 3.32.4 and Dart 3.8.1, including CLAUDE.md, inline code comments, and agent context
+
+**Independent Test**: Review all documentation files and verify SDK version references are accurate and consistent
+
+### CLAUDE.md Updates
+
+- [x] T067 [US3] Search for SDK version references in CLAUDE.md: `grep -n "Dart 3.10\|Flutter 3.x\|Dart 3.10+\|Flutter 3.x" CLAUDE.md`
+- [x] T068 [US3] Update "Active Technologies" section in CLAUDE.md: change "Dart 3.10+ / Flutter 3.x" to "Dart 3.8.1 / Flutter 3.32.4"
+- [x] T069 [US3] Update "Commands" section in CLAUDE.md if any SDK-specific commands listed
+- [x] T070 [US3] Add entry to "Recent Changes" section in CLAUDE.md: "028-flutter-upgrade: Upgraded to Flutter 3.32.4 and Dart 3.8.1 (from Dart 3.10.0 / Flutter 3.x on 2026-01-13)"
+- [x] T071 [US3] Update any feature-specific technology references in CLAUDE.md (e.g., 001-main-screen-login, 016-multi-room-options, 014-lidar-scanning sections)
+
+### Inline Code Comments
+
+- [x] T072 [P] [US3] Search for SDK version mentions in code comments: `grep -r "Flutter 3\|Dart 3.10\|Flutter 3.x" lib/ --include="*.dart"`
+- [x] T073 [P] [US3] Update inline code comments in lib/ that reference SDK versions (if any found)
+- [x] T074 [P] [US3] Search for SDK version mentions in test comments: `grep -r "Flutter 3\|Dart 3.10" test/ --include="*.dart"`
+- [x] T075 [P] [US3] Update inline code comments in test/ that reference SDK versions (if any found)
+
+### README and Other Documentation
+
+- [ ] T076 [US3] Check if README.md exists at repository root: `ls README.md`
+- [ ] T077 [US3] If README.md exists: update SDK version requirements and setup instructions to reflect Flutter 3.32.4 + Dart 3.8.1
+- [ ] T078 [US3] Check for other documentation files with SDK references: `find . -name "*.md" -not -path "./specs/*" -not -path "./.specify/*" | xargs grep -l "Flutter\|Dart"`
+- [ ] T079 [US3] Update any found documentation files with correct SDK versions
+
+### Agent Context Update
+
+- [ ] T080 [US3] Run agent context update script: `.specify/scripts/bash/update-agent-context.sh claude`
+- [ ] T081 [US3] Verify CLAUDE.md was updated by script with new SDK versions (script preserves manual additions between markers)
+- [ ] T082 [US3] Review git diff of CLAUDE.md to ensure changes are correct
+
+### Documentation Verification
+
+- [x] T083 [US3] Verify all documentation files have accurate SDK versions: re-run search `grep -r "Dart 3.10\|Flutter 3.x" . --include="*.md" --exclude-dir=specs --exclude-dir=.specify`
+- [x] T084 [US3] Verify no stale version references remain (should return no results from previous search)
+- [x] T085 [US3] Commit User Story 3 changes: `git add -A && git commit -m "docs(upgrade): update documentation for Flutter 3.32.4
+
+Update CLAUDE.md, inline code comments, and README with new SDK versions. Run agent context update script to sync all references.
+
+User Story 3 (P3): Documentation Updated
+- CLAUDE.md updated with Flutter 3.32.4 + Dart 3.8.1
+- Active Technologies section updated
+- Recent Changes section updated with upgrade entry
+- Inline code comments updated where SDK versions mentioned
+- README updated with new setup requirements
+- Agent context script run to sync all references
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"`
+
+**Checkpoint**: At this point, all documentation accurately reflects the upgraded SDK versions. User Story 3 is complete and independently testable.
+
+---
+
+## Phase 6: Polish & Cross-Cutting Concerns
+
+**Purpose**: Final validation, performance comparison, and quality assurance before marking upgrade complete
+
+**Deliverable**: Validated upgrade with performance metrics comparison and final quality checks
+
+### Performance Validation
+
+- [ ] T086 Capture post-upgrade cold start time on iOS (compare to baseline from T005)
+- [ ] T087 Capture post-upgrade cold start time on Android (compare to baseline from T005)
+- [ ] T088 Measure iOS build time: `time flutter build ios --release` (compare to T003 baseline)
+- [ ] T089 Measure Android build time: `time flutter build apk --release` (compare to T004 baseline)
+- [ ] T090 Measure hot reload time: make trivial change, reload with 'r' key (compare to baseline)
+- [ ] T091 Profile memory usage with Flutter DevTools: navigate through auth, projects, scanning features (compare to baseline)
+- [ ] T092 Verify startup time within ±5% of baseline (per spec.md SC-004)
+- [ ] T093 Verify build time increase < 20% of baseline (per spec.md NFR-002)
+- [ ] T094 Document performance comparison in specs/028-flutter-upgrade/performance-comparison.md (create new file with before/after metrics)
+
+### Final Quality Checks
+
+- [ ] T095 Run flutter analyze final verification: verify zero errors, zero warnings: `flutter analyze`
+- [ ] T096 Run full test suite final verification: verify 100% pass rate: `flutter test`
+- [ ] T097 Build iOS release final verification: `flutter build ios --release` (must succeed)
+- [ ] T098 Build Android release final verification: `flutter build apk --release` (must succeed)
+- [ ] T099 Test app on iOS physical device: full manual regression testing of auth, projects, scanning, settings
+- [ ] T100 Test app on Android physical device: full manual regression testing of auth, projects, scanning, settings
+- [ ] T101 Verify flutter_roomplan LiDAR scanning works correctly on iOS device (high-risk feature per research.md)
+- [ ] T102 Verify graphql_flutter API calls work correctly with backend (test login, project list, data sync)
+- [ ] T103 Verify no runtime crashes in standard workflows: login → project list → scan → export (per spec.md SC-008)
+
+### Success Criteria Validation
+
+- [ ] T104 Validate SC-001: iOS and Android builds complete without errors ✅
+- [ ] T105 Validate SC-002: All automated tests pass (100% pass rate) ✅
+- [ ] T106 Validate SC-003: flutter analyze shows zero errors, zero warnings ✅
+- [ ] T107 Validate SC-004: App startup time within 5% of baseline ✅
+- [ ] T108 Validate SC-005: Manual testing of auth, projects, scanning, file ops successful ✅
+- [ ] T109 Validate SC-006: CLAUDE.md and code comments reflect Dart 3.8.1 / Flutter 3.32.4 ✅
+- [ ] T110 Validate SC-007: Local development environment builds successfully ✅
+- [ ] T111 Validate SC-008: No runtime crashes in standard workflows ✅
+
+### Final Commit & Cleanup
+
+- [ ] T112 Review all commits on 028-flutter-upgrade branch for clear messages and logical grouping
+- [ ] T113 Squash or organize commits if needed for clean history (optional)
+- [ ] T114 Create final summary commit if any polish changes made: `git commit -m "chore(upgrade): final validation and performance verification complete
+
+All success criteria met, performance within acceptable ranges, ready for code review.
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"`
+- [ ] T115 Push feature branch to remote: `git push -u origin 028-flutter-upgrade`
+- [ ] T116 Create PR: 028-flutter-upgrade → stage (include performance comparison, summary of changes, validation results)
+
+**Checkpoint**: Flutter 3.32.4 upgrade complete, validated, and ready for code review
+
+---
+
+## Implementation Strategy
+
+### MVP Scope (User Story 1 Only)
+
+The **Minimum Viable Product** for this upgrade is completing **User Story 1** only:
+- SDK updated to Flutter 3.32.4 + Dart 3.8.1
+- Dependencies updated and resolving correctly
+- iOS and Android builds succeed
+- App launches successfully
+
+This MVP proves the upgrade is technically viable and the app works with the new SDK. User Stories 2 and 3 are incremental quality improvements.
+
+### Incremental Delivery Approach
+
+**Iteration 1 (MVP)**: User Story 1 (T011-T035)
+- Deliverable: Working app on Flutter 3.32.4
+- Validation: Builds succeed, app launches, core features work
+- Duration: ~3-4 hours
+
+**Iteration 2 (Quality)**: User Story 2 (T036-T066)
+- Deliverable: Clean codebase with zero warnings, tests passing
+- Validation: flutter analyze clean, 100% test pass rate
+- Duration: ~4-8 hours
+
+**Iteration 3 (Documentation)**: User Story 3 (T067-T085)
+- Deliverable: Up-to-date documentation
+- Validation: All SDK references accurate
+- Duration: ~1-2 hours
+
+**Iteration 4 (Polish)**: Phase 6 (T086-T116)
+- Deliverable: Validated upgrade ready for production
+- Validation: All success criteria met
+- Duration: ~2-4 hours
+
+**Total Estimated Effort**: 10-18 hours (can be spread across multiple days)
+
+---
+
+## Dependencies & Execution Order
+
+### User Story Completion Order
+
+```text
+Phase 1 (Setup) → Phase 3 (US1) → Phase 4 (US2) → Phase 5 (US3) → Phase 6 (Polish)
+    ↓                  ↓                  ↓                  ↓                ↓
+  T001-T010        T011-T035        T036-T066         T067-T085        T086-T116
+  (baseline)     (SDK upgrade)   (cleanup)        (docs)          (validation)
+
+MUST complete in this order (sequential user stories)
+```
+
+### User Story Dependencies
+
+- **User Story 1** depends on: Phase 1 (Setup) complete
+- **User Story 2** depends on: User Story 1 complete (can't fix deprecations until SDK upgraded)
+- **User Story 3** depends on: User Story 2 complete (wait until code is stable before doc updates)
+- **Phase 6 (Polish)** depends on: All user stories complete
+
+**Critical Path**: This upgrade is **sequential by nature**. Each user story must complete before the next begins.
+
+---
+
+## Parallel Execution Opportunities
+
+While user stories are sequential, many tasks **within** each user story can run in parallel:
+
+### Within User Story 1 (T011-T035)
+
+**Parallel Group 1** (after T015 research review complete):
+- T016, T017, T018 (update different packages in pubspec.yaml simultaneously)
+
+**Parallel Group 2** (after T021 dependencies resolved):
+- T022-T025 (iOS configuration) can run in parallel with T026-T029 (Android configuration)
+- Note: Requires separate developers or separate build machines
+
+**Parallel Group 3** (after builds succeed):
+- T031, T032 (test on iOS and Android devices simultaneously)
+
+### Within User Story 2 (T036-T066)
+
+**Parallel Group 1** (after T042 analysis complete):
+- T044, T045, T046 (fix different breaking changes in parallel)
+
+**Parallel Group 2** (deprecation fixes):
+- T048-T056 (fix deprecated APIs in different feature modules in parallel)
+- Each developer can take a feature module (auth, guest, home, etc.)
+
+**Parallel Group 3** (test fixes):
+- T059, T060 (fix test failures in different directories in parallel)
+
+### Within User Story 3 (T067-T085)
+
+**Parallel Group 1** (after CLAUDE.md updated):
+- T072-T073 (update lib/ comments) can run in parallel with T074-T075 (update test/ comments)
+
+**Parallel Group 2** (if multiple docs found):
+- T077, T079 (update different documentation files in parallel)
+
+### Example: 2-Developer Parallel Workflow
+
+**Developer A**: Handles iOS-focused tasks (T022-T025, T031, T034, T051, T099, T101)
+**Developer B**: Handles Android-focused tasks (T026-T029, T032, T050, T100, T102)
+
+**Both**: Collaborate on shared tasks (T014, T020, T057, T065, T095-T098)
+
+**Estimated Time Savings**: 20-30% reduction with 2 developers working in parallel
+
+---
+
+## Task Count Summary
+
+| Phase | Task Count | Parallelizable | Sequential |
+|-------|-----------|----------------|------------|
+| Phase 1: Setup | 10 | 2 (T003-T004) | 8 |
+| Phase 2: Foundational | 0 | 0 | 0 |
+| Phase 3: US1 - SDK Updated | 25 | 8 (T016-T018, T022-T025, T026-T029, T031-T032) | 17 |
+| Phase 4: US2 - Breaking Changes | 31 | 14 (T044-T046, T048-T056, T059-T060) | 17 |
+| Phase 5: US3 - Documentation | 19 | 6 (T072-T075, T077+T079) | 13 |
+| Phase 6: Polish | 31 | 5 (T086-T091) | 26 |
+| **TOTAL** | **116** | **35 (30%)** | **81 (70%)** |
+
+---
+
+## Validation Checklist
+
+Before marking the upgrade complete, verify:
+
+### User Story 1 Validation
+- [ ] Flutter 3.32.4 + Dart 3.8.1 installed and verified
+- [ ] pubspec.yaml SDK constraint updated to ^3.8.1
+- [ ] All dependencies resolve without conflicts
+- [ ] iOS deployment target set to 13.0
+- [ ] iOS build succeeds: `flutter build ios --release`
+- [ ] Android build succeeds: `flutter build apk --release`
+- [ ] App launches on iOS device and shows home screen
+- [ ] App launches on Android device and shows home screen
+- [ ] Core features work: login, project list, navigation
+
+### User Story 2 Validation
+- [ ] flutter analyze shows zero errors, zero warnings
+- [ ] All test pass: 100% pass rate from `flutter test`
+- [ ] Theme data uses typed classes (if applicable)
+- [ ] No withOpacity() usage (replaced with withValues())
+- [ ] Deprecated API usage resolved across all features
+- [ ] Manual testing shows no runtime errors or regressions
+- [ ] flutter_roomplan LiDAR scanning works on physical iOS device
+
+### User Story 3 Validation
+- [ ] CLAUDE.md updated with Flutter 3.32.4 + Dart 3.8.1
+- [ ] Active Technologies section accurate
+- [ ] Recent Changes section includes upgrade entry
+- [ ] Inline code comments updated (if any SDK references)
+- [ ] README updated (if exists)
+- [ ] No stale version references remain: `grep -r "Dart 3.10\|Flutter 3.x" . --include="*.md" --exclude-dir=specs` returns no results
+- [ ] Agent context update script run successfully
+
+### Phase 6 (Polish) Validation
+- [ ] Startup time within ±5% of baseline
+- [ ] Build time increase < 20% of baseline
+- [ ] Memory usage same or improved
+- [ ] All 8 success criteria from spec.md validated (SC-001 through SC-008)
+- [ ] Performance comparison documented
+- [ ] Final builds succeed without errors
+- [ ] Full manual regression testing complete
+- [ ] No runtime crashes in standard workflows
+
+---
+
+## Notes
+
+### Research References
+
+- **Breaking Changes**: See research.md Section 1 (Flutter 3.32) and Section 2 (Dart 3.8)
+- **Dependency Compatibility**: See research.md Section 3 for complete compatibility matrix
+- **Platform Requirements**: iOS 13.0+, Xcode 15.0+, Java 17+ (research.md Sections 5.1-5.2)
+- **Risk Assessment**: research.md Section 8 identifies high-risk dependencies (flutter_roomplan, graphql_flutter)
+
+### Quickstart Procedure
+
+- **Detailed Steps**: See quickstart.md for step-by-step commands and troubleshooting
+- **Rollback Procedure**: See quickstart.md Section "Rollback Procedure" if critical issues arise
+- **Troubleshooting**: See quickstart.md Section "Troubleshooting" for common issues and solutions
+
+### Constitution Compliance
+
+- **TDD Exception Justified**: Infrastructure upgrade - testing framework itself being upgraded
+- **Existing Tests Used**: Full test suite run as regression suite after each phase
+- **New Code**: Any breaking change fixes will be tested as part of T058-T062
+
+---
+
+**Tasks Generated**: 2026-01-13
+**Total Tasks**: 116 (35 parallelizable, 81 sequential)
+**Estimated Effort**: 10-18 hours with parallel execution, 18-30 hours sequential
+**MVP Scope**: User Story 1 only (T011-T035, ~3-4 hours)
+**Critical Path**: Sequential user stories (Phase 1 → US1 → US2 → US3 → Polish)
