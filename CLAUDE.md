@@ -1,13 +1,13 @@
 # vronmobile2 Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2025-12-20
+Auto-generated from all feature plans. Last updated: 2026-01-13
 
 ## Active Technologies
 - Backend GraphQL API (PostgreSQL), local caching via shared_preferences (003-projectdetail)
 - Session-only state management using StatefulWidget or Provider (no persistence across app restarts) (025-product-search)
-- Dart 3.10+ / Flutter 3.x, Swift 5.x (iOS native code for USDZ combination) (018-combined-scan-navmesh)
+- Dart 3.8.1 / Flutter 3.32.4, Swift 5.x (iOS native code for USDZ combination) (018-combined-scan-navmesh)
 
-- Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0) (001-main-screen-login)
+- Dart 3.8.1 / Flutter 3.32.4 (matches pubspec.yaml SDK constraint ^3.8.1) (001-main-screen-login)
 
 ## Project Structure
 
@@ -18,11 +18,11 @@ tests/
 
 ## Commands
 
-# Add commands for Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0)
+# Add commands for Dart 3.8.1 / Flutter 3.32.4 (matches pubspec.yaml SDK constraint ^3.8.1)
 
 ## Code Style
 
-Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0): Follow standard conventions
+Dart 3.8.1 / Flutter 3.32.4 (matches pubspec.yaml SDK constraint ^3.8.1): Follow standard conventions
 
 ## Patterns and Best Practices
 
@@ -61,9 +61,10 @@ Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0): Follow s
 - Share common code via `lib/core/`
 
 ## Recent Changes
-- 018-combined-scan-navmesh: Added Dart 3.10+ / Flutter 3.x, Swift 5.x (iOS native code for USDZ combination)
-- 016-multi-room-options: Added Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0)
-- 014-lidar-scanning: Added Dart 3.10+ / Flutter 3.x (matches pubspec.yaml SDK constraint ^3.10.0)
+- 028-flutter-upgrade: Upgraded to Flutter 3.32.4 and Dart 3.8.1 (from Flutter 3.x / Dart 3.10.0)
+- 018-combined-scan-navmesh: Added Dart 3.8.1 / Flutter 3.32.4, Swift 5.x (iOS native code for USDZ combination)
+- 016-multi-room-options: Added Dart 3.8.1 / Flutter 3.32.4 (matches pubspec.yaml SDK constraint ^3.8.1)
+- 014-lidar-scanning: Added Dart 3.8.1 / Flutter 3.32.4 (matches pubspec.yaml SDK constraint ^3.8.1)
 
 
 <!-- MANUAL ADDITIONS START -->
